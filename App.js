@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -15,7 +15,7 @@ import AuthScreen from './src/screens/AuthScreen';
 import CityPreviewScreen from './src/screens/CityPreviewScreen';
 
 // Import auth services
-import { CognitoUserPool, CognitoUser, AuthenticationDetails, CognitoUserSession } from 'amazon-cognito-identity-js';
+import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
 import { COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID, REGION } from './src/constants/config';
 
 // Initialize Cognito User Pool
@@ -25,7 +25,8 @@ const userPool = new CognitoUserPool({
 });
 
 // Create auth context for the app
-export const AuthContext = React.createContext();
+const AuthContext = createContext();
+export { AuthContext };
 
 // Create navigators
 const Stack = createStackNavigator();
@@ -161,31 +162,31 @@ export default function App() {
         <NavigationContainer>
           <StatusBar style="auto" />
           <Stack.Navigator>
-            {isAuthenticated ? (
-              // Authenticated user flow
-              <>
-                <Stack.Screen 
-                  name="Main" 
-                  component={MainTabNavigator} 
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="Audio" component={AudioScreen} />
-              </>
-            ) : (
-              // Authentication flow
-              <>
-                <Stack.Screen 
-                  name="Auth" 
-                  component={AuthScreen} 
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen 
-                  name="CityPreview" 
-                  component={CityPreviewScreen} 
-                  options={{ title: 'City Preview' }}
-                />
-              </>
-            )}
+          {isAuthenticated ? (
+            // Authenticated user flow
+            <>
+              <Stack.Screen 
+                name="Main" 
+                component={MainTabNavigator} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen name="Audio" component={AudioScreen} />
+            </>
+          ) : (
+            // Authentication flow
+            <>
+              <Stack.Screen 
+                name="Auth" 
+                component={AuthScreen} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="CityPreview" 
+                component={CityPreviewScreen} 
+                options={{ title: 'City Preview' }}
+              />
+            </>
+          )}
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaProvider>

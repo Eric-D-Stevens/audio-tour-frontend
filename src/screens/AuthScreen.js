@@ -60,9 +60,9 @@ const AuthScreen = ({ navigation }) => {
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.logoContainer}>
             <View style={styles.logoPlaceholder}>
-              <Text style={styles.logoText}>Audio Tour</Text>
+              <Text style={styles.logoText}>TensorTours</Text>
             </View>
-            <Text style={styles.tagline}>Discover the world through audio</Text>
+            <Text style={styles.tagline}>Discover the world through AI-powered audio</Text>
           </View>
 
           <View style={styles.formContainer}>
@@ -159,8 +159,8 @@ const styles = StyleSheet.create({
   logoPlaceholder: {
     width: 120,
     height: 120,
-    borderRadius: 60,
-    backgroundColor: '#007AFF',
+    borderRadius: 10, // Square with slightly rounded corners
+    backgroundColor: '#FF5722', // Orange color for TensorTours branding
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF5722', // Orange color for TensorTours branding
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   switchModeText: {
-    color: '#007AFF',
+    color: '#FF5722', // Orange color for TensorTours branding
     fontSize: 14,
   },
   divider: {
@@ -247,13 +247,13 @@ const styles = StyleSheet.create({
   },
   guestButton: {
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: '#FF5722', // Orange color for TensorTours branding
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',
   },
   guestButtonText: {
-    color: '#007AFF',
+    color: '#FF5722', // Orange color for TensorTours branding
     fontSize: 16,
     fontWeight: 'bold',
   },

@@ -50,7 +50,7 @@ function MainTabNavigator() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#007AFF',
+        tabBarActiveTintColor: '#FF5722', // Orange color for TensorTours branding
         tabBarInactiveTintColor: 'gray',
       })}
     >
@@ -151,7 +151,7 @@ export default function App() {
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#FF5722" /> {/* Orange color for TensorTours branding */}
       </View>
     );
   }

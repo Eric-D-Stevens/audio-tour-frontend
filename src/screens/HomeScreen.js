@@ -6,8 +6,8 @@ const HomeScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.title}>Audio Tour App</Text>
-        <Text style={styles.subtitle}>Discover amazing audio tours</Text>
+        <Text style={styles.title}>TensorTours</Text>
+        <Text style={styles.subtitle}>Discover amazing audio tours powered by AI</Text>
         
         <View style={styles.featuredSection}>
           <Text style={styles.sectionTitle}>Featured Tours</Text>
@@ -56,9 +56,9 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#FF5722', // Orange color for TensorTours branding
     marginTop: 10,
   },
   subtitle: {
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   exploreButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF5722', // Orange color for TensorTours branding
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 10,

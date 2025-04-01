@@ -67,10 +67,12 @@ const UserMapScreen = ({ navigation }) => {
   const fetchNearbyPlacesData = async (latitude, longitude) => {
     try {
       setLoading(true);
-      const tourType = tourParams?.category || 'history';
-      const radius = tourParams?.radius || 1000;
+      // Ensure the tour type is lowercase to match backend expectations
+      const tourType = (tourParams?.category || 'history').toLowerCase();
+      // Use the new distance parameter instead of radius
+      const distance = tourParams?.distance || 2000;
       
-      const data = await fetchNearbyPlaces(latitude, longitude, radius, tourType);
+      const data = await fetchNearbyPlaces(latitude, longitude, distance, tourType);
       
       if (data && data.places) {
         // Transform the places data to match the expected format for markers

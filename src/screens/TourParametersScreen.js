@@ -15,22 +15,24 @@ const TourParametersScreen = ({ navigation }) => {
   const { tourParams, setTourParams } = useContext(TourContext);
   
   // Local state to track changes before saving
-  const [duration, setDuration] = useState(tourParams.duration || 60);
-  const [category, setCategory] = useState(tourParams.category || 'History');
+  const [distance, setDistance] = useState(tourParams.distance || 2000);
+  const [numAttractions, setNumAttractions] = useState(tourParams.numAttractions || 5);
+  const [category, setCategory] = useState(tourParams.category || 'history');
   
+  // Tour types that match the backend geolocation lambda
   const categories = [
-    'History',
-    'Art',
-    'Culture',
-    'Food & Drink',
-    'Architecture',
-    'Nature'
+    { id: 'history', name: 'History' },
+    { id: 'cultural', name: 'Cultural' },
+    { id: 'art', name: 'Art' },
+    { id: 'nature', name: 'Nature' },
+    { id: 'architecture', name: 'Architecture' }
   ];
   
   const handleSave = () => {
     // Update the global tour parameters
     setTourParams({
-      duration,
+      distance,
+      numAttractions,
       category
     });
     
@@ -52,22 +54,42 @@ const TourParametersScreen = ({ navigation }) => {
       
       <ScrollView style={styles.content}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tour Duration</Text>
-          <Text style={styles.durationValue}>{duration} minutes</Text>
+          <Text style={styles.sectionTitle}>Search Distance</Text>
+          <Text style={styles.paramValue}>{(distance / 1000).toFixed(1)} km</Text>
           <Slider
             style={styles.slider}
-            minimumValue={30}
-            maximumValue={180}
-            step={15}
-            value={duration}
-            onValueChange={setDuration}
+            minimumValue={500}
+            maximumValue={5000}
+            step={500}
+            value={distance}
+            onValueChange={setDistance}
             minimumTrackTintColor="#FF5722"
             maximumTrackTintColor="#D3D3D3"
             thumbTintColor="#FF5722"
           />
           <View style={styles.sliderLabels}>
-            <Text style={styles.sliderLabel}>30 min</Text>
-            <Text style={styles.sliderLabel}>180 min</Text>
+            <Text style={styles.sliderLabel}>0.5 km</Text>
+            <Text style={styles.sliderLabel}>5 km</Text>
+          </View>
+        </View>
+        
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Number of Attractions</Text>
+          <Text style={styles.paramValue}>{numAttractions} places</Text>
+          <Slider
+            style={styles.slider}
+            minimumValue={3}
+            maximumValue={15}
+            step={1}
+            value={numAttractions}
+            onValueChange={setNumAttractions}
+            minimumTrackTintColor="#FF5722"
+            maximumTrackTintColor="#D3D3D3"
+            thumbTintColor="#FF5722"
+          />
+          <View style={styles.sliderLabels}>
+            <Text style={styles.sliderLabel}>3 places</Text>
+            <Text style={styles.sliderLabel}>15 places</Text>
           </View>
         </View>
         
@@ -76,20 +98,20 @@ const TourParametersScreen = ({ navigation }) => {
           <View style={styles.categoryContainer}>
             {categories.map((item) => (
               <TouchableOpacity
-                key={item}
+                key={item.id}
                 style={[
                   styles.categoryButton,
-                  category === item && styles.categoryButtonActive
+                  category === item.id && styles.categoryButtonActive
                 ]}
-                onPress={() => setCategory(item)}
+                onPress={() => setCategory(item.id)}
               >
                 <Text 
                   style={[
                     styles.categoryButtonText,
-                    category === item && styles.categoryButtonTextActive
+                    category === item.id && styles.categoryButtonTextActive
                   ]}
                 >
-                  {item}
+                  {item.name}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -142,7 +164,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     color: '#333',
   },
-  durationValue: {
+  paramValue: {
     fontSize: 16,
     color: '#FF5722',
     fontWeight: 'bold',

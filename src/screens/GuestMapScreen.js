@@ -72,7 +72,8 @@ const GuestMapScreen = ({ navigation }) => {
   const fetchCityPreviewData = async (city) => {
     try {
       setLoading(true);
-      const tourType = tourParams?.category || 'history';
+      // Ensure the tour type is lowercase to match backend expectations
+      const tourType = (tourParams?.category || 'history').toLowerCase();
       
       const data = await fetchCityPreview(city, tourType);
       

@@ -41,7 +41,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const [tourParams, setTourParams] = useState({ duration: 60, category: 'History' });
+  const [tourParams, setTourParams] = useState({ distance: 2000, numAttractions: 5, category: 'history' });
 
   // Save tour parameters to AsyncStorage whenever they change
   useEffect(() => {

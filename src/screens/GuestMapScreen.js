@@ -4,11 +4,10 @@ import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../components/AppHeader';
-import { TourContext, AuthContext } from '../../App';
+import { TourContext } from '../../App';
 
-const MapScreen = ({ navigation }) => {
+const GuestMapScreen = ({ navigation }) => {
   const { tourParams } = useContext(TourContext);
-  const { isAuthenticated } = useContext(AuthContext);
   const [region, setRegion] = useState({
     latitude: 37.7749,
     longitude: -122.4194,
@@ -22,20 +21,11 @@ const MapScreen = ({ navigation }) => {
     { id: '3', title: 'Alcatraz Island', description: 'Historic federal prison', coordinate: { latitude: 37.8270, longitude: -122.4230 } },
   ]);
   
-  const [previewModalVisible, setPreviewModalVisible] = useState(!isAuthenticated);
-
-  // Effect to update tour points when tour parameters change
-  useEffect(() => {
-    if (tourParams) {
-      console.log('Tour parameters updated:', tourParams);
-      // In a real app, this would call your lambda to get new tour points
-      // For now, we'll just log the parameters
-    }
-  }, [tourParams]);
+  const [previewModalVisible, setPreviewModalVisible] = useState(true);
 
   return (
     <SafeAreaView style={styles.container}>
-      <AppHeader navigation={navigation} title="TensorTours Map" />
+      <AppHeader navigation={navigation} title="TensorTours Preview" />
       <View style={styles.mapContainer}>
         <MapView
           style={styles.map}
@@ -53,30 +43,28 @@ const MapScreen = ({ navigation }) => {
           ))}
         </MapView>
         
-        {/* Preview Mode Button - only shown for non-authenticated users */}
-        {!isAuthenticated && (
-          <TouchableOpacity 
-            style={styles.previewButton}
-            onPress={() => setPreviewModalVisible(true)}
-          >
-            <Text style={styles.previewButtonText}>Preview Mode</Text>
-            <Ionicons name="help-circle" size={16} color="white" style={styles.buttonIcon} />
-          </TouchableOpacity>
-        )}
+        {/* Preview Mode Button */}
+        <TouchableOpacity 
+          style={styles.previewButton}
+          onPress={() => setPreviewModalVisible(true)}
+        >
+          <Text style={styles.previewButtonText}>Preview Mode</Text>
+          <Ionicons name="help-circle" size={16} color="white" style={styles.buttonIcon} />
+        </TouchableOpacity>
       </View>
       
       {/* Bottom Info Panel with Tour Selection Button */}
       <View style={styles.infoPanel}>
         <View style={styles.infoPanelContent}>
-          <Text style={styles.infoPanelTitle}>Explore Tour Points</Text>
+          <Text style={styles.infoPanelTitle}>Preview Tour</Text>
           <Text style={styles.infoPanelText}>
-            {tourParams ? `${tourParams.category} tour (${tourParams.duration} min)` : 'Tap on markers to view available audio tours'}
+            {tourParams ? `${tourParams.category} tour (${tourParams.duration} min)` : 'Explore sample tours in preview mode'}
           </Text>
         </View>
         
         <TouchableOpacity 
           style={styles.tourButton}
-          onPress={() => navigation.navigate('TourParameters')}
+          onPress={() => navigation.navigate('GuestTourParameters')}
         >
           <Text style={styles.tourButtonText}>Tour Settings</Text>
           <Ionicons name="settings-outline" size={16} color="white" style={styles.buttonIcon} />
@@ -239,4 +227,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MapScreen;
+export default GuestMapScreen;

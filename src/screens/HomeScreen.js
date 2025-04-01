@@ -38,7 +38,7 @@ const HomeScreen = ({ navigation }) => {
 
         <TouchableOpacity 
           style={styles.exploreButton}
-          onPress={() => navigation.navigate('Explore')}
+          onPress={() => navigation.navigate('Map')}
         >
           <Text style={styles.exploreButtonText}>Explore All Tours</Text>
         </TouchableOpacity>

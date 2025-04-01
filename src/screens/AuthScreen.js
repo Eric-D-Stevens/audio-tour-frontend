@@ -48,7 +48,7 @@ const AuthScreen = ({ navigation }) => {
   };
 
   const handleGuestAccess = () => {
-    navigation.navigate('CityPreview');
+    navigation.navigate('Map');
   };
 
   return (

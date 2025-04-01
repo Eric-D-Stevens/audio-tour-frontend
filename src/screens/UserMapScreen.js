@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../components/AppHeader';
 import { TourContext, AuthContext } from '../../App';
 
-const MapScreen = ({ navigation }) => {
+const UserMapScreen = ({ navigation }) => {
   const { tourParams } = useContext(TourContext);
   const { isAuthenticated } = useContext(AuthContext);
   const [region, setRegion] = useState({
@@ -21,8 +21,6 @@ const MapScreen = ({ navigation }) => {
     { id: '2', title: 'Fisherman\'s Wharf', description: 'Popular tourist attraction', coordinate: { latitude: 37.8080, longitude: -122.4177 } },
     { id: '3', title: 'Alcatraz Island', description: 'Historic federal prison', coordinate: { latitude: 37.8270, longitude: -122.4230 } },
   ]);
-  
-  const [previewModalVisible, setPreviewModalVisible] = useState(!isAuthenticated);
 
   // Effect to update tour points when tour parameters change
   useEffect(() => {
@@ -52,17 +50,6 @@ const MapScreen = ({ navigation }) => {
             />
           ))}
         </MapView>
-        
-        {/* Preview Mode Button - only shown for non-authenticated users */}
-        {!isAuthenticated && (
-          <TouchableOpacity 
-            style={styles.previewButton}
-            onPress={() => setPreviewModalVisible(true)}
-          >
-            <Text style={styles.previewButtonText}>Preview Mode</Text>
-            <Ionicons name="help-circle" size={16} color="white" style={styles.buttonIcon} />
-          </TouchableOpacity>
-        )}
       </View>
       
       {/* Bottom Info Panel with Tour Selection Button */}
@@ -82,40 +69,6 @@ const MapScreen = ({ navigation }) => {
           <Ionicons name="settings-outline" size={16} color="white" style={styles.buttonIcon} />
         </TouchableOpacity>
       </View>
-      
-      {/* Preview Mode Info Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={previewModalVisible}
-        onRequestClose={() => setPreviewModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Preview Mode</Text>
-              <TouchableOpacity onPress={() => setPreviewModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
-            
-            <Text style={styles.modalText}>
-              You are currently in Preview Mode. In this mode, TensorTours provides a limited selection of pre-recorded audio tours to demonstrate the app's functionality.
-            </Text>
-            
-            <Text style={styles.modalText}>
-              In the full version, our AI will generate personalized tours based on your preferences, location, and interests in real-time.
-            </Text>
-            
-            <TouchableOpacity 
-              style={styles.modalButton}
-              onPress={() => setPreviewModalVisible(false)}
-            >
-              <Text style={styles.modalButtonText}>Got it</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -132,22 +85,6 @@ const styles = StyleSheet.create({
   map: {
     width: Dimensions.get('window').width,
     height: '100%',
-  },
-  previewButton: {
-    position: 'absolute',
-    top: 15,
-    right: 15,
-    backgroundColor: 'rgba(255, 87, 34, 0.9)', // Semi-transparent orange
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  previewButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
   },
   infoPanel: {
     backgroundColor: 'white',
@@ -193,50 +130,7 @@ const styles = StyleSheet.create({
   },
   buttonIcon: {
     marginLeft: 5,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 15,
-    padding: 20,
-    width: '100%',
-    maxWidth: 400,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 15,
-    lineHeight: 20,
-  },
-  modalButton: {
-    backgroundColor: '#FF5722',
-    padding: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  modalButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  }
 });
 
-export default MapScreen;
+export default UserMapScreen;

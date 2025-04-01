@@ -2,18 +2,18 @@ import React, { useState, useEffect, createContext } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import screens
-import HomeScreen from './src/screens/HomeScreen';
-import MapScreen from './src/screens/MapScreen';
+import UserMapScreen from './src/screens/UserMapScreen';
+import GuestMapScreen from './src/screens/GuestMapScreen';
 import AudioScreen from './src/screens/AudioScreen';
 import AuthScreen from './src/screens/AuthScreen';
-import CityPreviewScreen from './src/screens/CityPreviewScreen';
+import TourParametersScreen from './src/screens/TourParametersScreen';
+import GuestTourParametersScreen from './src/screens/GuestTourParametersScreen';
 
 // Import auth services
 import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
@@ -25,51 +25,29 @@ const userPool = new CognitoUserPool({
   ClientId: COGNITO_CLIENT_ID
 });
 
-// Create auth context for the app
+// Create contexts for the app
 const AuthContext = createContext();
-export { AuthContext };
+const TourContext = createContext();
+export { AuthContext, TourContext };
 
-// Create navigators
+// Create navigator
 const Stack = createStackNavigator();
-const Tab = createBottomTabNavigator();
 
 // Storage keys
 const AUTH_STATE_KEY = 'tensortours_auth_state';
 const USER_DATA_KEY = 'tensortours_user_data';
+const TOUR_PARAMS_KEY = 'tensortours_tour_params';
 
-// Main tab navigator (post-authentication)
-function MainTabNavigator() {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
+// Dummy component to fix reference error
+const MainTabNavigator = () => null;
 
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Map') {
-            iconName = focused ? 'map' : 'map-outline';
-          } else if (route.name === 'Explore') {
-            iconName = focused ? 'compass' : 'compass-outline';
-          }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#FF5722', // Orange color for TensorTours branding
-        tabBarInactiveTintColor: 'gray',
-      })}
-    >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Map" component={MapScreen} />
-      <Tab.Screen name="Explore" component={CityPreviewScreen} />
-    </Tab.Navigator>
-  );
-}
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [tourParams, setTourParams] = useState({ duration: 60, category: 'History' });
 
   // Save auth state to AsyncStorage whenever it changes
   useEffect(() => {
@@ -77,10 +55,16 @@ export default function App() {
       saveAuthState();
     }
   }, [isAuthenticated, user]);
+  
+  // Save tour parameters to AsyncStorage whenever they change
+  useEffect(() => {
+    saveTourParams();
+  }, [tourParams]);
 
-  // Load auth state from AsyncStorage on app start
+  // Load auth state and tour parameters from AsyncStorage on app start
   useEffect(() => {
     loadAuthState();
+    loadTourParams();
   }, []);
 
   // Save authentication state to AsyncStorage
@@ -180,6 +164,27 @@ export default function App() {
     });
   };
 
+  // Save tour parameters to AsyncStorage
+  const saveTourParams = async () => {
+    try {
+      await AsyncStorage.setItem(TOUR_PARAMS_KEY, JSON.stringify(tourParams));
+    } catch (error) {
+      console.error('Error saving tour parameters:', error);
+    }
+  };
+
+  // Load tour parameters from AsyncStorage
+  const loadTourParams = async () => {
+    try {
+      const storedTourParams = await AsyncStorage.getItem(TOUR_PARAMS_KEY);
+      if (storedTourParams) {
+        setTourParams(JSON.parse(storedTourParams));
+      }
+    } catch (error) {
+      console.error('Error loading tour parameters:', error);
+    }
+  };
+
   // Fallback to check Cognito session directly
   const checkCognitoSession = () => {
 
@@ -271,7 +276,8 @@ export default function App() {
         });
       });
     },
-    user
+    user,
+    handleLogout
   };
 
   // Show loading screen if still checking auth status
@@ -284,39 +290,60 @@ export default function App() {
   }
 
   return (
-    <AuthContext.Provider value={authContext}>
-      <SafeAreaProvider>
-        <NavigationContainer>
-          <StatusBar style="auto" />
-          <Stack.Navigator>
-          {isAuthenticated ? (
-            // Authenticated user flow
-            <>
-              <Stack.Screen 
-                name="Main" 
-                component={MainTabNavigator} 
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen name="Audio" component={AudioScreen} />
-            </>
-          ) : (
-            // Authentication flow
-            <>
-              <Stack.Screen 
-                name="Auth" 
-                component={AuthScreen} 
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen 
-                name="CityPreview" 
-                component={CityPreviewScreen} 
-                options={{ title: 'City Preview' }}
-              />
-            </>
-          )}
-          </Stack.Navigator>
-        </NavigationContainer>
-      </SafeAreaProvider>
-    </AuthContext.Provider>
+    <SafeAreaProvider>
+      <StatusBar style="auto" />
+      <AuthContext.Provider value={authContext}>
+        <TourContext.Provider value={{ tourParams, setTourParams }}>
+          <NavigationContainer>
+            <Stack.Navigator>
+              {isAuthenticated ? (
+                // Authenticated user flow
+                <>
+                  <Stack.Screen 
+                    name="Map" 
+                    component={UserMapScreen} 
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen 
+                    name="TourParameters" 
+                    component={TourParametersScreen} 
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen 
+                    name="Audio" 
+                    component={AudioScreen} 
+                    options={{ headerShown: false }}
+                  />
+                </>
+              ) : (
+                // Authentication flow
+                <>
+                  <Stack.Screen 
+                    name="Auth" 
+                    component={AuthScreen} 
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen 
+                    name="Map" 
+                    component={GuestMapScreen} 
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen 
+                    name="GuestTourParameters" 
+                    component={GuestTourParametersScreen} 
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen 
+                    name="Audio" 
+                    component={AudioScreen} 
+                    options={{ headerShown: false }}
+                  />
+                </>
+              )}
+            </Stack.Navigator>
+          </NavigationContainer>
+        </TourContext.Provider>
+      </AuthContext.Provider>
+    </SafeAreaProvider>
   );
 }

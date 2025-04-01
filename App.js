@@ -278,7 +278,7 @@ export default function App() {
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#FF5722" /> {/* Orange color for TensorTours branding */}
+        <ActivityIndicator size="large" color="#FF5722" />{/* Orange color for TensorTours branding */}
       </View>
     );
   }

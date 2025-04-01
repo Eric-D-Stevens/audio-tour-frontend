@@ -62,6 +62,15 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
 
     // Parse JSON response
     const data = await response.json();
+    
+    // Log successful API response
+    console.log(`API call to ${endpoint} completed successfully:`, {
+      status: response.status,
+      dataSize: JSON.stringify(data).length,
+      timestamp: new Date().toISOString(),
+      endpoint: `${API_BASE_URL}${endpoint}`
+    });
+    
     return data;
   } catch (error) {
     console.error(`API request error: ${error.message}`);
@@ -78,8 +87,19 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
  * @returns {Promise<Object>} - Places data
  */
 export const fetchNearbyPlaces = async (lat, lng, radius = 500, tourType = 'history') => {
+  console.log(`fetchNearbyPlaces called with: lat=${lat}, lng=${lng}, radius=${radius}, tourType=${tourType}`);
   const endpoint = `/places?lat=${lat}&lng=${lng}&radius=${radius}&tour_type=${tourType}`;
-  return apiRequest(endpoint, { method: 'GET' }, true); // This endpoint requires authentication
+  const startTime = Date.now();
+  
+  try {
+    const result = await apiRequest(endpoint, { method: 'GET' }, true);
+    const duration = Date.now() - startTime;
+    console.log(`fetchNearbyPlaces completed in ${duration}ms with ${result.places?.length || 0} places`);
+    return result;
+  } catch (error) {
+    console.error(`fetchNearbyPlaces failed after ${Date.now() - startTime}ms:`, error);
+    throw error;
+  }
 };
 
 /**
@@ -89,8 +109,19 @@ export const fetchNearbyPlaces = async (lat, lng, radius = 500, tourType = 'hist
  * @returns {Promise<Object>} - City preview data
  */
 export const fetchCityPreview = async (city, tourType = 'history') => {
+  console.log(`fetchCityPreview called with: city=${city}, tourType=${tourType}`);
   const endpoint = `/preview/${encodeURIComponent(city)}?tour_type=${tourType}`;
-  return apiRequest(endpoint, { method: 'GET' }, false);
+  const startTime = Date.now();
+  
+  try {
+    const result = await apiRequest(endpoint, { method: 'GET' }, false);
+    const duration = Date.now() - startTime;
+    console.log(`fetchCityPreview completed in ${duration}ms with ${result.places?.length || 0} places`);
+    return result;
+  } catch (error) {
+    console.error(`fetchCityPreview failed after ${Date.now() - startTime}ms:`, error);
+    throw error;
+  }
 };
 
 /**
@@ -100,8 +131,19 @@ export const fetchCityPreview = async (city, tourType = 'history') => {
  * @returns {Promise<Object>} - Audio tour data
  */
 export const fetchAudioTour = async (placeId, tourType = 'history') => {
+  console.log(`fetchAudioTour called with: placeId=${placeId}, tourType=${tourType}`);
   const endpoint = `/audio/${placeId}?tourType=${tourType}`;
-  return apiRequest(endpoint, { method: 'GET' }, true);
+  const startTime = Date.now();
+  
+  try {
+    const result = await apiRequest(endpoint, { method: 'GET' }, true);
+    const duration = Date.now() - startTime;
+    console.log(`fetchAudioTour completed in ${duration}ms, audio length: ${result.audio_url ? 'available' : 'unavailable'}`);
+    return result;
+  } catch (error) {
+    console.error(`fetchAudioTour failed after ${Date.now() - startTime}ms:`, error);
+    throw error;
+  }
 };
 
 /**
@@ -111,6 +153,17 @@ export const fetchAudioTour = async (placeId, tourType = 'history') => {
  * @returns {Promise<Object>} - Audio tour preview data
  */
 export const fetchPreviewAudioTour = async (placeId, tourType = 'history') => {
+  console.log(`fetchPreviewAudioTour called with: placeId=${placeId}, tourType=${tourType}`);
   const endpoint = `/preview/audio/${placeId}?tourType=${tourType}`;
-  return apiRequest(endpoint, { method: 'GET' }, false);
+  const startTime = Date.now();
+  
+  try {
+    const result = await apiRequest(endpoint, { method: 'GET' }, false);
+    const duration = Date.now() - startTime;
+    console.log(`fetchPreviewAudioTour completed in ${duration}ms, audio length: ${result.audio_url ? 'available' : 'unavailable'}`);
+    return result;
+  } catch (error) {
+    console.error(`fetchPreviewAudioTour failed after ${Date.now() - startTime}ms:`, error);
+    throw error;
+  }
 };

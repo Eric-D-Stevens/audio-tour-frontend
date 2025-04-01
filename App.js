@@ -16,14 +16,10 @@ import TourParametersScreen from './src/screens/TourParametersScreen';
 import GuestTourParametersScreen from './src/screens/GuestTourParametersScreen';
 
 // Import auth services
-import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
+import * as AuthService from './src/services/auth';
 import { COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID, REGION } from './src/constants/config';
 
-// Initialize Cognito User Pool
-const userPool = new CognitoUserPool({
-  UserPoolId: COGNITO_USER_POOL_ID,
-  ClientId: COGNITO_CLIENT_ID
-});
+// Auth service is already initialized in ./src/services/auth.js
 
 // Create contexts for the app
 const AuthContext = createContext();
@@ -34,8 +30,6 @@ export { AuthContext, TourContext };
 const Stack = createStackNavigator();
 
 // Storage keys
-const AUTH_STATE_KEY = 'tensortours_auth_state';
-const USER_DATA_KEY = 'tensortours_user_data';
 const TOUR_PARAMS_KEY = 'tensortours_tour_params';
 
 // Dummy component to fix reference error
@@ -49,119 +43,44 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [tourParams, setTourParams] = useState({ duration: 60, category: 'History' });
 
-  // Save auth state to AsyncStorage whenever it changes
-  useEffect(() => {
-    if (!isLoading) {
-      saveAuthState();
-    }
-  }, [isAuthenticated, user]);
-  
   // Save tour parameters to AsyncStorage whenever they change
   useEffect(() => {
     saveTourParams();
   }, [tourParams]);
 
-  // Load auth state and tour parameters from AsyncStorage on app start
+  // Load auth state and tour parameters on app start
   useEffect(() => {
-    loadAuthState();
+    checkAuthStatus();
     loadTourParams();
   }, []);
 
-  // Save authentication state to AsyncStorage
-  const saveAuthState = async () => {
-    try {
-      await AsyncStorage.setItem(AUTH_STATE_KEY, JSON.stringify(isAuthenticated));
-      
-      // Only save user data if authenticated and user exists
-      if (isAuthenticated && user) {
-        // We can't store the full user object, so we'll store essential info
-        const userData = {
-          username: user.username,
-          // Add any other necessary user data here
-        };
-        await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
-      }
-    } catch (error) {
-      console.error('Error saving auth state:', error);
-    }
-  };
-
-  // Load authentication state from AsyncStorage
-  const loadAuthState = async () => {
+  // Check authentication status using the improved auth service
+  const checkAuthStatus = async () => {
     try {
       setIsLoading(true);
       
-      // First try to load from AsyncStorage
-      const storedAuthState = await AsyncStorage.getItem(AUTH_STATE_KEY);
-      const storedUserData = await AsyncStorage.getItem(USER_DATA_KEY);
+      // Check if user is authenticated using the auth service
+      const isUserAuthenticated = await AuthService.isAuthenticated();
       
-      if (storedAuthState === 'true' || storedAuthState === true) {
-        // If we have stored auth state, restore it
-        setIsAuthenticated(true);
+      if (isUserAuthenticated) {
+        // Get user data from storage
+        const userData = await AuthService.getCurrentUserData();
+        const cognitoUser = AuthService.getCurrentUser();
         
-        if (storedUserData) {
-          // Restore basic user data
-          const userData = JSON.parse(storedUserData);
-          
-          // Now try to get the actual Cognito user
-          const cognitoUser = userPool.getCurrentUser();
-          if (cognitoUser) {
-            // Verify the session is still valid with Cognito
-            cognitoUser.getSession((err, session) => {
-              if (err || !session.isValid()) {
-                // If there's an error or session is invalid, try to refresh
-                handleSessionRefresh(cognitoUser);
-              } else {
-                // Session is valid, set the user
-                setUser(cognitoUser);
-                setIsLoading(false);
-              }
-            });
-          } else {
-            // We have stored auth but no Cognito user - this is a mismatch
-            // Keep the user logged in with basic data for better UX
-            setUser({ username: userData.username });
-            setIsLoading(false);
-          }
-        } else {
-          setIsLoading(false);
-        }
+        setIsAuthenticated(true);
+        setUser(userData || cognitoUser || { username: 'User' });
       } else {
-        // No stored auth state, check Cognito as fallback
-        checkCognitoSession();
+        // Not authenticated
+        setIsAuthenticated(false);
+        setUser(null);
       }
     } catch (error) {
-      console.error('Error loading auth state:', error);
-      checkCognitoSession();
+      console.error('Error checking auth status:', error);
+      setIsAuthenticated(false);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  // Handle session refresh
-  const handleSessionRefresh = (cognitoUser) => {
-    cognitoUser.getSession((err, session) => {
-      if (err) {
-        console.error('Error getting session:', err);
-        handleLogout();
-        return;
-      }
-      
-      const refreshToken = session.getRefreshToken();
-      if (refreshToken) {
-        cognitoUser.refreshSession(refreshToken, (refreshErr, refreshedSession) => {
-          if (refreshErr) {
-            console.error('Error refreshing session:', refreshErr);
-            handleLogout();
-          } else {
-            console.log('Session refreshed successfully');
-            setUser(cognitoUser);
-            setIsAuthenticated(true);
-          }
-          setIsLoading(false);
-        });
-      } else {
-        handleLogout();
-      }
-    });
   };
 
   // Save tour parameters to AsyncStorage
@@ -185,96 +104,34 @@ export default function App() {
     }
   };
 
-  // Fallback to check Cognito session directly
-  const checkCognitoSession = () => {
-
-    const cognitoUser = userPool.getCurrentUser();
-    
-    if (cognitoUser) {
-      cognitoUser.getSession((err, session) => {
-        if (err) {
-          console.error('Session error:', err);
-          handleLogout();
-          return;
-        }
-        
-        if (session.isValid()) {
-          setUser(cognitoUser);
-          setIsAuthenticated(true);
-        } else {
-          handleSessionRefresh(cognitoUser);
-        }
-        setIsLoading(false);
-      });
-    } else {
-      handleLogout();
-    }
-  };
-
-  // Handle logout
+  // Handle logout using the auth service
   const handleLogout = async () => {
-    setIsAuthenticated(false);
-    setUser(null);
-    setIsLoading(false);
-    
-    // Clear stored auth state
     try {
-      await AsyncStorage.removeItem(AUTH_STATE_KEY);
-      await AsyncStorage.removeItem(USER_DATA_KEY);
+      await AuthService.signOut();
+      setIsAuthenticated(false);
+      setUser(null);
     } catch (error) {
-      console.error('Error clearing auth state:', error);
+      console.error('Error during logout:', error);
     }
   };
-
-  // Function to check if user is authenticated (replaced by above functions)
-  function checkAuthStatus() {
-    checkCognitoSession();
-  }
   
-  // Auth context value
+  // Auth context value - using the improved auth service
   const authContext = {
-    signIn: (username, password) => {
-      return new Promise((resolve, reject) => {
-        const authDetails = new AuthenticationDetails({
-          Username: username,
-          Password: password
-        });
-        
-        const cognitoUser = new CognitoUser({
-          Username: username,
-          Pool: userPool
-        });
-        
-        cognitoUser.authenticateUser(authDetails, {
-          onSuccess: (result) => {
-            setUser(cognitoUser);
-            setIsAuthenticated(true);
-            resolve(result);
-          },
-          onFailure: (err) => {
-            reject(err);
-          }
-        });
-      });
-    },
-    signOut: () => {
-      if (user) {
-        user.signOut();
-        handleLogout();
+    signIn: async (username, password) => {
+      try {
+        const result = await AuthService.signIn(username, password);
+        setUser(await AuthService.getCurrentUserData());
+        setIsAuthenticated(true);
+        return result;
+      } catch (error) {
+        throw error;
       }
     },
+    signOut: async () => {
+      await handleLogout();
+    },
     signUp: (username, password, email) => {
-      return new Promise((resolve, reject) => {
-        userPool.signUp(username, password, [
-          { Name: 'email', Value: email }
-        ], null, (err, result) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          resolve(result);
-        });
-      });
+      return AuthService.signUp(username, password, email);
     },
     user,
     handleLogout

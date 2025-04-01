@@ -1,47 +1,159 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Modal } from 'react-native';
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import AppHeader from '../components/AppHeader';
 import { TourContext } from '../../App';
+import { fetchCityPreview } from '../services/api';
 
 const GuestMapScreen = ({ navigation }) => {
   const { tourParams } = useContext(TourContext);
-  const [region, setRegion] = useState({
-    latitude: 37.7749,
-    longitude: -122.4194,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  });
-  
-  const [tourPoints, setTourPoints] = useState([
-    { id: '1', title: 'Golden Gate Bridge', description: 'Iconic suspension bridge', coordinate: { latitude: 37.8199, longitude: -122.4783 } },
-    { id: '2', title: 'Fisherman\'s Wharf', description: 'Popular tourist attraction', coordinate: { latitude: 37.8080, longitude: -122.4177 } },
-    { id: '3', title: 'Alcatraz Island', description: 'Historic federal prison', coordinate: { latitude: 37.8270, longitude: -122.4230 } },
-  ]);
-  
+  const [region, setRegion] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [tourPoints, setTourPoints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [previewModalVisible, setPreviewModalVisible] = useState(true);
+  const mapRef = useRef(null);
+  
+  // Default city for preview mode
+  const defaultCity = 'San Francisco';
+
+  // Get user's location and fetch city preview data on component mount
+  useEffect(() => {
+    (async () => {
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          // If location permission is denied, use default city
+          setError('Using default city (San Francisco) - location permission denied');
+          await fetchCityPreviewData(defaultCity);
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        
+        const { latitude, longitude } = location.coords;
+        setUserLocation({ latitude, longitude });
+        
+        // Set initial map region
+        const newRegion = {
+          latitude,
+          longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        };
+        setRegion(newRegion);
+
+        // In preview mode, we'll still use the default city
+        // but center the map at the user's location
+        await fetchCityPreviewData(defaultCity);
+      } catch (err) {
+        console.error('Error getting location:', err);
+        setError('Using default city - ' + err.message);
+        await fetchCityPreviewData(defaultCity);
+      }
+    })();
+  }, []);
+
+  // Effect to update tour points when tour parameters change
+  useEffect(() => {
+    if (tourParams) {
+      console.log('Tour parameters updated:', tourParams);
+      fetchCityPreviewData(defaultCity);
+    }
+  }, [tourParams]);
+
+  // Fetch city preview data
+  const fetchCityPreviewData = async (city) => {
+    try {
+      setLoading(true);
+      const tourType = tourParams?.category || 'history';
+      
+      const data = await fetchCityPreview(city, tourType);
+      
+      if (data && data.places) {
+        // Transform the places data to match the expected format for markers
+        const transformedPlaces = data.places.map((place, index) => ({
+          id: place.place_id || String(index),
+          title: place.name,
+          description: place.vicinity || place.description || '',
+          coordinate: {
+            latitude: place.location.lat,
+            longitude: place.location.lng
+          },
+          // Keep the original data for detailed view
+          originalData: place
+        }));
+        
+        setTourPoints(transformedPlaces);
+      } else {
+        // If no places are found, set empty array
+        setTourPoints([]);
+      }
+    } catch (err) {
+      console.error('Error fetching places:', err);
+      setError('Error fetching places: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Center the map on the user's location
+  const centerOnUser = () => {
+    if (userLocation && mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      });
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <AppHeader navigation={navigation} title="TensorTours Preview" />
       <View style={styles.mapContainer}>
-        <MapView
-          style={styles.map}
-          initialRegion={region}
-          onRegionChangeComplete={setRegion}
-        >
-          {tourPoints.map((point) => (
-            <Marker
-              key={point.id}
-              coordinate={point.coordinate}
-              title={point.title}
-              description={point.description}
-              onCalloutPress={() => navigation.navigate('Audio', { tourId: point.id })}
-            />
-          ))}
-        </MapView>
+        {region ? (
+          <MapView
+            ref={mapRef}
+            style={styles.map}
+            initialRegion={region}
+            onRegionChangeComplete={setRegion}
+            showsUserLocation
+            showsMyLocationButton={false}
+          >
+            {tourPoints.map((point) => (
+              <Marker
+                key={point.id}
+                coordinate={point.coordinate}
+                title={point.title}
+                description={point.description}
+                onCalloutPress={() => navigation.navigate('Audio', { place: point.originalData })}
+              />
+            ))}
+          </MapView>
+        ) : (
+          <View style={[styles.map, styles.loadingContainer]}>
+            <ActivityIndicator size="large" color="#FF5722" />
+            <Text style={styles.loadingText}>Loading map...</Text>
+          </View>
+        )}
+        
+        {/* User location button */}
+        {region && (
+          <TouchableOpacity
+            style={styles.userLocationButton}
+            onPress={centerOnUser}
+          >
+            <Ionicons name="locate" size={24} color="#FF5722" />
+          </TouchableOpacity>
+        )}
         
         {/* Preview Mode Button */}
         <TouchableOpacity 
@@ -51,6 +163,13 @@ const GuestMapScreen = ({ navigation }) => {
           <Text style={styles.previewButtonText}>Preview Mode</Text>
           <Ionicons name="help-circle" size={16} color="white" style={styles.buttonIcon} />
         </TouchableOpacity>
+        
+        {/* Error message */}
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
       </View>
       
       {/* Bottom Info Panel with Tour Selection Button */}
@@ -181,6 +300,42 @@ const styles = StyleSheet.create({
   },
   buttonIcon: {
     marginLeft: 5,
+  },
+  userLocationButton: {
+    position: 'absolute',
+    bottom: 80,
+    right: 15,
+    backgroundColor: 'white',
+    padding: 12,
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(255, 0, 0, 0.7)',
+    padding: 10,
+    borderRadius: 5,
+  },
+  errorText: {
+    color: 'white',
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,

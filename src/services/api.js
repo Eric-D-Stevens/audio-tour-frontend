@@ -17,14 +17,20 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
 
     // Add authentication token if required
     if (requiresAuth) {
+      // First try to get token from our storage
       const token = await getAuthToken();
+      
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        // For API Gateway with Cognito User Pools Authorizer
+        headers['Authorization'] = token;
+        console.log(`Using stored auth token, length: ${token.length}`);
       } else {
+        console.log('No authentication token available');
         throw new Error('Authentication required');
       }
     }
 
+    console.log(`Sending request to: ${API_BASE_URL}${endpoint}`);
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
@@ -33,9 +39,22 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
     // Handle response errors
     if (!response.ok) {
       const errorText = await response.text();
+      console.log(`API error response (${response.status}):`, errorText);
+      
+      // For 401 errors, try to provide more helpful information
+      if (response.status === 401) {
+        console.log('Authentication error detected. Token may be invalid or expired.');
+        // Attempt to refresh the token on auth errors
+        if (requiresAuth) {
+          // Clear stored tokens to force a fresh login on next attempt
+          const { signOut } = await import('./auth');
+          await signOut();
+        }
+      }
+      
       try {
         const errorJson = JSON.parse(errorText);
-        throw new Error(errorJson.error || `Request failed with status ${response.status}`);
+        throw new Error(errorJson.message || errorJson.error || `Request failed with status ${response.status}`);
       } catch (e) {
         throw new Error(`Request failed with status ${response.status}: ${errorText}`);
       }
@@ -60,7 +79,7 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
  */
 export const fetchNearbyPlaces = async (lat, lng, radius = 500, tourType = 'history') => {
   const endpoint = `/places?lat=${lat}&lng=${lng}&radius=${radius}&tour_type=${tourType}`;
-  return apiRequest(endpoint, { method: 'GET' }, true);
+  return apiRequest(endpoint, { method: 'GET' }, true); // This endpoint requires authentication
 };
 
 /**

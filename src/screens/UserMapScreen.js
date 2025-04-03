@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import AppHeader from '../components/AppHeader';
+import MiniAudioPlayer from '../components/MiniAudioPlayer';
 import { TourContext, AuthContext } from '../../App';
 import { fetchNearbyPlaces } from '../services/api';
 
@@ -217,13 +218,9 @@ const UserMapScreen = ({ navigation }) => {
       
       {/* Bottom Info Panel with Tour Selection Button */}
       <View style={styles.infoPanel}>
-        <View style={styles.infoPanelContent}>
-          <Text style={styles.infoPanelTitle}>Explore Tour Points</Text>
-          <Text style={styles.infoPanelText}>
-            {tourParams ? `${tourParams.category} tour (${tourParams.duration} min)` : 'Tap on markers to view available audio tours'}
-          </Text>
+        <View style={styles.leftControls}>
+          <MiniAudioPlayer />
         </View>
-        
         <TouchableOpacity 
           style={styles.tourButton}
           onPress={() => navigation.navigate('TourParameters')}
@@ -280,52 +277,49 @@ const styles = StyleSheet.create({
   },
   infoPanel: {
     backgroundColor: 'white',
-    padding: 15,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
-    shadowRadius: 5,
+    shadowRadius: 4,
     elevation: 5,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    minHeight: 52,
   },
-  infoPanelContent: {
+  leftControls: {
     flex: 1,
-  },
-  infoPanelTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#333',
-  },
-  infoPanelText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  tourButton: {
-    backgroundColor: '#FF5722',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
   },
+  tourButton: {
+    backgroundColor: '#FF5722',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
   tourButtonText: {
     color: 'white',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginRight: 5,
+    fontSize: 12,
+    fontWeight: '500',
+    marginRight: 4,
   },
   buttonIcon: {
     marginLeft: 5,
   },
+  bottomContainer: {
+    backgroundColor: 'transparent',
+  },
   userLocationButton: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 100,
     right: 15,
     backgroundColor: 'white',
     padding: 12,

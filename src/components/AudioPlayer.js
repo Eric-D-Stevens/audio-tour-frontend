@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Audio } from 'expo-av';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchAudioTour } from '../services/api';
+import audioManager from '../services/audioManager';
 
 const AudioPlayer = ({ placeId, tourType = 'history' }) => {
-  const [sound, setSound] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,28 +17,14 @@ const AudioPlayer = ({ placeId, tourType = 'history' }) => {
   useEffect(() => {
     loadAudioData();
     
+    // Subscribe to audio status updates
+    const unsubscribe = audioManager.subscribe(onPlaybackStatusUpdate);
+    
     // Cleanup function
     return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
+      unsubscribe();
     };
   }, [placeId, tourType]);
-
-  // Position update interval
-  useEffect(() => {
-    let interval;
-    
-    if (isPlaying) {
-      interval = setInterval(updatePosition, 1000);
-    }
-    
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [isPlaying, sound]);
 
   // Load audio data from API
   const loadAudioData = async () => {
@@ -52,7 +37,16 @@ const AudioPlayer = ({ placeId, tourType = 'history' }) => {
       setAudioData(data);
       
       // Load the audio file
-      await loadAudio(data.audio_url);
+      const placeName = typeof data.place_details?.name === 'object'
+        ? data.place_details?.name?.text
+        : data.place_details?.name;
+      await audioManager.loadAudio(data.audio_url, placeId, placeName);
+      
+      // Get initial status
+      const status = await audioManager.getStatus();
+      if (status) {
+        onPlaybackStatusUpdate(status);
+      }
       
     } catch (err) {
       setError('Failed to load audio tour: ' + err.message);
@@ -61,73 +55,16 @@ const AudioPlayer = ({ placeId, tourType = 'history' }) => {
     }
   };
 
-  // Load and set up audio file
-  const loadAudio = async (uri) => {
-    try {
-      // Unload any existing sound
-      if (sound) {
-        await sound.unloadAsync();
-      }
-      
-      // Configure audio mode
-      await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
-        shouldDuckAndroid: true,
-      });
-      
-      // Load the sound file
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri },
-        { shouldPlay: false },
-        onPlaybackStatusUpdate
-      );
-      
-      setSound(newSound);
-    } catch (err) {
-      setError('Failed to load audio file: ' + err.message);
-    }
-  };
-
   // Handle playback status updates
   const onPlaybackStatusUpdate = (status) => {
     if (status.isLoaded) {
       setDuration(status.durationMillis || 0);
       setPosition(status.positionMillis || 0);
+      setIsPlaying(status.isPlaying || false);
       
       if (status.didJustFinish) {
         setIsPlaying(false);
       }
-    }
-  };
-
-  // Update the current position
-  const updatePosition = async () => {
-    if (sound) {
-      const status = await sound.getStatusAsync();
-      if (status.isLoaded) {
-        setPosition(status.positionMillis);
-      }
-    }
-  };
-
-  // Toggle play/pause
-  const togglePlayPause = async () => {
-    if (sound) {
-      if (isPlaying) {
-        await sound.pauseAsync();
-      } else {
-        await sound.playAsync();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  // Seek to a specific position
-  const seekTo = async (value) => {
-    if (sound) {
-      await sound.setPositionAsync(value);
-      setPosition(value);
     }
   };
 
@@ -142,32 +79,58 @@ const AudioPlayer = ({ placeId, tourType = 'history' }) => {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // Toggle play/pause
+  const togglePlayPause = async () => {
+    if (isPlaying) {
+      await audioManager.pause();
+    } else {
+      await audioManager.play();
+    }
+  };
+
+  // Seek to a specific position
+  const seekTo = async (value) => {
+    await audioManager.seekTo(value);
+  };
+
   // Restart audio
   const restart = async () => {
-    if (sound) {
-      await sound.setPositionAsync(0);
-      await sound.playAsync();
-      setIsPlaying(true);
-    }
+    await audioManager.seekTo(0);
+    await audioManager.play();
   };
 
   // Forward 10 seconds
   const forward = async () => {
-    if (sound) {
-      const newPosition = Math.min(position + 10000, duration);
-      await sound.setPositionAsync(newPosition);
-      setPosition(newPosition);
-    }
+    const newPosition = Math.min(position + 10000, duration);
+    await audioManager.seekTo(newPosition);
   };
 
   // Rewind 10 seconds
   const rewind = async () => {
-    if (sound) {
-      const newPosition = Math.max(0, position - 10000);
-      await sound.setPositionAsync(newPosition);
-      setPosition(newPosition);
-    }
+    const newPosition = Math.max(0, position - 10000);
+    await audioManager.seekTo(newPosition);
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.loadingText}>Loading audio tour...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Ionicons name="alert-circle" size={50} color="#FF6B6B" />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={loadAudioData}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -212,9 +175,9 @@ const AudioPlayer = ({ placeId, tourType = 'history' }) => {
               maximumValue={duration}
               value={position}
               onSlidingComplete={seekTo}
-              minimumTrackTintColor="#007AFF"
+              minimumTrackTintColor="#FF5722"
               maximumTrackTintColor="#CCCCCC"
-              thumbTintColor="#007AFF"
+              thumbTintColor="#FF5722"
             />
             <Text style={styles.timeText}>{formatTime(duration)}</Text>
           </View>
@@ -228,7 +191,10 @@ const AudioPlayer = ({ placeId, tourType = 'history' }) => {
               <Ionicons name="play-back" size={24} color="#555" />
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.playButton} onPress={togglePlayPause}>
+            <TouchableOpacity 
+              style={[styles.playButton, { backgroundColor: '#FF5722' }]} 
+              onPress={togglePlayPause}
+            >
               <Ionicons 
                 name={isPlaying ? "pause" : "play"} 
                 size={32} 

@@ -53,12 +53,12 @@ const AudioScreen = ({ route, navigation }) => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Loading Tour...</Text>
+          <Text style={styles.headerTitle}>Generating Tour...</Text>
         </View>
         
         <View style={styles.errorContainer}>
           <ActivityIndicator size="large" color="#FF5722" />
-          <Text style={styles.errorText}>Loading tour information...</Text>
+          <Text style={styles.errorText}>Generating AI-powered tour from scratch, this may take a few seconds...</Text>
         </View>
       </SafeAreaView>
     );

@@ -115,7 +115,7 @@ const AudioPlayer = ({ placeId, tourType = 'history' }) => {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading audio tour...</Text>
+        <Text style={styles.loadingText}>Generating AI-powered tour from scratch, this may take a few seconds...</Text>
       </View>
     );
   }
@@ -136,7 +136,7 @@ const AudioPlayer = ({ placeId, tourType = 'history' }) => {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading audio tour...</Text>
+        <Text style={styles.loadingText}>Generating AI-powered tour from scratch, this may take a few seconds...</Text>
       </View>
     );
   }

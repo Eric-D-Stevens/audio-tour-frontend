@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,8 +15,10 @@ const UserMapScreen = ({ navigation }) => {
   const [userLocation, setUserLocation] = useState(null);
   const [tourPoints, setTourPoints] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingPoints, setLoadingPoints] = useState(false);
   const [error, setError] = useState(null);
   const mapRef = useRef(null);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   // Get user's location and fetch nearby places on component mount
   useEffect(() => {
@@ -59,6 +61,17 @@ const UserMapScreen = ({ navigation }) => {
   useEffect(() => {
     if (tourParams && userLocation) {
       console.log('Tour parameters updated:', tourParams);
+      // Clear existing points and show loading animation
+      setTourPoints([]);
+      setLoadingPoints(true);
+      
+      // Fade in the loading overlay
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+      
       fetchNearbyPlacesData(userLocation.latitude, userLocation.longitude);
     }
   }, [tourParams, userLocation]);
@@ -72,6 +85,7 @@ const UserMapScreen = ({ navigation }) => {
       // Use the new distance parameter instead of radius
       const distance = tourParams?.distance || 2000;
       
+      console.log(`Fetching places with params: ${tourType}, ${distance}m`);
       const data = await fetchNearbyPlaces(latitude, longitude, distance, tourType);
       
       if (data && data.places) {
@@ -88,16 +102,44 @@ const UserMapScreen = ({ navigation }) => {
           originalData: place
         }));
         
+        // Set the tour points with the new data
         setTourPoints(transformedPlaces);
+        console.log(`Loaded ${transformedPlaces.length} places`);
       } else {
         // If no places are found, set empty array
         setTourPoints([]);
+        console.log('No places found');
       }
     } catch (err) {
       console.error('Error fetching places:', err);
       setError('Error fetching places: ' + err.message);
     } finally {
       setLoading(false);
+      setLoadingPoints(false);
+      
+      // Fade out the loading overlay
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        // Force map refresh by slightly adjusting the region
+        if (mapRef.current && region) {
+          const refreshRegion = {
+            ...region,
+            // Slightly adjust latitude to force refresh
+            latitude: region.latitude + (region.latitudeDelta * 0.0001)
+          };
+          mapRef.current.animateToRegion(refreshRegion, 100);
+          
+          // Return to original position after a short delay
+          setTimeout(() => {
+            if (mapRef.current) {
+              mapRef.current.animateToRegion(region, 100);
+            }
+          }, 150);
+        }
+      });
     }
   };
 
@@ -141,6 +183,18 @@ const UserMapScreen = ({ navigation }) => {
             <ActivityIndicator size="large" color="#FF5722" />
             <Text style={styles.loadingText}>Loading map...</Text>
           </View>
+        )}
+        
+        {/* Loading overlay for tour points */}
+        {loadingPoints && (
+          <Animated.View 
+            style={[styles.loadingOverlay, { opacity: fadeAnim }]}
+          >
+            <View style={styles.loadingContent}>
+              <ActivityIndicator size="large" color="#FF5722" />
+              <Text style={styles.loadingOverlayText}>Loading tour points...</Text>
+            </View>
+          </Animated.View>
         )}
         
         {/* User location button */}
@@ -194,6 +248,35 @@ const styles = StyleSheet.create({
   map: {
     width: Dimensions.get('window').width,
     height: '100%',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  loadingOverlayText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
   },
   infoPanel: {
     backgroundColor: 'white',

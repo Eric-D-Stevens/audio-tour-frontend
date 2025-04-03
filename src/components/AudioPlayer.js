@@ -195,7 +195,12 @@ const AudioPlayer = ({ placeId, tourType = 'history' }) => {
       {audioData && (
         <>
           <View style={styles.headerContainer}>
-            <Text style={styles.title}>{audioData.place_details?.name || 'Audio Tour'}</Text>
+            <Text style={styles.title}>
+              {typeof audioData.place_details?.name === 'object' 
+                ? audioData.place_details?.name?.text || 'Audio Tour'
+                : audioData.place_details?.name || 'Audio Tour'
+              }
+            </Text>
             {audioData.cached && <Text style={styles.cachedBadge}>Cached</Text>}
           </View>
           

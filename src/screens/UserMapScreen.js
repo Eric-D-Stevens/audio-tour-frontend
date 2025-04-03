@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Callout } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -173,10 +173,21 @@ const UserMapScreen = ({ navigation }) => {
               <Marker
                 key={point.id}
                 coordinate={point.coordinate}
-                title={point.title}
-                description={point.description}
-                onCalloutPress={() => navigation.navigate('Audio', { place: point.originalData })}
-              />
+              >
+                <Callout
+                  onPress={() => navigation.navigate('Audio', { place: point.originalData })}
+                  style={styles.callout}
+                >
+                  <View style={styles.calloutContent}>
+                    <Text style={styles.calloutTitle}>{point.title}</Text>
+                    <Text style={styles.calloutDescription}>{point.description}</Text>
+                    <View style={styles.calloutButton}>
+                      <Text style={styles.calloutButtonText}>Start Audio Tour</Text>
+                      <Ionicons name="play" size={16} color="white" style={styles.calloutButtonIcon} />
+                    </View>
+                  </View>
+                </Callout>
+              </Marker>
             ))}
           </MapView>
         ) : (
@@ -352,7 +363,45 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'white',
     textAlign: 'center',
-  }
+  },
+  callout: {
+    width: 200,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 0,
+  },
+  calloutContent: {
+    padding: 12,
+  },
+  calloutTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  calloutDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  calloutButton: {
+    backgroundColor: '#FF5722',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 8,
+    borderRadius: 6,
+    marginTop: 4,
+  },
+  calloutButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+    marginRight: 4,
+  },
+  calloutButtonIcon: {
+    marginLeft: 4,
+  },
 });
 
 export default UserMapScreen;

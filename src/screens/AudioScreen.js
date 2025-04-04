@@ -1,23 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AudioPlayer from '../components/AudioPlayer';
+import { fetchAudioTour } from '../services/api';
 
 const AudioScreen = ({ route, navigation }) => {
   const { place } = route.params || {};
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [error, setError] = useState(null);
   
-  // Check if we have valid place data
+  // Fetch audio tour data including photos
   useEffect(() => {
-    if (!place || !place.place_id) {
-      setError('Invalid place data. Please try again.');
-      setLoading(false);
-    } else {
-      setLoading(false);
-    }
+    const fetchData = async () => {
+      if (!place || !place.place_id) {
+        setError('Invalid place data. Please try again.');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await fetchAudioTour(place.place_id, place.tourType || 'history');
+        setPhotos(response.photos || []);
+      } catch (error) {
+        console.error('Error fetching audio tour:', error);
+        setError('Failed to load audio tour data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [place]);
   
   // If there's an error, show error screen
@@ -45,25 +61,6 @@ const AudioScreen = ({ route, navigation }) => {
     );
   }
 
-  // If still loading initial data
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#333" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Generating Tour...</Text>
-        </View>
-        
-        <View style={styles.errorContainer}>
-          <ActivityIndicator size="large" color="#FF5722" />
-          <Text style={styles.errorText}>Generating AI-powered tour from scratch, this may take a few seconds...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -74,24 +71,55 @@ const AudioScreen = ({ route, navigation }) => {
           <Text style={styles.headerTitle}>{place.name}</Text>
         </View>
         
-        {place.photos && place.photos[0] ? (
+        {photos && photos.length > 0 ? (
           <View>
-            <Image 
-              source={{ uri: place.photos[0] }}
-              style={styles.placeImage}
-              onLoadStart={() => setImageLoading(true)}
-              onLoadEnd={() => setImageLoading(false)}
-            />
-            {imageLoading && (
-              <View style={styles.imageLoadingOverlay}>
-                <ActivityIndicator size="large" color="#ffffff" />
-              </View>
-            )}
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              style={styles.imageSlider}
+              onScroll={(event) => {
+                const slideSize = event.nativeEvent.layoutMeasurement.width;
+                const offset = event.nativeEvent.contentOffset.x;
+                const index = Math.floor(offset / slideSize);
+                setCurrentImageIndex(index);
+              }}
+              scrollEventThrottle={200}
+            >
+              {photos.map((photoUrl, index) => (
+                <View key={index} style={styles.imageSlide}>
+                  <Image
+                    source={{ uri: photoUrl }}
+                    style={styles.placeImage}
+                    onLoadStart={() => setImageLoading(true)}
+                    onLoadEnd={() => setImageLoading(false)}
+                  />
+
+                </View>
+              ))}
+            </ScrollView>
+            <View style={styles.paginationDots}>
+              {photos.map((_, index) => (
+                <View
+                  key={index}
+                  style={[styles.paginationDot, index === currentImageIndex && styles.paginationDotActive]}
+                />
+              ))}
+            </View>
           </View>
         ) : (
           <View style={styles.imagePlaceholder}>
-            <Ionicons name="image-outline" size={50} color="#999" />
-            <Text style={styles.imagePlaceholderText}>No Image Available</Text>
+            {loading ? (
+              <View style={styles.styledLoadingContainer}>
+                <ActivityIndicator size="large" color="#FF5722" />
+                <Text style={styles.styledLoadingText}>Generating AI-powered tour...</Text>
+              </View>
+            ) : (
+              <>
+                <Ionicons name="image-outline" size={50} color="#999" />
+                <Text style={styles.imagePlaceholderText}>No Image Available</Text>
+              </>
+            )}
           </View>
         )}
         
@@ -102,7 +130,7 @@ const AudioScreen = ({ route, navigation }) => {
           <View style={styles.audioPlayerContainer}>
             <AudioPlayer 
               placeId={place.place_id} 
-              tourType={place.tour_type || 'history'} 
+              tourType={place.tourType || 'history'} 
             />
           </View>
         </View>
@@ -112,6 +140,47 @@ const AudioScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  styledLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: 'rgba(255, 87, 34, 0.1)',
+    borderRadius: 12,
+    minHeight: 200,
+  },
+  styledLoadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#FF5722',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  imageSlider: {
+    height: 250,
+    width: '100%',
+  },
+  imageSlide: {
+    width: Dimensions.get('window').width,
+    height: 250,
+  },
+  paginationDots: {
+    flexDirection: 'row',
+    position: 'absolute',
+    bottom: 10,
+    alignSelf: 'center',
+    justifyContent: 'center',
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    marginHorizontal: 4,
+  },
+  paginationDotActive: {
+    backgroundColor: '#ffffff',
+  },
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
@@ -147,16 +216,7 @@ const styles = StyleSheet.create({
     width: '100%',
     resizeMode: 'cover',
   },
-  imageLoadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 250,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+
   contentContainer: {
     padding: 20,
   },

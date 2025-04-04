@@ -35,9 +35,9 @@ const AuthScreen = ({ navigation }) => {
         // Sign up
         await auth.signUp(email, password, email);
         
-        // In a real app, you might want to handle confirmation flow
-        setIsLogin(true);
-        setErrorMessage('Account created! Please sign in.');
+        // Navigate to email verification screen
+        navigation.navigate('EmailVerification', { email });
+        return;
       }
     } catch (error) {
       console.log('Auth error:', error);

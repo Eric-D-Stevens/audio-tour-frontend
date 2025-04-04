@@ -12,6 +12,7 @@ import UserMapScreen from './src/screens/UserMapScreen';
 import GuestMapScreen from './src/screens/GuestMapScreen';
 import AudioScreen from './src/screens/AudioScreen';
 import AuthScreen from './src/screens/AuthScreen';
+import EmailVerificationScreen from './src/screens/EmailVerificationScreen';
 import TourParametersScreen from './src/screens/TourParametersScreen';
 import GuestTourParametersScreen from './src/screens/GuestTourParametersScreen';
 
@@ -133,6 +134,12 @@ export default function App() {
     signUp: (username, password, email) => {
       return AuthService.signUp(username, password, email);
     },
+    confirmSignUp: (username, code) => {
+      return AuthService.confirmSignUp(username, code);
+    },
+    resendConfirmationCode: (username) => {
+      return AuthService.resendConfirmationCode(username);
+    },
     user,
     handleLogout
   };
@@ -179,6 +186,18 @@ export default function App() {
                     name="Auth" 
                     component={AuthScreen} 
                     options={{ headerShown: false }}
+                  />
+                  <Stack.Screen 
+                    name="EmailVerification" 
+                    component={EmailVerificationScreen} 
+                    options={{
+                      headerShown: true,
+                      title: 'Verify Email',
+                      headerStyle: {
+                        backgroundColor: '#FF5722',
+                      },
+                      headerTintColor: '#fff',
+                    }}
                   />
                   <Stack.Screen 
                     name="Map" 

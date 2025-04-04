@@ -287,3 +287,50 @@ export const signUp = (username, password, email) => {
     });
   });
 };
+
+/**
+ * Confirm a user's sign up with their verification code
+ * @param {string} username - User's username or email
+ * @param {string} code - Verification code
+ * @returns {Promise<Object>} - Confirmation result
+ */
+export const confirmSignUp = (username, code) => {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = new CognitoUser({
+      Username: username,
+      Pool: userPool
+    });
+
+    cognitoUser.confirmRegistration(code, true, (err, result) => {
+      if (err) {
+        console.error('Error during confirmation:', err);
+        reject(err);
+        return;
+      }
+      resolve(result);
+    });
+  });
+};
+
+/**
+ * Resend confirmation code to user's email
+ * @param {string} username - User's username or email
+ * @returns {Promise<string>} - Success message
+ */
+export const resendConfirmationCode = (username) => {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = new CognitoUser({
+      Username: username,
+      Pool: userPool
+    });
+
+    cognitoUser.resendConfirmationCode((err, result) => {
+      if (err) {
+        console.error('Error resending code:', err);
+        reject(err);
+        return;
+      }
+      resolve(result);
+    });
+  });
+};

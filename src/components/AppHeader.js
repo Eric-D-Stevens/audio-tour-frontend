@@ -89,7 +89,7 @@ const AppHeader = ({ navigation, title }) => {
                   style={styles.menuItem}
                   onPress={() => {
                     closeMenu();
-                    handleLogout();
+                    handleLogout(navigation);
                   }}
                 >
                   <Ionicons name="log-out-outline" size={20} color="#FF5722" />

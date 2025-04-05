@@ -106,11 +106,19 @@ export default function App() {
   };
 
   // Handle logout using the auth service
-  const handleLogout = async () => {
+  const handleLogout = async (navigation) => {
     try {
       await AuthService.signOut();
       setIsAuthenticated(false);
       setUser(null);
+      
+      // If navigation is provided, explicitly navigate to Auth screen
+      if (navigation) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Auth' }]
+        });
+      }
     } catch (error) {
       console.error('Error during logout:', error);
     }
@@ -166,7 +174,7 @@ export default function App() {
                   <Stack.Screen 
                     name="Map" 
                     component={UserMapScreen} 
-                    options={{ headerShown: false }}
+                    options={{ headerShown: false, unmountOnBlur: true }}
                   />
                   <Stack.Screen 
                     name="TourParameters" 

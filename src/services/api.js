@@ -84,11 +84,12 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
  * @param {number} lng - Longitude
  * @param {number} radius - Search radius in meters
  * @param {string} tourType - Type of tour (history, cultural, etc.)
+ * @param {number} maxResults - Maximum number of places to return
  * @returns {Promise<Object>} - Places data
  */
-export const fetchNearbyPlaces = async (lat, lng, radius = 500, tourType = 'history') => {
+export const fetchNearbyPlaces = async (lat, lng, radius = 500, tourType = 'history', maxResults = 5) => {
   console.log(`fetchNearbyPlaces called with: lat=${lat}, lng=${lng}, radius=${radius}, tourType=${tourType}`);
-  const endpoint = `/places?lat=${lat}&lng=${lng}&radius=${radius}&tour_type=${tourType}`;
+  const endpoint = `/places?lat=${lat}&lng=${lng}&radius=${radius}&tour_type=${tourType}&max_results=${maxResults}`;
   const startTime = Date.now();
   
   try {

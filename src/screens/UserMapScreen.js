@@ -83,11 +83,12 @@ const UserMapScreen = ({ navigation }) => {
       setLoading(true);
       // Ensure the tour type is lowercase to match backend expectations
       const tourType = (tourParams?.category || 'history').toLowerCase();
-      // Use the new distance parameter instead of radius
+      // Get distance and number of attractions from tour parameters
       const distance = tourParams?.distance || 2000;
+      const maxResults = tourParams?.numAttractions || 5;
       
-      console.log(`Fetching places with params: ${tourType}, ${distance}m`);
-      const data = await fetchNearbyPlaces(latitude, longitude, distance, tourType);
+      console.log(`Fetching places with params: ${tourType}, ${distance}m, max results: ${maxResults}`);
+      const data = await fetchNearbyPlaces(latitude, longitude, distance, tourType, maxResults);
       
       if (data && data.places) {
         // Transform the places data to match the expected format for markers

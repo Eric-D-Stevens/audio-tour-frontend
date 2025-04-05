@@ -18,6 +18,11 @@ const TourParametersScreen = ({ navigation }) => {
   const [distance, setDistance] = useState(tourParams.distance || 2000);
   const [numAttractions, setNumAttractions] = useState(tourParams.numAttractions || 5);
   const [category, setCategory] = useState(tourParams.category || 'history');
+
+  // Convert meters to miles for display
+  const metersToMiles = (meters) => (meters * 0.000621371).toFixed(1);
+  // Convert miles to meters for API
+  const milesToMeters = (miles) => Math.round(miles / 0.000621371);
   
   // Tour types that match the backend geolocation lambda
   const categories = [
@@ -55,11 +60,11 @@ const TourParametersScreen = ({ navigation }) => {
       <ScrollView style={styles.content}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Search Distance</Text>
-          <Text style={styles.paramValue}>{(distance / 1000).toFixed(1)} km</Text>
+          <Text style={styles.paramValue}>{metersToMiles(distance)} miles</Text>
           <Slider
             style={styles.slider}
             minimumValue={500}
-            maximumValue={5000}
+            maximumValue={8000}
             step={500}
             value={distance}
             onValueChange={setDistance}
@@ -68,8 +73,8 @@ const TourParametersScreen = ({ navigation }) => {
             thumbTintColor="#FF5722"
           />
           <View style={styles.sliderLabels}>
-            <Text style={styles.sliderLabel}>0.5 km</Text>
-            <Text style={styles.sliderLabel}>5 km</Text>
+            <Text style={styles.sliderLabel}>0.3 miles</Text>
+            <Text style={styles.sliderLabel}>5 miles</Text>
           </View>
         </View>
         

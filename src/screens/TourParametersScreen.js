@@ -6,7 +6,7 @@ import {
   TouchableOpacity, 
   ScrollView
 } from 'react-native';
-import Slider from '@react-native-community/slider';
+import { Slider } from '@miblanchard/react-native-slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { TourContext } from '../../App';
@@ -62,15 +62,23 @@ const TourParametersScreen = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Search Distance</Text>
           <Text style={styles.paramValue}>{metersToMiles(distance)} miles</Text>
           <Slider
-            style={styles.slider}
+            value={distance}
+            onValueChange={value => setDistance(value[0])}
             minimumValue={500}
             maximumValue={8000}
             step={500}
-            value={distance}
-            onValueChange={setDistance}
+            containerStyle={styles.slider}
+            trackStyle={{ backgroundColor: '#D3D3D3' }}
             minimumTrackTintColor="#FF5722"
-            maximumTrackTintColor="#D3D3D3"
             thumbTintColor="#FF5722"
+            renderThumbComponent={() => (
+              <View style={{
+                width: 20,
+                height: 20,
+                borderRadius: 10,
+                backgroundColor: '#FF5722',
+              }} />
+            )}
           />
           <View style={styles.sliderLabels}>
             <Text style={styles.sliderLabel}>0.3 miles</Text>
@@ -82,15 +90,23 @@ const TourParametersScreen = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Number of Attractions</Text>
           <Text style={styles.paramValue}>{numAttractions} places</Text>
           <Slider
-            style={styles.slider}
+            value={numAttractions}
+            onValueChange={value => setNumAttractions(value[0])}
             minimumValue={3}
             maximumValue={20}
             step={1}
-            value={numAttractions}
-            onValueChange={setNumAttractions}
+            containerStyle={styles.slider}
+            trackStyle={{ backgroundColor: '#D3D3D3' }}
             minimumTrackTintColor="#FF5722"
-            maximumTrackTintColor="#D3D3D3"
             thumbTintColor="#FF5722"
+            renderThumbComponent={() => (
+              <View style={{
+                width: 20,
+                height: 20,
+                borderRadius: 10,
+                backgroundColor: '#FF5722',
+              }} />
+            )}
           />
           <View style={styles.sliderLabels}>
             <Text style={styles.sliderLabel}>3 places</Text>

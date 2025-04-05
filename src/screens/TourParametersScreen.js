@@ -15,9 +15,9 @@ const TourParametersScreen = ({ navigation }) => {
   const { tourParams, setTourParams } = useContext(TourContext);
   
   // Local state to track changes before saving
-  const [distance, setDistance] = useState(tourParams.distance || 2000);
-  const [numAttractions, setNumAttractions] = useState(tourParams.numAttractions || 5);
-  const [category, setCategory] = useState(tourParams.category || 'history');
+  const [distance, setDistance] = useState(tourParams.distance ?? 2000);
+  const [numAttractions, setNumAttractions] = useState(tourParams.numAttractions ?? 5);
+  const [category, setCategory] = useState(tourParams.category ?? 'history');
 
   // Convert meters to miles for display
   const metersToMiles = (meters) => (meters * 0.000621371).toFixed(1);
@@ -84,7 +84,7 @@ const TourParametersScreen = ({ navigation }) => {
           <Slider
             style={styles.slider}
             minimumValue={3}
-            maximumValue={15}
+            maximumValue={20}
             step={1}
             value={numAttractions}
             onValueChange={setNumAttractions}
@@ -94,7 +94,7 @@ const TourParametersScreen = ({ navigation }) => {
           />
           <View style={styles.sliderLabels}>
             <Text style={styles.sliderLabel}>3 places</Text>
-            <Text style={styles.sliderLabel}>15 places</Text>
+            <Text style={styles.sliderLabel}>20 places</Text>
           </View>
         </View>
         

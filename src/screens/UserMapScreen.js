@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated, Platform } from 'react-native';
+import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
+import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import AppHeader from '../components/AppHeader';
 import MiniAudioPlayer from '../components/MiniAudioPlayer';
+import GoogleAttributionFooter from '../components/GoogleAttributionFooter';
 import { TourContext, AuthContext } from '../../App';
 import { fetchNearbyPlaces } from '../services/api';
 
@@ -164,6 +166,7 @@ const UserMapScreen = ({ navigation }) => {
         {region ? (
           <MapView
             ref={mapRef}
+            provider={Constants.appOwnership === 'expo' ? undefined : PROVIDER_GOOGLE}
             style={styles.map}
             initialRegion={region}
             onRegionChangeComplete={setRegion}
@@ -231,7 +234,7 @@ const UserMapScreen = ({ navigation }) => {
       {/* Bottom Info Panel with Tour Selection Button */}
       <View style={styles.infoPanel}>
         <View style={styles.leftControls}>
-          <MiniAudioPlayer />
+          {isAuthenticated && <MiniAudioPlayer />}
         </View>
         <TouchableOpacity 
           style={styles.tourButton}
@@ -241,6 +244,7 @@ const UserMapScreen = ({ navigation }) => {
           <Ionicons name="settings-outline" size={16} color="white" style={styles.buttonIcon} />
         </TouchableOpacity>
       </View>
+      <GoogleAttributionFooter />
     </SafeAreaView>
   );
 };

@@ -16,7 +16,7 @@ const TourParametersScreen = ({ navigation }) => {
   
   // Local state to track changes before saving
   const [distance, setDistance] = useState(tourParams.distance ?? 2000);
-  const [numAttractions, setNumAttractions] = useState(tourParams.numAttractions ?? 5);
+  const [numAttractions, setNumAttractions] = useState(tourParams.numAttractions ?? 15);
   const [category, setCategory] = useState(tourParams.category ?? 'history');
 
   // Convert meters to miles for display

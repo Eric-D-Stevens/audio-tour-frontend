@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated, Platform } from 'react-native';
+import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
+import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -85,7 +86,7 @@ const UserMapScreen = ({ navigation }) => {
       const tourType = (tourParams?.category || 'history').toLowerCase();
       // Get distance and number of attractions from tour parameters
       const distance = tourParams?.distance || 2000;
-      const maxResults = tourParams?.numAttractions || 5;
+      const maxResults = tourParams?.numAttractions || 15;
       
       console.log(`Fetching places with params: ${tourType}, ${distance}m, max results: ${maxResults}`);
       const data = await fetchNearbyPlaces(latitude, longitude, distance, tourType, maxResults);
@@ -164,6 +165,7 @@ const UserMapScreen = ({ navigation }) => {
         {region ? (
           <MapView
             ref={mapRef}
+            provider={Constants.appOwnership === 'expo' ? undefined : PROVIDER_GOOGLE}
             style={styles.map}
             initialRegion={region}
             onRegionChangeComplete={setRegion}
@@ -231,7 +233,7 @@ const UserMapScreen = ({ navigation }) => {
       {/* Bottom Info Panel with Tour Selection Button */}
       <View style={styles.infoPanel}>
         <View style={styles.leftControls}>
-          <MiniAudioPlayer />
+          {isAuthenticated && <MiniAudioPlayer />}
         </View>
         <TouchableOpacity 
           style={styles.tourButton}

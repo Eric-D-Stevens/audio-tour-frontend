@@ -164,12 +164,27 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar style="auto" />
+    <SafeAreaProvider style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      <StatusBar style="dark" backgroundColor="#FFFFFF" />
       <AuthContext.Provider value={authContext}>
         <TourContext.Provider value={{ tourParams, setTourParams }}>
-          <NavigationContainer>
-            <Stack.Navigator>
+          <NavigationContainer 
+            style={{ flex: 1, backgroundColor: '#FFFFFF' }}
+            theme={{
+              colors: {
+                background: '#FFFFFF',
+                card: '#FFFFFF',
+                border: '#FFFFFF',
+                primary: '#FF5722',
+                text: '#000000'
+              }
+            }}>
+            <Stack.Navigator
+              screenOptions={{
+                cardStyle: { backgroundColor: '#FFFFFF' },
+                headerStyle: { backgroundColor: '#FFFFFF' },
+                contentStyle: { backgroundColor: '#FFFFFF' }
+              }}>
               {isAuthenticated ? (
                 // Authenticated user flow
                 <>

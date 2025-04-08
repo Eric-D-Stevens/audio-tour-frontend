@@ -25,7 +25,12 @@ export default {
       },
       config: {
         googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS
-      }
+      },
+      statusBar: {
+        backgroundColor: "#FFFFFF",
+        style: "dark"
+      },
+      backgroundColor: "#FFFFFF"
     },
     android: {
       adaptiveIcon: {

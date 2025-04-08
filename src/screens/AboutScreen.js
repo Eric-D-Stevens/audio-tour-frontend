@@ -10,7 +10,7 @@ const AboutScreen = ({ navigation }) => {
       <ScrollView style={styles.content}>
         <View style={styles.logoContainer}>
           <Image 
-            source={require('../../assets/icon.png')} 
+            source={require('../../assets/EarthAudio.jpg')} 
             style={styles.logo}
             resizeMode="contain"
           />

@@ -12,7 +12,7 @@ const AboutScreen = ({ navigation }) => {
           <Image 
             source={require('../../assets/EarthAudio.jpg')} 
             style={styles.logo}
-            resizeMode="contain"
+            resizeMode="cover"
           />
         </View>
         
@@ -68,10 +68,12 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     marginVertical: 20,
+    width: '100%',
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: '100%',
+    height: 200,
+    borderRadius: 10,
   },
   heading: {
     fontSize: 24,

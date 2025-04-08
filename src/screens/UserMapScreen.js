@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated, Platform } from 'react-native';
 import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
 import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import { getDistance } from 'geolib';
 import AppHeader from '../components/AppHeader';
 import MiniAudioPlayer from '../components/MiniAudioPlayer';
 import { TourContext, AuthContext } from '../../App';
@@ -15,6 +16,9 @@ const UserMapScreen = ({ navigation }) => {
   const { isAuthenticated } = useContext(AuthContext);
   const [region, setRegion] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
+  const [lastFetchLocation, setLastFetchLocation] = useState(null);
+  const [locationSubscription, setLocationSubscription] = useState(null);
+  const DISTANCE_THRESHOLD = 300; // 300 meters threshold for refetching
   const [tourPoints, setTourPoints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingPoints, setLoadingPoints] = useState(false);
@@ -22,41 +26,96 @@ const UserMapScreen = ({ navigation }) => {
   const mapRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
+  // Calculate distance between two coordinates
+  const calculateDistance = (coords1, coords2) => {
+    if (!coords1 || !coords2) return 0;
+    return getDistance(
+      { latitude: coords1.latitude, longitude: coords1.longitude },
+      { latitude: coords2.latitude, longitude: coords2.longitude }
+    );
+  };
+
+  // Start location tracking
+  const startLocationTracking = useCallback(async () => {
+    try {
+      // Request permissions first
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setError('Permission to access location was denied');
+        setLoading(false);
+        return;
+      }
+
+      // Get initial location
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      
+      const { latitude, longitude } = location.coords;
+      const initialUserLocation = { latitude, longitude };
+      setUserLocation(initialUserLocation);
+      setLastFetchLocation(initialUserLocation);
+      
+      // Set initial map region
+      const newRegion = {
+        latitude,
+        longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      };
+      setRegion(newRegion);
+
+      // Fetch nearby places based on location and tour parameters
+      await fetchNearbyPlacesData(latitude, longitude);
+
+      // Start watching position
+      const subscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Balanced,
+          distanceInterval: 10, // Update every 10 meters (for UI updates)
+          timeInterval: 5000,   // Or every 5 seconds
+        },
+        (newLocation) => {
+          const newUserLocation = {
+            latitude: newLocation.coords.latitude,
+            longitude: newLocation.coords.longitude,
+          };
+          
+          // Update user location
+          setUserLocation(newUserLocation);
+          
+          // Check if we've moved far enough to fetch new data
+          if (lastFetchLocation) {
+            const distance = calculateDistance(lastFetchLocation, newUserLocation);
+            console.log(`Distance moved: ${distance} meters`);
+            
+            if (distance >= DISTANCE_THRESHOLD) {
+              console.log(`Moved ${distance} meters - fetching new points`);
+              fetchNearbyPlacesData(newUserLocation.latitude, newUserLocation.longitude);
+              setLastFetchLocation(newUserLocation);
+            }
+          }
+        }
+      );
+      
+      setLocationSubscription(subscription);
+    } catch (err) {
+      console.error('Error setting up location tracking:', err);
+      setError('Error setting up location tracking: ' + err.message);
+      setLoading(false);
+    }
+  }, [lastFetchLocation]);
+
   // Get user's location and fetch nearby places on component mount
   useEffect(() => {
-    (async () => {
-      try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setError('Permission to access location was denied');
-          setLoading(false);
-          return;
-        }
-
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        
-        const { latitude, longitude } = location.coords;
-        setUserLocation({ latitude, longitude });
-        
-        // Set initial map region
-        const newRegion = {
-          latitude,
-          longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        };
-        setRegion(newRegion);
-
-        // Fetch nearby places based on location and tour parameters
-        await fetchNearbyPlacesData(latitude, longitude);
-      } catch (err) {
-        console.error('Error getting location:', err);
-        setError('Error getting location: ' + err.message);
-        setLoading(false);
+    startLocationTracking();
+    
+    // Cleanup function to remove location subscription
+    return () => {
+      if (locationSubscription) {
+        locationSubscription.remove();
       }
-    })();
+    };
   }, []);
 
   // Effect to update tour points when tour parameters change
@@ -75,11 +134,15 @@ const UserMapScreen = ({ navigation }) => {
       }).start();
       
       fetchNearbyPlacesData(userLocation.latitude, userLocation.longitude);
+      // Reset last fetch location to current location when tour parameters change
+      setLastFetchLocation(userLocation);
     }
-  }, [tourParams, userLocation]);
+  }, [tourParams]);
 
   // Fetch nearby places based on location and tour parameters
   const fetchNearbyPlacesData = async (latitude, longitude) => {
+    // Update last fetch location
+    setLastFetchLocation({ latitude, longitude });
     try {
       setLoading(true);
       // Ensure the tour type is lowercase to match backend expectations

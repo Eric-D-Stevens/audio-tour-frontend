@@ -8,6 +8,13 @@
       "developmentClient": true,
       "distribution": "internal"
     },
+    "standalone": {
+      "distribution": "internal",
+      "developmentClient": false,
+      "ios": {
+        "resourceClass": "m1-medium"
+      }
+    },
     "preview": {
       "distribution": "internal",
       "android": {

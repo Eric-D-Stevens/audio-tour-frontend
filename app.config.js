@@ -18,6 +18,9 @@ export default {
       supportsTablet: true,
       bundleIdentifier: "com.tensortours.app",
       buildNumber: "1",
+      infoPlist: {
+        NSLocationWhenInUseUsageDescription: "TensorTours needs access to your location."
+      },
       config: {
         googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS
       }

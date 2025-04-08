@@ -10,6 +10,7 @@ import AppHeader from '../components/AppHeader';
 import MiniAudioPlayer from '../components/MiniAudioPlayer';
 import { TourContext, AuthContext } from '../../App';
 import { fetchNearbyPlaces } from '../services/api';
+import audioManager from '../services/audioManager';
 
 const UserMapScreen = ({ navigation }) => {
   const { tourParams } = useContext(TourContext);
@@ -241,7 +242,19 @@ const UserMapScreen = ({ navigation }) => {
                 coordinate={point.coordinate}
               >
                 <Callout
-                  onPress={() => navigation.navigate('Audio', { place: point.originalData })}
+                  onPress={() => {
+                    // Navigate to Audio screen
+                    navigation.navigate('Audio', { place: point.originalData });
+                    
+                    // Also load the audio in the mini player if available
+                    if (point.originalData && point.originalData.audio_url) {
+                      audioManager.loadAudio(
+                        point.originalData.audio_url,
+                        point.originalData.place_id,
+                        point.originalData.name
+                      );
+                    }
+                  }}
                   style={styles.callout}
                 >
                   <View style={styles.calloutContent}>
@@ -296,7 +309,7 @@ const UserMapScreen = ({ navigation }) => {
       {/* Bottom Info Panel with Tour Selection Button */}
       <View style={styles.infoPanel}>
         <View style={styles.leftControls}>
-          {isAuthenticated && <MiniAudioPlayer />}
+          <MiniAudioPlayer />
         </View>
         <TouchableOpacity 
           style={styles.tourButton}

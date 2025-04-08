@@ -223,7 +223,7 @@ const UserMapScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <AppHeader navigation={navigation} title="TensorTours Map" />
       <View style={styles.mapContainer}>
         {region ? (
@@ -367,7 +367,8 @@ const styles = StyleSheet.create({
   },
   infoPanel: {
     backgroundColor: 'white',
-    paddingVertical: 8,
+    paddingTop: 8,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 8, // Extra padding for iOS home indicator
     paddingHorizontal: 12,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,

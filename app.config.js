@@ -21,7 +21,7 @@ export default {
       infoPlist: {
         NSLocationWhenInUseUsageDescription: "TensorTours needs access to your location.",
         ITSAppUsesNonExemptEncryption: false,
-        UIBackgroundModes: ["audio"]
+        UIBackgroundModes: ["audio"],
       },
       config: {
         googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS

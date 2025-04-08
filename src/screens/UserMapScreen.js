@@ -7,7 +7,6 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import AppHeader from '../components/AppHeader';
 import MiniAudioPlayer from '../components/MiniAudioPlayer';
-import GoogleAttributionFooter from '../components/GoogleAttributionFooter';
 import { TourContext, AuthContext } from '../../App';
 import { fetchNearbyPlaces } from '../services/api';
 
@@ -87,7 +86,7 @@ const UserMapScreen = ({ navigation }) => {
       const tourType = (tourParams?.category || 'history').toLowerCase();
       // Get distance and number of attractions from tour parameters
       const distance = tourParams?.distance || 2000;
-      const maxResults = tourParams?.numAttractions || 5;
+      const maxResults = tourParams?.numAttractions || 15;
       
       console.log(`Fetching places with params: ${tourType}, ${distance}m, max results: ${maxResults}`);
       const data = await fetchNearbyPlaces(latitude, longitude, distance, tourType, maxResults);
@@ -244,7 +243,6 @@ const UserMapScreen = ({ navigation }) => {
           <Ionicons name="settings-outline" size={16} color="white" style={styles.buttonIcon} />
         </TouchableOpacity>
       </View>
-      <GoogleAttributionFooter />
     </SafeAreaView>
   );
 };

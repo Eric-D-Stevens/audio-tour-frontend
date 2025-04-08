@@ -15,6 +15,8 @@ import AuthScreen from './src/screens/AuthScreen';
 import EmailVerificationScreen from './src/screens/EmailVerificationScreen';
 import TourParametersScreen from './src/screens/TourParametersScreen';
 import GuestTourParametersScreen from './src/screens/GuestTourParametersScreen';
+import AboutScreen from './src/screens/AboutScreen';
+import ContactScreen from './src/screens/ContactScreen';
 
 // Import auth services
 import * as AuthService from './src/services/auth';
@@ -178,6 +180,16 @@ export default function App() {
                     component={AudioScreen} 
                     options={{ headerShown: false }}
                   />
+                  <Stack.Screen 
+                    name="About" 
+                    component={AboutScreen} 
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen 
+                    name="Contact" 
+                    component={ContactScreen} 
+                    options={{ headerShown: false }}
+                  />
                 </>
               ) : (
                 // Authentication flow
@@ -212,6 +224,16 @@ export default function App() {
                   <Stack.Screen 
                     name="Audio" 
                     component={AudioScreen} 
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen 
+                    name="About" 
+                    component={AboutScreen} 
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen 
+                    name="Contact" 
+                    component={ContactScreen} 
                     options={{ headerShown: false }}
                   />
                 </>

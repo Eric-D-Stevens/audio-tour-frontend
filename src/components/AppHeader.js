@@ -73,13 +73,21 @@ const AppHeader = ({ navigation, title }) => {
                 <Ionicons name="map-outline" size={20} color="#333" />
                 <Text style={styles.menuItemText}>Map</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity 
                 style={styles.menuItem}
-                onPress={() => handleNavigate('Audio')}
+                onPress={() => handleNavigate('About')}
               >
-                <Ionicons name="headset-outline" size={20} color="#333" />
-                <Text style={styles.menuItemText}>Audio Tours</Text>
+                <Ionicons name="information-circle-outline" size={20} color="#333" />
+                <Text style={styles.menuItemText}>About</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.menuItem}
+                onPress={() => handleNavigate('Contact')}
+              >
+                <Ionicons name="mail-outline" size={20} color="#333" />
+                <Text style={styles.menuItemText}>Contact Us</Text>
               </TouchableOpacity>
               
               <View style={styles.divider} />

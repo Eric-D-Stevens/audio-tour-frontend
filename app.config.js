@@ -20,7 +20,8 @@ export default {
       buildNumber: "1",
       infoPlist: {
         NSLocationWhenInUseUsageDescription: "TensorTours needs access to your location.",
-        ITSAppUsesNonExemptEncryption: false
+        ITSAppUsesNonExemptEncryption: false,
+        UIBackgroundModes: ["audio"]
       },
       config: {
         googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS
@@ -37,7 +38,9 @@ export default {
         googleMaps: {
           apiKey: process.env.GOOGLE_MAPS_API_KEY_ANDROID
         }
-      }
+      },
+      permissions: ["android.permission.FOREGROUND_SERVICE"],
+      softwareKeyboardLayoutMode: "pan"
     },
     web: {
       favicon: "./assets/favicon.png"

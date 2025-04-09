@@ -70,86 +70,135 @@ const GuestAudioPlayer = ({ placeId, tourType = 'history' }) => {
     }
   };
 
-  // Play/pause toggle
-  const togglePlayback = async () => {
-    try {
-      if (isPlaying) {
-        await audioManager.pause();
-      } else {
-        await audioManager.play();
-      }
-    } catch (err) {
-      console.error('Error toggling playback:', err);
-      setError('Failed to control playback');
+  // Toggle play/pause
+  const togglePlayPause = async () => {
+    if (isPlaying) {
+      await audioManager.pause();
+    } else {
+      await audioManager.play();
     }
   };
 
-  // Seek to position
+  // Seek to a specific position
   const seekTo = async (value) => {
-    try {
-      await audioManager.seekTo(value);
-    } catch (err) {
-      console.error('Error seeking:', err);
-      setError('Failed to seek');
-    }
+    await audioManager.seekTo(value);
   };
 
-  // Format time in mm:ss
+  // Restart audio
+  const restart = async () => {
+    await audioManager.seekTo(0);
+    await audioManager.play();
+  };
+
+  // Forward 10 seconds
+  const forward = async () => {
+    const newPosition = Math.min(position + 10000, duration);
+    await audioManager.seekTo(newPosition);
+  };
+
+  // Rewind 10 seconds
+  const rewind = async () => {
+    const newPosition = Math.max(0, position - 10000);
+    await audioManager.seekTo(newPosition);
+  };
+
+
+
+  // Format time in MM:SS
   const formatTime = (millis) => {
+    if (!millis) return '00:00';
+    
     const totalSeconds = Math.floor(millis / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#FF5722" />
+        <Text style={styles.loadingText}>Generating AI-powered tour from scratch, this may take a few seconds...</Text>
+      </View>
+    );
+  }
 
   if (error) {
     return (
       <View style={styles.container}>
+        <Ionicons name="alert-circle" size={50} color="#FF6B6B" />
         <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={loadAudioData}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {isLoading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
+      {audioData && (
         <>
-          <View style={styles.controls}>
-            <TouchableOpacity onPress={togglePlayback} style={styles.playButton}>
-              <Ionicons 
-                name={isPlaying ? "pause" : "play"} 
-                size={32} 
-                color="#333" 
-              />
-            </TouchableOpacity>
-            
-            <View style={styles.sliderContainer}>
-              <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={duration}
-                value={position}
-                onSlidingComplete={seekTo}
-                minimumTrackTintColor="#333"
-                maximumTrackTintColor="#999"
-                thumbTintColor="#333"
-              />
-              <View style={styles.timeContainer}>
-                <Text style={styles.timeText}>{formatTime(position)}</Text>
-                <Text style={styles.timeText}>{formatTime(duration)}</Text>
-              </View>
+          <View style={styles.headerContainer}>
+            <View style={styles.titleContainer}>
+              <Text 
+                style={styles.title} 
+                numberOfLines={1} 
+                ellipsizeMode="tail"
+              >
+                {typeof audioData.place_details?.name === 'object' 
+                  ? audioData.place_details?.name?.text || 'Audio Tour'
+                  : audioData.place_details?.name || 'Audio Tour'
+                }
+              </Text>
+              <Text style={styles.previewBadge}>Preview</Text>
             </View>
           </View>
           
-          {audioData?.place_details?.name && (
-            <Text style={styles.title}>
-              {typeof audioData.place_details.name === 'object'
-                ? audioData.place_details.name.text
-                : audioData.place_details.name}
-            </Text>
-          )}
+          <View style={styles.sliderContainer}>
+            <Text style={styles.timeText}>{formatTime(position)}</Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={duration}
+              value={position}
+              onSlidingComplete={seekTo}
+              minimumTrackTintColor="#FF5722"
+              maximumTrackTintColor="#CCCCCC"
+              thumbTintColor="#FF5722"
+            />
+            <Text style={styles.timeText}>{formatTime(duration)}</Text>
+          </View>
+          
+          <View style={styles.controlsContainer}>
+            <TouchableOpacity style={styles.controlButton} onPress={restart}>
+              <Ionicons name="refresh" size={24} color="#555" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.controlButton} onPress={rewind}>
+              <Ionicons name="play-back" size={24} color="#555" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.playButton, { backgroundColor: '#FF5722' }]} 
+              onPress={togglePlayPause}
+            >
+              <Ionicons 
+                name={isPlaying ? "pause" : "play"} 
+                size={32} 
+                color="white" 
+              />
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.controlButton} onPress={forward}>
+              <Ionicons name="play-forward" size={24} color="#555" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.controlButton} onPress={() => {/* Volume control */}}>
+              <Ionicons name="volume-medium" size={24} color="#555" />
+            </TouchableOpacity>
+          </View>
         </>
       )}
     </View>
@@ -160,52 +209,96 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: 'white',
     borderRadius: 10,
-    padding: 15,
-    marginHorizontal: 10,
-    marginBottom: 20,
+    padding: 20,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  controls: {
+  headerContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
-  },
-  playButton: {
-    marginRight: 15,
-  },
-  sliderContainer: {
-    flex: 1,
-  },
-  slider: {
-    width: '100%',
-    height: 40,
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: -10,
-  },
-  timeText: {
-    color: '#666',
-    fontSize: 12,
+    justifyContent: 'center',
+    maxWidth: '100%',
   },
   title: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    marginTop: 5,
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    flexShrink: 1,
+    marginRight: 5,
+  },
+  previewBadge: {
+    fontSize: 12,
+    backgroundColor: 'rgba(255, 87, 34, 0.1)',
+    color: '#FF5722',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 10,
+  },
+  sliderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 20,
+  },
+  slider: {
+    flex: 1,
+    height: 40,
+    marginHorizontal: 10,
+  },
+  timeText: {
+    fontSize: 12,
+    color: '#555',
+    width: 45,
+    textAlign: 'center',
+  },
+  controlsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  controlButton: {
+    padding: 10,
+  },
+  playButton: {
+    backgroundColor: '#FF5722',
+    borderRadius: 30,
+    width: 60,
+    height: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#555',
   },
   errorText: {
-    color: '#FF5722',
+    marginTop: 10,
+    color: '#FF6B6B',
     textAlign: 'center',
-    marginVertical: 10,
+  },
+  retryButton: {
+    marginTop: 20,
+    backgroundColor: '#FF5722',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 

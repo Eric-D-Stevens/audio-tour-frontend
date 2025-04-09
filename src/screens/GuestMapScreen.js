@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Modal, ActivityIndicator, Animated } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Modal, ActivityIndicator, Animated, Platform } from 'react-native';
 import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -303,6 +303,18 @@ const GuestMapScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  mapContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  map: {
+    width: Dimensions.get('window').width,
+    height: '100%',
+  },
   loadingOverlay: {
     position: 'absolute',
     top: 0,
@@ -331,10 +343,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   callout: {
     width: 250,
@@ -371,14 +379,6 @@ const styles = StyleSheet.create({
   calloutButtonIcon: {
     marginLeft: 2,
   },
-  mapContainer: {
-    flex: 1,
-    position: 'relative',
-  },
-  map: {
-    width: Dimensions.get('window').width,
-    height: '100%',
-  },
   previewButton: {
     position: 'absolute',
     top: 15,
@@ -396,14 +396,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   infoPanel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: 'white',
-    padding: 15,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    paddingTop: 8,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 8, // Extra padding for iOS home indicator
+    paddingHorizontal: 12,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
-    shadowRadius: 5,
+    shadowRadius: 4,
     elevation: 5,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -456,7 +462,7 @@ const styles = StyleSheet.create({
   loadingContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#FFFFFF',
   },
   loadingText: {
     marginTop: 10,

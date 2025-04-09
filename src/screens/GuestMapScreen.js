@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Modal, ActivityIndicator, Animated } from 'react-native';
 import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +18,7 @@ const GuestMapScreen = ({ navigation }) => {
   const [error, setError] = useState(null);
   const [previewModalVisible, setPreviewModalVisible] = useState(true);
   const mapRef = useRef(null);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   // Initialize with selected city or default city on component mount
   useEffect(() => {
@@ -85,6 +86,23 @@ const GuestMapScreen = ({ navigation }) => {
   }, [guestTourParams]);
 
   // Fetch city preview data
+  // Effect to handle loading animation
+  useEffect(() => {
+    if (loading) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [loading]);
+
   const fetchCityPreviewData = async (city) => {
     try {
       setLoading(true);
@@ -138,6 +156,14 @@ const GuestMapScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <AppHeader navigation={navigation} title="TensorTours Preview" />
       <View style={styles.mapContainer}>
+        {loading && (
+          <Animated.View style={[styles.loadingOverlay, { opacity: fadeAnim }]}>
+            <View style={styles.loadingContent}>
+              <ActivityIndicator size="large" color="#FF5722" />
+              <Text style={styles.loadingOverlayText}>Loading places...</Text>
+            </View>
+          </Animated.View>
+        )}
         {region ? (
           <MapView
             ref={mapRef}
@@ -277,6 +303,35 @@ const GuestMapScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  loadingOverlayText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',

@@ -259,7 +259,13 @@ const UserMapScreen = ({ navigation }) => {
                 <Callout
                   onPress={() => {
                     // Navigate to Audio screen
-                    navigation.navigate('Audio', { place: point.originalData });
+                    // Include the tour type from TourContext when navigating to AudioScreen
+                    const placeWithTourType = {
+                      ...point.originalData,
+                      tourType: tourParams.category // Add the current tour type from context
+                    };
+                    console.log(`Navigating to AudioScreen with tour type: ${tourParams.category}`);
+                    navigation.navigate('Audio', { place: placeWithTourType });
                     
                     // Also load the audio in the mini player if available
                     if (point.originalData && point.originalData.audio_url) {

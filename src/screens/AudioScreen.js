@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AudioPlayer from '../components/AudioPlayer';
 import { fetchAudioTour } from '../services/api';
+import { TourContext } from '../../App';
 
 const AudioScreen = ({ route, navigation }) => {
   const { place } = route.params || {};
+  const { tourParams } = useContext(TourContext);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
@@ -23,7 +25,18 @@ const AudioScreen = ({ route, navigation }) => {
 
       try {
         setLoading(true);
-        const response = await fetchAudioTour(place.place_id, place.tourType || 'history');
+        // First try to use the tour type passed directly with the place object
+        // If not available, fall back to the tour type from TourContext
+        const tourType = place.tourType || tourParams.category;
+        
+        if (!tourType) {
+          setError('Tour type is required. Please configure tour settings.');
+          setLoading(false);
+          return;
+        }
+        
+        console.log(`Using tour type: ${tourType} for place: ${place.name}`);
+        const response = await fetchAudioTour(place.place_id, tourType);
         setPhotos(response.photos || []);
       } catch (error) {
         console.error('Error fetching audio tour:', error);

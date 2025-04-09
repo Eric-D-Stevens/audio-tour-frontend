@@ -4,6 +4,7 @@ import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../components/AppHeader';
+import MiniAudioPlayer from '../components/MiniAudioPlayer';
 import { TourContext } from '../../App';
 import { fetchCityPreview } from '../services/api';
 import { PRESET_CITIES, getCityById, getDefaultCity } from '../constants/cities';
@@ -249,11 +250,8 @@ const GuestMapScreen = ({ navigation }) => {
       
       {/* Bottom Info Panel with Tour Selection Button */}
       <View style={styles.infoPanel}>
-        <View style={styles.infoPanelContent}>
-          <Text style={styles.infoPanelTitle}>{selectedCity ? selectedCity.name : 'Preview Tour'}</Text>
-          <Text style={styles.infoPanelText}>
-            {guestTourParams ? `${guestTourParams.category} tour in ${selectedCity?.name || 'selected city'}` : 'Explore sample tours in preview mode'}
-          </Text>
+        <View style={styles.leftControls}>
+          <MiniAudioPlayer />
         </View>
         
         <TouchableOpacity 
@@ -405,14 +403,23 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 30 : 8, // Extra padding for iOS home indicator
     paddingHorizontal: 12,
     borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#f8f8f8',
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  leftControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 16,
+  },
+  rightControls: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
   infoPanelContent: {

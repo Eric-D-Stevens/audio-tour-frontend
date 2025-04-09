@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import audioManager from '../services/audioManager';
 
-const MiniAudioPlayer = () => {
+const MiniAudioPlayer = ({ targetScreen = 'Audio' }) => {
   const navigation = useNavigation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [placeName, setPlaceName] = useState('');
@@ -47,7 +47,7 @@ const MiniAudioPlayer = () => {
 
   const navigateToAudioScreen = () => {
     if (audioManager.currentPlaceId) {
-      navigation.navigate('Audio', {
+      navigation.navigate(targetScreen, {
         place: {
           place_id: audioManager.currentPlaceId,
           name: audioManager.currentPlaceName,

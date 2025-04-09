@@ -251,7 +251,7 @@ const GuestMapScreen = ({ navigation }) => {
       {/* Bottom Info Panel with Tour Selection Button */}
       <View style={styles.infoPanel}>
         <View style={styles.leftControls}>
-          <MiniAudioPlayer />
+          <MiniAudioPlayer targetScreen="GuestAudio" />
         </View>
         
         <TouchableOpacity 

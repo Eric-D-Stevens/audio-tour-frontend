@@ -111,6 +111,8 @@ const AudioPlayer = ({ placeId, tourType = 'history' }) => {
     await audioManager.seekTo(newPosition);
   };
 
+
+
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -158,13 +160,19 @@ const AudioPlayer = ({ placeId, tourType = 'history' }) => {
       {audioData && (
         <>
           <View style={styles.headerContainer}>
-            <Text style={styles.title}>
-              {typeof audioData.place_details?.name === 'object' 
-                ? audioData.place_details?.name?.text || 'Audio Tour'
-                : audioData.place_details?.name || 'Audio Tour'
-              }
-            </Text>
-            {audioData.cached && <Text style={styles.cachedBadge}>Cached</Text>}
+            <View style={styles.titleContainer}>
+              <Text 
+                style={styles.title} 
+                numberOfLines={1} 
+                ellipsizeMode="tail"
+              >
+                {typeof audioData.place_details?.name === 'object' 
+                  ? audioData.place_details?.name?.text || 'Audio Tour'
+                  : audioData.place_details?.name || 'Audio Tour'
+                }
+              </Text>
+              {audioData.cached && <Text style={styles.cachedBadge}>Cached</Text>}
+            </View>
           </View>
           
           <View style={styles.sliderContainer}>
@@ -230,15 +238,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    maxWidth: '100%',
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
+    flexShrink: 1,
+    marginRight: 5,
   },
   cachedBadge: {
     fontSize: 12,
@@ -276,7 +292,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   playButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF5722',
     borderRadius: 30,
     width: 60,
     height: 60,
@@ -294,7 +310,7 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     marginTop: 20,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF5722',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 5,

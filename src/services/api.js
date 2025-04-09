@@ -121,7 +121,14 @@ export const fetchCityPreview = async (city, tourType = 'history') => {
     return result;
   } catch (error) {
     console.error(`fetchCityPreview failed after ${Date.now() - startTime}ms:`, error);
-    throw error;
+    
+    // In case of failure, return a fallback empty result structure
+    // This allows the app to continue functioning even if the API is unavailable
+    return {
+      city: city,
+      places: [],
+      error: error.message
+    };
   }
 };
 
@@ -131,7 +138,7 @@ export const fetchCityPreview = async (city, tourType = 'history') => {
  * @param {string} tourType - Type of tour (history, cultural, etc.)
  * @returns {Promise<Object>} - Audio tour data
  */
-export const fetchAudioTour = async (placeId, tourType = 'history') => {
+export const fetchAudioTour = async (placeId, tourType) => {
   console.log(`fetchAudioTour called with: placeId=${placeId}, tourType=${tourType}`);
   const endpoint = `/audio/${placeId}?tourType=${tourType}`;
   const startTime = Date.now();

@@ -5,20 +5,21 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   ScrollView,
-  Modal
+  Modal,
+  Image,
+  FlatList
 } from 'react-native';
-import Slider from '@react-native-community/slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { TourContext } from '../../App';
+import { PRESET_CITIES } from '../constants/cities';
 
 const GuestTourParametersScreen = ({ navigation }) => {
-  const { tourParams, setTourParams } = useContext(TourContext);
+  const { guestTourParams, setGuestTourParams } = useContext(TourContext);
   
   // Local state to track changes before saving
-  const [distance, setDistance] = useState(tourParams.distance || 2000);
-  const [numAttractions, setNumAttractions] = useState(tourParams.numAttractions || 15);
-  const [category, setCategory] = useState(tourParams.category || 'history');
+  const [selectedCity, setSelectedCity] = useState(guestTourParams.cityId || PRESET_CITIES[0].id);
+  const [category, setCategory] = useState(guestTourParams.category || 'history');
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
   
   // Tour types that match the backend geolocation lambda
@@ -31,10 +32,9 @@ const GuestTourParametersScreen = ({ navigation }) => {
   ];
   
   const handleSave = () => {
-    // Update the global tour parameters
-    setTourParams({
-      distance,
-      numAttractions,
+    // Update the global guest tour parameters
+    setGuestTourParams({
+      cityId: selectedCity,
       category
     });
     
@@ -63,43 +63,38 @@ const GuestTourParametersScreen = ({ navigation }) => {
         </View>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Search Distance</Text>
-          <Text style={styles.paramValue}>{(distance / 1000).toFixed(1)} km</Text>
-          <Slider
-            style={styles.slider}
-            minimumValue={500}
-            maximumValue={5000}
-            step={500}
-            value={distance}
-            onValueChange={setDistance}
-            minimumTrackTintColor="#FF5722"
-            maximumTrackTintColor="#D3D3D3"
-            thumbTintColor="#FF5722"
+          <Text style={styles.sectionTitle}>Select a City</Text>
+          <Text style={styles.sectionDescription}>Choose a city to explore in guest mode</Text>
+          
+          <FlatList
+            data={PRESET_CITIES}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item) => item.id}
+            style={styles.cityList}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => setSelectedCity(item.id)}
+                style={[styles.cityCard, selectedCity === item.id && styles.cityCardSelected]}
+              >
+                <Image 
+                  source={{ uri: item.image }}
+                  style={styles.cityImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.cityOverlay} />
+                <View style={styles.cityTextContainer}>
+                  <Text style={styles.cityName}>{item.name}</Text>
+                  <Text style={styles.cityCountry}>{item.country}</Text>
+                </View>
+                {selectedCity === item.id && (
+                  <View style={styles.citySelectedIndicator}>
+                    <Ionicons name="checkmark-circle" size={24} color="#FF5722" />
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
           />
-          <View style={styles.sliderLabels}>
-            <Text style={styles.sliderLabel}>0.5 km</Text>
-            <Text style={styles.sliderLabel}>5 km</Text>
-          </View>
-        </View>
-        
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Number of Attractions</Text>
-          <Text style={styles.paramValue}>{numAttractions} places</Text>
-          <Slider
-            style={styles.slider}
-            minimumValue={3}
-            maximumValue={15}
-            step={1}
-            value={numAttractions}
-            onValueChange={setNumAttractions}
-            minimumTrackTintColor="#FF5722"
-            maximumTrackTintColor="#D3D3D3"
-            thumbTintColor="#FF5722"
-          />
-          <View style={styles.sliderLabels}>
-            <Text style={styles.sliderLabel}>3 places</Text>
-            <Text style={styles.sliderLabel}>15 places</Text>
-          </View>
         </View>
         
         <View style={styles.section}>
@@ -193,6 +188,65 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+  },
+  cityList: {
+    marginTop: 15,
+    marginBottom: 5,
+  },
+  cityCard: {
+    width: 160,
+    height: 200,
+    marginRight: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  cityCardSelected: {
+    borderColor: '#FF5722',
+  },
+  cityImage: {
+    width: '100%',
+    height: '100%',
+  },
+  cityOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  cityTextContainer: {
+    position: 'absolute',
+    bottom: 15,
+    left: 10,
+    right: 10,
+  },
+  cityName: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
+  },
+  cityCountry: {
+    color: 'white',
+    fontSize: 14,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
+  },
+  citySelectedIndicator: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 2,
+  },
+  sectionDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
   },
   header: {
     flexDirection: 'row',

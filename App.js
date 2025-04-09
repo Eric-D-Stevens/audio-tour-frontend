@@ -34,6 +34,7 @@ const Stack = createStackNavigator();
 
 // Storage keys
 const TOUR_PARAMS_KEY = 'tensortours_tour_params';
+const GUEST_TOUR_PARAMS_KEY = 'tensortours_guest_tour_params';
 
 // Dummy component to fix reference error
 const MainTabNavigator = () => null;
@@ -44,17 +45,25 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [initialRoute, setInitialRoute] = useState('Auth');
   const [tourParams, setTourParams] = useState({ distance: 1448, numAttractions: 15, category: 'history' });
+  const [guestTourParams, setGuestTourParams] = useState({ cityId: 'san-francisco', category: 'history' });
 
   // Save tour parameters to AsyncStorage whenever they change
   useEffect(() => {
     saveTourParams();
   }, [tourParams]);
+  
+  // Save guest tour parameters to AsyncStorage whenever they change
+  useEffect(() => {
+    saveGuestTourParams();
+  }, [guestTourParams]);
 
   // Load auth state and tour parameters on app start
   useEffect(() => {
     checkAuthStatus();
     loadTourParams();
+    loadGuestTourParams();
   }, []);
 
   // Check authentication status using the improved auth service
@@ -106,21 +115,41 @@ export default function App() {
       console.error('Error loading tour parameters:', error);
     }
   };
+  
+  // Save guest tour parameters to AsyncStorage
+  const saveGuestTourParams = async () => {
+    try {
+      await AsyncStorage.setItem(GUEST_TOUR_PARAMS_KEY, JSON.stringify(guestTourParams));
+    } catch (error) {
+      console.error('Error saving guest tour parameters:', error);
+    }
+  };
+
+  // Load guest tour parameters from AsyncStorage
+  const loadGuestTourParams = async () => {
+    try {
+      const storedGuestTourParams = await AsyncStorage.getItem(GUEST_TOUR_PARAMS_KEY);
+      if (storedGuestTourParams) {
+        setGuestTourParams(JSON.parse(storedGuestTourParams));
+      }
+    } catch (error) {
+      console.error('Error loading guest tour parameters:', error);
+    }
+  };
 
   // Handle logout using the auth service
-  const handleLogout = async (navigation) => {
+  const handleLogout = async () => {
     try {
+      console.log('Logging out user...');
+      // Sign out and update state
       await AuthService.signOut();
+      
+      // Update authentication state which will trigger navigator change
       setIsAuthenticated(false);
       setUser(null);
+      setInitialRoute('Auth');
       
-      // If navigation is provided, explicitly navigate to Auth screen
-      if (navigation) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Auth' }]
-        });
-      }
+      console.log('User logged out successfully');
     } catch (error) {
       console.error('Error during logout:', error);
     }
@@ -167,7 +196,7 @@ export default function App() {
     <SafeAreaProvider style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <StatusBar style="dark" backgroundColor="#FFFFFF" />
       <AuthContext.Provider value={authContext}>
-        <TourContext.Provider value={{ tourParams, setTourParams }}>
+        <TourContext.Provider value={{ tourParams, setTourParams, guestTourParams, setGuestTourParams }}>
           <NavigationContainer 
             style={{ flex: 1, backgroundColor: '#FFFFFF' }}
             theme={{
@@ -180,6 +209,7 @@ export default function App() {
               }
             }}>
             <Stack.Navigator
+              initialRouteName={initialRoute}
               screenOptions={{
                 cardStyle: { backgroundColor: '#FFFFFF' },
                 headerStyle: { backgroundColor: '#FFFFFF' },
@@ -215,7 +245,7 @@ export default function App() {
                   />
                 </>
               ) : (
-                // Authentication flow
+                // Unauthenticated user flow
                 <>
                   <Stack.Screen 
                     name="Auth" 
@@ -225,19 +255,13 @@ export default function App() {
                   <Stack.Screen 
                     name="EmailVerification" 
                     component={EmailVerificationScreen} 
-                    options={{
-                      headerShown: true,
-                      title: 'Verify Email',
-                      headerStyle: {
-                        backgroundColor: '#FF5722',
-                      },
-                      headerTintColor: '#fff',
-                    }}
+                    options={{ headerShown: false }}
                   />
                   <Stack.Screen 
-                    name="Map" 
+                    name="GuestMap" 
                     component={GuestMapScreen} 
                     options={{ headerShown: false }}
+                    initialParams={{ isGuestMode: true }}
                   />
                   <Stack.Screen 
                     name="GuestTourParameters" 

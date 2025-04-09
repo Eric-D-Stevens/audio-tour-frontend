@@ -48,7 +48,7 @@ const AuthScreen = ({ navigation }) => {
   };
 
   const handleGuestAccess = () => {
-    navigation.navigate('Map');
+    navigation.navigate('GuestMap');
   };
 
   return (
@@ -131,6 +131,7 @@ const AuthScreen = ({ navigation }) => {
 
             <TouchableOpacity style={styles.guestButton} onPress={handleGuestAccess}>
               <Text style={styles.guestButtonText}>Continue as Guest</Text>
+              <Text style={styles.guestButtonSubtext}>Explore preset cities without an account</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -246,16 +247,23 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   guestButton: {
+    backgroundColor: '#FFF3E0',
     borderWidth: 1,
     borderColor: '#FF5722', // Orange color for TensorTours branding
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',
+    marginTop: 5,
   },
   guestButtonText: {
     color: '#FF5722', // Orange color for TensorTours branding
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  guestButtonSubtext: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 5,
   },
 });
 

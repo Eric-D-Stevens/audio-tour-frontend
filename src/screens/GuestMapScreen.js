@@ -1,79 +1,94 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import * as Location from 'expo-location';
 import AppHeader from '../components/AppHeader';
 import { TourContext } from '../../App';
 import { fetchCityPreview } from '../services/api';
+import { PRESET_CITIES, getCityById, getDefaultCity } from '../constants/cities';
 
 const GuestMapScreen = ({ navigation }) => {
-  const { tourParams } = useContext(TourContext);
+  const { guestTourParams } = useContext(TourContext);
   const [region, setRegion] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);
+  const [selectedCity, setSelectedCity] = useState(null);
   const [tourPoints, setTourPoints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [previewModalVisible, setPreviewModalVisible] = useState(true);
   const mapRef = useRef(null);
-  
-  // Default city for preview mode
-  const defaultCity = 'San Francisco';
 
-  // Get user's location and fetch city preview data on component mount
+  // Initialize with selected city or default city on component mount
   useEffect(() => {
     (async () => {
       try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          // If location permission is denied, use default city
-          setError('Using default city (San Francisco) - location permission denied');
-          await fetchCityPreviewData(defaultCity);
-          return;
-        }
-
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
+        // Get the selected city from guest tour params or use default
+        const cityId = guestTourParams?.cityId || getDefaultCity().id;
+        const city = getCityById(cityId);
+        setSelectedCity(city);
         
-        const { latitude, longitude } = location.coords;
-        setUserLocation({ latitude, longitude });
-        
-        // Set initial map region
+        // Set initial map region based on the city coordinates
         const newRegion = {
-          latitude,
-          longitude,
+          latitude: city.coordinate.latitude,
+          longitude: city.coordinate.longitude,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         };
         setRegion(newRegion);
 
-        // In preview mode, we'll still use the default city
-        // but center the map at the user's location
-        await fetchCityPreviewData(defaultCity);
+        // Fetch city preview data
+        await fetchCityPreviewData(city.name);
       } catch (err) {
-        console.error('Error getting location:', err);
-        setError('Using default city - ' + err.message);
-        await fetchCityPreviewData(defaultCity);
+        console.error('Error initializing map:', err);
+        setError('Error loading city data: ' + err.message);
+        
+        // Fallback to default city
+        const defaultCity = getDefaultCity();
+        setSelectedCity(defaultCity);
+        setRegion({
+          latitude: defaultCity.coordinate.latitude,
+          longitude: defaultCity.coordinate.longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        });
+        await fetchCityPreviewData(defaultCity.name);
       }
     })();
   }, []);
 
-  // Effect to update tour points when tour parameters change
+  // Effect to update tour points when guest tour parameters change
   useEffect(() => {
-    if (tourParams) {
-      console.log('Tour parameters updated:', tourParams);
-      fetchCityPreviewData(defaultCity);
+    if (guestTourParams && guestTourParams.cityId) {
+      console.log('Guest tour parameters updated:', guestTourParams);
+      const city = getCityById(guestTourParams.cityId);
+      
+      if (city) {
+        setSelectedCity(city);
+        
+        // Update map region to the new city
+        if (mapRef.current) {
+          const newRegion = {
+            latitude: city.coordinate.latitude,
+            longitude: city.coordinate.longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          };
+          mapRef.current.animateToRegion(newRegion, 500);
+          setRegion(newRegion);
+        }
+        
+        // Fetch city preview data
+        fetchCityPreviewData(city.name);
+      }
     }
-  }, [tourParams]);
+  }, [guestTourParams]);
 
   // Fetch city preview data
   const fetchCityPreviewData = async (city) => {
     try {
       setLoading(true);
       // Ensure the tour type is lowercase to match backend expectations
-      const tourType = (tourParams?.category || 'history').toLowerCase();
+      const tourType = (guestTourParams?.category || 'history').toLowerCase();
       
       const data = await fetchCityPreview(city, tourType);
       
@@ -104,15 +119,17 @@ const GuestMapScreen = ({ navigation }) => {
     }
   };
 
-  // Center the map on the user's location
-  const centerOnUser = () => {
-    if (userLocation && mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
+  // Center the map on the selected city
+  const centerOnCity = () => {
+    if (selectedCity && mapRef.current) {
+      const newRegion = {
+        latitude: selectedCity.coordinate.latitude,
+        longitude: selectedCity.coordinate.longitude,
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
-      });
+      };
+      mapRef.current.animateToRegion(newRegion, 500);
+      setRegion(newRegion);
     }
   };
 
@@ -124,6 +141,7 @@ const GuestMapScreen = ({ navigation }) => {
           <MapView
             ref={mapRef}
             style={styles.map}
+            provider={PROVIDER_GOOGLE}
             initialRegion={region}
             onRegionChangeComplete={setRegion}
             showsUserLocation
@@ -146,13 +164,13 @@ const GuestMapScreen = ({ navigation }) => {
           </View>
         )}
         
-        {/* User location button */}
+        {/* Center on city button */}
         {region && (
           <TouchableOpacity
             style={styles.userLocationButton}
-            onPress={centerOnUser}
+            onPress={centerOnCity}
           >
-            <Ionicons name="locate" size={24} color="#FF5722" />
+            <Ionicons name="location" size={24} color="#FF5722" />
           </TouchableOpacity>
         )}
         
@@ -176,9 +194,9 @@ const GuestMapScreen = ({ navigation }) => {
       {/* Bottom Info Panel with Tour Selection Button */}
       <View style={styles.infoPanel}>
         <View style={styles.infoPanelContent}>
-          <Text style={styles.infoPanelTitle}>Preview Tour</Text>
+          <Text style={styles.infoPanelTitle}>{selectedCity ? selectedCity.name : 'Preview Tour'}</Text>
           <Text style={styles.infoPanelText}>
-            {tourParams ? `${tourParams.category} tour (${tourParams.duration} min)` : 'Explore sample tours in preview mode'}
+            {guestTourParams ? `${guestTourParams.category} tour in ${selectedCity?.name || 'selected city'}` : 'Explore sample tours in preview mode'}
           </Text>
         </View>
         

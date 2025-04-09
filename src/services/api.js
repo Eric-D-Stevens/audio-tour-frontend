@@ -162,7 +162,7 @@ export const fetchAudioTour = async (placeId, tourType) => {
  */
 export const fetchPreviewAudioTour = async (placeId, tourType = 'history') => {
   console.log(`fetchPreviewAudioTour called with: placeId=${placeId}, tourType=${tourType}`);
-  const endpoint = `/preview/audio/${placeId}?tourType=${tourType}`;
+  const endpoint = `/preview/audio/${placeId}?tour_type=${tourType}`;
   const startTime = Date.now();
   
   try {

@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../components/AppHeader';
 import { TourContext } from '../../App';
 import { fetchCityPreview } from '../services/api';
 import { PRESET_CITIES, getCityById, getDefaultCity } from '../constants/cities';
+import audioManager from '../services/audioManager';
 
 const GuestMapScreen = ({ navigation }) => {
   const { guestTourParams } = useContext(TourContext);
@@ -151,10 +152,39 @@ const GuestMapScreen = ({ navigation }) => {
               <Marker
                 key={point.id}
                 coordinate={point.coordinate}
-                title={point.title}
-                description={point.description}
-                onCalloutPress={() => navigation.navigate('Audio', { place: point.originalData })}
-              />
+              >
+                <Callout
+                  onPress={() => {
+                    // Navigate to Audio screen
+                    // Include the tour type from guestTourParams when navigating to AudioScreen
+                    const placeWithTourType = {
+                      ...point.originalData,
+                      tourType: guestTourParams?.category || 'history' // Add the current tour type from context
+                    };
+                    console.log(`Navigating to AudioScreen with tour type: ${guestTourParams?.category || 'history'}`);
+                    navigation.navigate('GuestAudio', { place: placeWithTourType });
+                    
+                    // Also load the audio in the mini player if available
+                    if (point.originalData && point.originalData.audio_url) {
+                      audioManager.loadAudio(
+                        point.originalData.audio_url,
+                        point.originalData.place_id,
+                        point.originalData.name
+                      );
+                    }
+                  }}
+                  style={styles.callout}
+                >
+                  <View style={styles.calloutContent}>
+                    <Text style={styles.calloutTitle}>{point.title}</Text>
+                    <Text style={styles.calloutDescription}>{point.description}</Text>
+                    <View style={styles.calloutButton}>
+                      <Text style={styles.calloutButtonText}>Start Audio Tour</Text>
+                      <Ionicons name="play" size={16} color="white" style={styles.calloutButtonIcon} />
+                    </View>
+                  </View>
+                </Callout>
+              </Marker>
             ))}
           </MapView>
         ) : (
@@ -250,6 +280,41 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+  },
+  callout: {
+    width: 250,
+    padding: 0,
+  },
+  calloutContent: {
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: 'white',
+  },
+  calloutTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  calloutDescription: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 10,
+  },
+  calloutButton: {
+    backgroundColor: '#FF5722',
+    padding: 8,
+    borderRadius: 4,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  calloutButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    marginRight: 5,
+  },
+  calloutButtonIcon: {
+    marginLeft: 2,
   },
   mapContainer: {
     flex: 1,

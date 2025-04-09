@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import UserMapScreen from './src/screens/UserMapScreen';
 import GuestMapScreen from './src/screens/GuestMapScreen';
 import AudioScreen from './src/screens/AudioScreen';
+import GuestAudioScreen from './src/screens/GuestAudioScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import EmailVerificationScreen from './src/screens/EmailVerificationScreen';
 import TourParametersScreen from './src/screens/TourParametersScreen';
@@ -261,7 +262,6 @@ export default function App() {
                     name="GuestMap" 
                     component={GuestMapScreen} 
                     options={{ headerShown: false }}
-                    initialParams={{ isGuestMode: true }}
                   />
                   <Stack.Screen 
                     name="GuestTourParameters" 
@@ -269,8 +269,8 @@ export default function App() {
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen 
-                    name="Audio" 
-                    component={AudioScreen} 
+                    name="GuestAudio" 
+                    component={GuestAudioScreen} 
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen 

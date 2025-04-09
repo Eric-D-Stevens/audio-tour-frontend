@@ -20,6 +20,7 @@ const UserMapScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [loadingPoints, setLoadingPoints] = useState(false);
   const [error, setError] = useState(null);
+  const [needsJiggle, setNeedsJiggle] = useState(false);
   const mapRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -60,6 +61,40 @@ const UserMapScreen = ({ navigation }) => {
     })();
   }, []);
 
+  // Effect to handle map region changes and perform jiggle when needed
+  useEffect(() => {
+    if (region && needsJiggle) {
+      // Only perform the jiggle if we have a region and the flag is set
+      // This ensures the map has finished any centering animations
+      
+      // Small delay to ensure the map is fully settled
+      const jiggleTimeout = setTimeout(() => {
+        if (mapRef.current) {
+          // First, create a very slightly adjusted region (almost imperceptible to user)
+          const refreshRegion = {
+            ...region,
+            latitude: region.latitude + (region.latitudeDelta * 0.0001)
+          };
+          
+          // Apply the tiny change to force a re-render
+          mapRef.current.animateToRegion(refreshRegion, 100);
+          
+          // Then go back to the original region after a short delay
+          setTimeout(() => {
+            if (mapRef.current) {
+              mapRef.current.animateToRegion(region, 100);
+            }
+          }, 150);
+          
+          // Reset the flag
+          setNeedsJiggle(false);
+        }
+      }, 300); // Wait 300ms after region change to ensure map is settled
+      
+      return () => clearTimeout(jiggleTimeout);
+    }
+  }, [region, needsJiggle]);
+
   // Effect to update tour points when tour parameters change
   useEffect(() => {
     if (tourParams) {
@@ -92,12 +127,15 @@ const UserMapScreen = ({ navigation }) => {
           
           // 3. Recenter the map on user's location
           if (mapRef.current) {
-            mapRef.current.animateToRegion({
+            const newRegion = {
               latitude,
               longitude,
               latitudeDelta: 0.0922,
               longitudeDelta: 0.0421,
-            });
+            };
+            mapRef.current.animateToRegion(newRegion);
+            // Update region state to keep it in sync with the map
+            setRegion(newRegion);
           }
           
           // 4. Fetch new places at current location
@@ -115,6 +153,8 @@ const UserMapScreen = ({ navigation }) => {
   const fetchNearbyPlacesData = async (latitude, longitude) => {
     try {
       setLoading(true);
+      setLoadingPoints(true);
+      
       // Ensure the tour type is lowercase to match backend expectations
       const tourType = (tourParams?.category || 'history').toLowerCase();
       // Get distance and number of attractions from tour parameters
@@ -159,22 +199,9 @@ const UserMapScreen = ({ navigation }) => {
         duration: 300,
         useNativeDriver: true,
       }).start(() => {
-        // Force map refresh by slightly adjusting the region
-        if (mapRef.current && region) {
-          const refreshRegion = {
-            ...region,
-            // Slightly adjust latitude to force refresh
-            latitude: region.latitude + (region.latitudeDelta * 0.0001)
-          };
-          mapRef.current.animateToRegion(refreshRegion, 100);
-          
-          // Return to original position after a short delay
-          setTimeout(() => {
-            if (mapRef.current) {
-              mapRef.current.animateToRegion(region, 100);
-            }
-          }, 150);
-        }
+        // Instead of immediately jiggling, set a flag that we need to jiggle
+        // The actual jiggle will happen after the map has finished any ongoing animations
+        setNeedsJiggle(true);
       });
     }
   };
@@ -192,16 +219,18 @@ const UserMapScreen = ({ navigation }) => {
       
       // Animate map to new location
       if (mapRef.current) {
-        mapRef.current.animateToRegion({
+        const newRegion = {
           latitude,
           longitude,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
-        });
+        };
+        mapRef.current.animateToRegion(newRegion);
+        // Also update the region state to keep it in sync
+        setRegion(newRegion);
+      } else {
+        console.warn('Map reference is null, cannot center map');
       }
-      
-      // Fetch new places at current location
-      await fetchNearbyPlacesData(latitude, longitude);
     } catch (err) {
       console.error('Error updating location:', err);
       setError('Error updating location: ' + err.message);

@@ -32,8 +32,8 @@ const GuestMapScreen = ({ navigation }) => {
         const newRegion = {
           latitude: city.coordinate.latitude,
           longitude: city.coordinate.longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
+          latitudeDelta: 0.19,
+          longitudeDelta: 0.09,
         };
         setRegion(newRegion);
 
@@ -49,8 +49,8 @@ const GuestMapScreen = ({ navigation }) => {
         setRegion({
           latitude: defaultCity.coordinate.latitude,
           longitude: defaultCity.coordinate.longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
+          latitudeDelta: 0.19,
+          longitudeDelta: 0.09,
         });
         await fetchCityPreviewData(defaultCity.name);
       }
@@ -71,8 +71,8 @@ const GuestMapScreen = ({ navigation }) => {
           const newRegion = {
             latitude: city.coordinate.latitude,
             longitude: city.coordinate.longitude,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
+            latitudeDelta: 0.19,
+            longitudeDelta: 0.09,
           };
           mapRef.current.animateToRegion(newRegion, 500);
           setRegion(newRegion);

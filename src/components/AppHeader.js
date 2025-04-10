@@ -68,7 +68,7 @@ const AppHeader = ({ navigation, title }) => {
             <View style={styles.menuItems}>
               <TouchableOpacity 
                 style={styles.menuItem}
-                onPress={() => handleNavigate('Map')}
+                onPress={() => handleNavigate(user ? 'Map' : 'GuestMap')}
               >
                 <Ionicons name="map-outline" size={20} color="#333" />
                 <Text style={styles.menuItemText}>Map</Text>

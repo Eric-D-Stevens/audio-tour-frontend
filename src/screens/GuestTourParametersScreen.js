@@ -38,8 +38,8 @@ const GuestTourParametersScreen = ({ navigation }) => {
       category
     });
     
-    // Show sign-in prompt
-    setShowSignInPrompt(true);
+    // Navigate back without showing sign-in prompt
+    navigation.goBack();
   };
   
   return (

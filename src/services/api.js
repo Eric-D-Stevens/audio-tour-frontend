@@ -20,19 +20,28 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
 
     // Add authentication token if required
     if (requiresAuth) {
-      // First try to get token from our storage
-      // The getAuthToken now returns an object with {token, error} structure
-      const authResult = await getAuthToken();
-      
-      if (authResult && authResult.token) {
-        // For API Gateway with Cognito User Pools Authorizer
-        headers['Authorization'] = authResult.token;
-        console.log(`Using stored auth token, length: ${authResult.token.length}`);
-      } else {
-        const errorMsg = authResult?.error || 'No authentication token available';
-        console.log(errorMsg);
-        throw new Error(errorMsg);
+      try {
+        // First try to get token from our storage
+        // The getAuthToken now returns an object with {token, error} structure
+        const authResult = await getAuthToken();
+        
+        if (authResult && authResult.token) {
+          // For API Gateway with Cognito User Pools Authorizer
+          headers['Authorization'] = authResult.token;
+          console.log(`Using stored auth token, length: ${authResult.token.length}`);
+        } else {
+          const errorMsg = authResult?.error || 'No authentication token available';
+          console.log(errorMsg);
+          throw new Error(errorMsg);
+        }
+      } catch (authError) {
+        // For authenticated endpoints, we need to propagate the error
+        console.error('Authentication error:', authError.message);
+        throw new Error(`Authentication required: ${authError.message}`);
       }
+    } else {
+      // For guest endpoints, explicitly log that we're proceeding without auth
+      console.log(`Proceeding with guest access for endpoint: ${endpoint}`);
     }
 
     // Simplified request logging
@@ -49,11 +58,20 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
       // For 401 errors, try to provide more helpful information
       if (response.status === 401) {
         console.log('Authentication error detected. Token may be invalid or expired.');
-        // Attempt to refresh the token on auth errors
+        // Only attempt to refresh the token on auth errors for endpoints that require auth
+        // This avoids unnecessary sign-out operations in guest mode
         if (requiresAuth) {
-          // Clear stored tokens to force a fresh login on next attempt
-          const { signOut } = await import('./auth');
-          await signOut();
+          try {
+            // Clear stored tokens to force a fresh login on next attempt
+            const { signOut } = await import('./auth');
+            await signOut();
+            console.log('User signed out due to authentication error');
+          } catch (authError) {
+            // Prevent auth errors from completely crashing the app
+            console.error('Error during authentication cleanup:', authError);
+          }
+        } else {
+          console.log('Authentication error on non-auth endpoint - continuing in guest mode');
         }
       }
       
@@ -123,6 +141,7 @@ export const fetchCityPreview = async (city, tourType = 'history') => {
   // Create a promise that will be stored and returned for parallel requests
   pendingRequests[cacheKey] = (async () => {
     try {
+      // Guest mode endpoint - explicitly set requiresAuth to false
       const result = await apiRequest(endpoint, { method: 'GET' }, false);
       const duration = Date.now() - now;
       console.log(`City preview for ${city} (${tourType}): ${result.places?.length || 0} places in ${duration}ms`);

@@ -9,16 +9,15 @@ const AboutScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" backgroundColor="#FFFFFF" />
       <AppHeader navigation={navigation} title="About TensorTours" />
-      <ScrollView style={styles.content}>
-        <View style={styles.logoContainer}>
-          <Image 
-            source={require('../../assets/EarthAudio.jpg')} 
-            style={styles.logo}
-            resizeMode="cover"
-          />
-        </View>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Image 
+          source={require('../../assets/EarthAudio.jpg')} 
+          style={styles.logo}
+          resizeMode="cover"
+        />
         
-        <Text style={styles.heading}>About TensorTours</Text>
+        <View style={styles.content}>
+          <Text style={styles.heading}>About TensorTours</Text>
         
         <Text style={styles.paragraph}>
           TensorTours is a location-based audio tour application that helps you discover the hidden 
@@ -26,16 +25,25 @@ const AboutScreen = ({ navigation }) => {
         </Text>
         
         <Text style={styles.paragraph}>
-          Using advanced location technology, TensorTours identifies points of interest near you and 
-          provides engaging audio narratives about their significance, history, and interesting facts.
+          Powered by cutting-edge AI, TensorTours dynamically generates personalized tour content and 
+          delivers it through natural-sounding voices. Our AI creates rich, informative narratives 
+          about each location's history, architecture, and cultural significance in real-time.
         </Text>
         
         <Text style={styles.subheading}>Our Mission</Text>
         
         <Text style={styles.paragraph}>
-          Our mission is to make history, culture, and knowledge accessible to everyone through 
-          immersive audio experiences. We believe that every place has a story to tell, and we're 
-          dedicated to bringing those stories to life.
+          Our mission is to transform how we interact with the world around us. In an era where most of us 
+          are constantly looking down at our screens, disconnected from our surroundings, TensorTours 
+          flips the script—using the very device that often distracts us to actually deepen our connection 
+          with the places we visit.
+        </Text>
+        
+        <Text style={styles.paragraph}>
+          We believe technology should enhance our real-world experiences, not replace them. By delivering 
+          rich, AI-generated audio content about the places around you, we encourage mindful exploration, 
+          helping you look up from your screen and truly see the history, architecture, and culture that 
+          surrounds you every day.
         </Text>
         
         <Text style={styles.subheading}>How It Works</Text>
@@ -53,6 +61,7 @@ const AboutScreen = ({ navigation }) => {
         <View style={styles.footer}>
           <Text style={styles.copyright}>© 2025 TensorTours. All rights reserved.</Text>
         </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -63,19 +72,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  content: {
-    flex: 1,
-    padding: 20,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginVertical: 20,
-    width: '100%',
+  scrollContent: {
+    paddingBottom: 20,
   },
   logo: {
     width: '100%',
-    height: 200,
-    borderRadius: 10,
+    height: 220,
+    marginBottom: 20,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
   },
   heading: {
     fontSize: 24,

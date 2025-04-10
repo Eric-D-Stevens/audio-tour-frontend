@@ -7,11 +7,11 @@ import AppHeader from '../components/AppHeader';
 
 const ContactScreen = ({ navigation }) => {
   const handleEmailPress = () => {
-    Linking.openURL('mailto:support@tensortours.com');
+    Linking.openURL('mailto:support@tensortrix.com');
   };
 
   const handleWebsitePress = () => {
-    Linking.openURL('https://tensortours.com');
+    Linking.openURL('https://tensortrix.com');
   };
 
   return (
@@ -32,7 +32,7 @@ const ContactScreen = ({ navigation }) => {
             <View style={styles.contactTextContainer}>
               <Text style={styles.contactLabel}>Email Us</Text>
               <TouchableOpacity onPress={handleEmailPress}>
-                <Text style={styles.contactValue}>support@tensortours.com</Text>
+                <Text style={styles.contactValue}>support@tensortrix.com</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -44,7 +44,9 @@ const ContactScreen = ({ navigation }) => {
             <View style={styles.contactTextContainer}>
               <Text style={styles.contactLabel}>Website</Text>
               <TouchableOpacity onPress={handleWebsitePress}>
-                <Text style={styles.contactValue}>tensortours.com</Text>
+                <TouchableOpacity onPress={handleWebsitePress}>
+                  <Text style={[styles.contactValue, { textDecorationLine: 'underline' }]}>tensortrix.com</Text>
+                </TouchableOpacity>
               </TouchableOpacity>
             </View>
           </View>
@@ -54,9 +56,7 @@ const ContactScreen = ({ navigation }) => {
           <View style={styles.contactItem}>
             <Ionicons name="location-outline" size={24} color="#FF5722" />
             <View style={styles.contactTextContainer}>
-              <Text style={styles.contactLabel}>Headquarters</Text>
-              <Text style={styles.contactValue}>123 Innovation Way</Text>
-              <Text style={styles.contactValue}>San Francisco, CA 94103</Text>
+              <Text style={styles.contactValue}>Portland, OR 97201</Text>
             </View>
           </View>
         </View>

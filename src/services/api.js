@@ -1,13 +1,8 @@
 import { API_BASE_URL } from '../constants/config';
 import { getAuthToken } from './auth';
 
-// Simple debounce cache to prevent multiple API calls with the same parameters
-const apiCache = {
-  lastCalls: {}, // Store timestamps of last calls
-  responses: {}, // Store responses
-  debounceTime: 2000, // 2 seconds
-  pendingRequests: {} // Track in-flight requests to avoid duplicates
-};
+// Track in-flight requests to prevent duplicates
+const pendingRequests = {};
 
 /**
  * Base API request function with authentication
@@ -119,36 +114,18 @@ export const fetchCityPreview = async (city, tourType = 'history') => {
   const cacheKey = `${city}-${tourType}`;
   const now = Date.now();
   
-  // Check if we've made this call recently
-  if (apiCache.lastCalls[cacheKey]) {
-    const timeSinceLastCall = now - apiCache.lastCalls[cacheKey];
-    
-    // If call was made recently and we have a cached response, use it
-    if (timeSinceLastCall < apiCache.debounceTime && apiCache.responses[cacheKey]) {
-      console.log(`Using cached result for ${city} (${tourType}) - ${timeSinceLastCall}ms since last call`);
-      return apiCache.responses[cacheKey];
-    }
-  }
-  
   // Check if there's already a pending request for this city/tour type
-  if (apiCache.pendingRequests[cacheKey]) {
+  if (pendingRequests[cacheKey]) {
     console.log(`Using in-flight request for ${city} (${tourType})`);
-    return apiCache.pendingRequests[cacheKey];
+    return pendingRequests[cacheKey];
   }
-  
-  // Update the last call time
-  apiCache.lastCalls[cacheKey] = now;
   
   // Create a promise that will be stored and returned for parallel requests
-  apiCache.pendingRequests[cacheKey] = (async () => {
+  pendingRequests[cacheKey] = (async () => {
     try {
       const result = await apiRequest(endpoint, { method: 'GET' }, false);
       const duration = Date.now() - now;
       console.log(`City preview for ${city} (${tourType}): ${result.places?.length || 0} places in ${duration}ms`);
-      
-      // Cache the successful response
-      apiCache.responses[cacheKey] = result;
-      
       return result;
     } catch (error) {
       console.error(`fetchCityPreview failed after ${Date.now() - now}ms:`, error);
@@ -163,11 +140,11 @@ export const fetchCityPreview = async (city, tourType = 'history') => {
       return fallback;
     } finally {
       // Remove the pending request reference after completion (success or error)
-      delete apiCache.pendingRequests[cacheKey];
+      delete pendingRequests[cacheKey];
     }
   })();
   
-  return apiCache.pendingRequests[cacheKey];
+  return pendingRequests[cacheKey];
 };
 
 /**
@@ -182,47 +159,29 @@ export const fetchAudioTour = async (placeId, tourType) => {
   const cacheKey = `audio-${placeId}-${tourType}`;
   const now = Date.now();
   
-  // Check if we've made this call recently
-  if (apiCache.lastCalls[cacheKey]) {
-    const timeSinceLastCall = now - apiCache.lastCalls[cacheKey];
-    
-    // If call was made recently and we have a cached response, use it
-    if (timeSinceLastCall < apiCache.debounceTime && apiCache.responses[cacheKey]) {
-      console.log(`Using cached audio for ${placeId} (${tourType}) - ${timeSinceLastCall}ms since last call`);
-      return apiCache.responses[cacheKey];
-    }
-  }
-  
   // Check if there's already a pending request for this place/tour type
-  if (apiCache.pendingRequests[cacheKey]) {
+  if (pendingRequests[cacheKey]) {
     console.log(`Using in-flight audio request for ${placeId} (${tourType})`);
-    return apiCache.pendingRequests[cacheKey];
+    return pendingRequests[cacheKey];
   }
-  
-  // Update the last call time
-  apiCache.lastCalls[cacheKey] = now;
   
   // Create a promise that will be stored and returned for parallel requests
-  apiCache.pendingRequests[cacheKey] = (async () => {
+  pendingRequests[cacheKey] = (async () => {
     try {
       const result = await apiRequest(endpoint, { method: 'GET' }, true);
       const duration = Date.now() - now;
       console.log(`fetchAudioTour completed in ${duration}ms, audio length: ${result.audio_url ? 'available' : 'unavailable'}`);
-      
-      // Cache the successful response
-      apiCache.responses[cacheKey] = result;
-      
       return result;
     } catch (error) {
       console.error(`fetchAudioTour failed after ${Date.now() - now}ms:`, error);
       throw error;
     } finally {
       // Remove the pending request reference after completion
-      delete apiCache.pendingRequests[cacheKey];
+      delete pendingRequests[cacheKey];
     }
   })();
   
-  return apiCache.pendingRequests[cacheKey];
+  return pendingRequests[cacheKey];
 };
 
 /**
@@ -237,45 +196,27 @@ export const fetchPreviewAudioTour = async (placeId, tourType = 'history') => {
   const cacheKey = `preview-audio-${placeId}-${tourType}`;
   const now = Date.now();
   
-  // Check if we've made this call recently
-  if (apiCache.lastCalls[cacheKey]) {
-    const timeSinceLastCall = now - apiCache.lastCalls[cacheKey];
-    
-    // If call was made recently and we have a cached response, use it
-    if (timeSinceLastCall < apiCache.debounceTime && apiCache.responses[cacheKey]) {
-      console.log(`Using cached preview audio for ${placeId} (${tourType}) - ${timeSinceLastCall}ms since last call`);
-      return apiCache.responses[cacheKey];
-    }
-  }
-  
   // Check if there's already a pending request for this place/tour type
-  if (apiCache.pendingRequests[cacheKey]) {
+  if (pendingRequests[cacheKey]) {
     console.log(`Using in-flight preview audio request for ${placeId} (${tourType})`);
-    return apiCache.pendingRequests[cacheKey];
+    return pendingRequests[cacheKey];
   }
-  
-  // Update the last call time
-  apiCache.lastCalls[cacheKey] = now;
   
   // Create a promise that will be stored and returned for parallel requests
-  apiCache.pendingRequests[cacheKey] = (async () => {
+  pendingRequests[cacheKey] = (async () => {
     try {
       const result = await apiRequest(endpoint, { method: 'GET' }, false);
       const duration = Date.now() - now;
       console.log(`fetchPreviewAudioTour completed in ${duration}ms, audio length: ${result.audio_url ? 'available' : 'unavailable'}`);
-      
-      // Cache the successful response
-      apiCache.responses[cacheKey] = result;
-      
       return result;
     } catch (error) {
       console.error(`fetchPreviewAudioTour failed after ${Date.now() - now}ms:`, error);
       throw error;
     } finally {
       // Remove the pending request reference after completion
-      delete apiCache.pendingRequests[cacheKey];
+      delete pendingRequests[cacheKey];
     }
   })();
   
-  return apiCache.pendingRequests[cacheKey];
+  return pendingRequests[cacheKey];
 };

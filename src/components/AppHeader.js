@@ -6,7 +6,8 @@ import {
   TouchableOpacity, 
   Modal,
   SafeAreaView,
-  ScrollView
+  ScrollView,
+  Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../../App';
@@ -30,7 +31,13 @@ const AppHeader = ({ navigation, title }) => {
   
   return (
     <View style={styles.header}>
-      <Text style={styles.headerTitle}>{title || 'TensorTours'}</Text>
+      <View style={styles.headerLeft}>
+        <Image 
+          source={require('../../assets/header-icon.png')} 
+          style={styles.logoImage} 
+        />
+        <Text style={styles.headerTitle}>{title || 'TensorTours'}</Text>
+      </View>
       
       <View style={styles.headerRight}>
         <TouchableOpacity 
@@ -128,10 +135,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
     backgroundColor: 'white',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logoImage: {
+    width: 30,
+    height: 30,
+    resizeMode: 'contain',
+    borderRadius: 6,
   },
   headerTitle: {
     fontSize: 20,

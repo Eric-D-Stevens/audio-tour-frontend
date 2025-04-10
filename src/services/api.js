@@ -32,7 +32,7 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
       }
     }
 
-    console.log(`Sending request to: ${API_BASE_URL}${endpoint}`);
+    // Simplified request logging
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
@@ -65,13 +65,8 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
     // Parse JSON response
     const data = await response.json();
     
-    // Log successful API response
-    console.log(`API call to ${endpoint} completed successfully:`, {
-      status: response.status,
-      dataSize: JSON.stringify(data).length,
-      timestamp: new Date().toISOString(),
-      endpoint: `${API_BASE_URL}${endpoint}`
-    });
+    // Log successful API response - simplified
+    console.log(`API: ${endpoint} completed (${response.status})`);
     
     return data;
   } catch (error) {
@@ -112,14 +107,13 @@ export const fetchNearbyPlaces = async (lat, lng, radius = 500, tourType = 'hist
  * @returns {Promise<Object>} - City preview data
  */
 export const fetchCityPreview = async (city, tourType = 'history') => {
-  console.log(`fetchCityPreview called with: city=${city}, tourType=${tourType}`);
   const endpoint = `/preview/${encodeURIComponent(city)}?tour_type=${tourType}`;
   const startTime = Date.now();
   
   try {
     const result = await apiRequest(endpoint, { method: 'GET' }, false);
     const duration = Date.now() - startTime;
-    console.log(`fetchCityPreview completed in ${duration}ms with ${result.places?.length || 0} places`);
+    console.log(`City preview for ${city} (${tourType}): ${result.places?.length || 0} places in ${duration}ms`);
     return result;
   } catch (error) {
     console.error(`fetchCityPreview failed after ${Date.now() - startTime}ms:`, error);

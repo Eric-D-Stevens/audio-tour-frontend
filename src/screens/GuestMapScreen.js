@@ -18,6 +18,7 @@ const GuestMapScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [previewModalVisible, setPreviewModalVisible] = useState(true);
+  const [needsJiggle, setNeedsJiggle] = useState(false);
   const mapRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -100,9 +101,46 @@ const GuestMapScreen = ({ navigation }) => {
         toValue: 0,
         duration: 300,
         useNativeDriver: true,
-      }).start();
+      }).start(() => {
+        // Set the jiggle flag after the fade-out animation completes
+        setNeedsJiggle(true);
+      });
     }
   }, [loading]);
+
+  // Effect to handle map region changes and perform jiggle when needed
+  useEffect(() => {
+    if (region && needsJiggle) {
+      // Only perform the jiggle if we have a region and the flag is set
+      // This ensures the map has finished any centering animations
+      
+      // Small delay to ensure the map is fully settled
+      const jiggleTimeout = setTimeout(() => {
+        if (mapRef.current) {
+          // First, create a very slightly adjusted region (almost imperceptible to user)
+          const refreshRegion = {
+            ...region,
+            latitude: region.latitude + (region.latitudeDelta * 0.0001)
+          };
+          
+          // Apply the tiny change to force a re-render
+          mapRef.current.animateToRegion(refreshRegion, 100);
+          
+          // Then go back to the original region after a short delay
+          setTimeout(() => {
+            if (mapRef.current) {
+              mapRef.current.animateToRegion(region, 100);
+            }
+          }, 150);
+          
+          // Reset the flag
+          setNeedsJiggle(false);
+        }
+      }, 300); // Wait 300ms after region change to ensure map is settled
+      
+      return () => clearTimeout(jiggleTimeout);
+    }
+  }, [region, needsJiggle]);
 
   const fetchCityPreviewData = async (city) => {
     try {

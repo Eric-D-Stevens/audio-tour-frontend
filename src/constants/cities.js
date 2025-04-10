@@ -8,6 +8,7 @@ const cityImages = {
   'paris': require('../assets/cities/paris.jpg'),
   'tokyo': require('../assets/cities/tokyo.jpg'),
   'rome': require('../assets/cities/rome.jpg'),
+  'giza': require('../assets/cities/giza.jpg'),
 };
 
 /**
@@ -80,6 +81,17 @@ export const PRESET_CITIES = [
     },
     description: 'Discover the Colosseum, Vatican City, and Roman Forum',
     image: cityImages['rome']
+  },
+  {
+    id: 'giza',
+    name: 'Giza',
+    country: 'Egypt',
+    coordinate: {
+      latitude: 29.9773,
+      longitude: 31.1325
+    },
+    description: 'Marvel at the Great Pyramids, Sphinx, and ancient Egyptian wonders',
+    image: cityImages['giza']
   }
 ];
 

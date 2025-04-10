@@ -78,7 +78,7 @@ const GuestTourParametersScreen = ({ navigation }) => {
                 style={[styles.cityCard, selectedCity === item.id && styles.cityCardSelected]}
               >
                 <Image 
-                  source={{ uri: item.image }}
+                  source={item.image}
                   style={styles.cityImage}
                   resizeMode="cover"
                 />

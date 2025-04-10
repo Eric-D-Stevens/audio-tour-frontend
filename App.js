@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -46,7 +46,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const [initialRoute, setInitialRoute] = useState('Auth');
+  // Remove the initialRoute state as we'll determine it dynamically
   const [tourParams, setTourParams] = useState({ distance: 1448, numAttractions: 15, category: 'history' });
   const [guestTourParams, setGuestTourParams] = useState({ cityId: 'san-francisco', category: 'history' });
 
@@ -67,15 +67,16 @@ export default function App() {
     loadGuestTourParams();
   }, []);
 
-  // Check authentication status using the improved auth service
+  // Check authentication status using the enhanced secure auth service
   const checkAuthStatus = async () => {
     try {
       setIsLoading(true);
       
-      // Check if user is authenticated using the auth service
-      const isUserAuthenticated = await AuthService.isAuthenticated();
+      // Check if user is authenticated using the auth service (returns detailed status)
+      const { isAuthenticated: userAuthenticated, error: authError } = await AuthService.isAuthenticated();
       
-      if (isUserAuthenticated) {
+      if (userAuthenticated) {
+        console.log('User is authenticated');
         // Get user data from storage
         const userData = await AuthService.getCurrentUserData();
         const cognitoUser = AuthService.getCurrentUser();
@@ -83,9 +84,16 @@ export default function App() {
         setIsAuthenticated(true);
         setUser(userData || cognitoUser || { username: 'User' });
       } else {
-        // Not authenticated
+        // Not authenticated with potential error reason
+        console.log('User is not authenticated:', authError || 'No reason provided');
         setIsAuthenticated(false);
         setUser(null);
+        
+        // If there was a specific auth error, we could show it to the user
+        if (authError) {
+          console.warn('Authentication error:', authError);
+          // Could set an auth error state here to display in UI if needed
+        }
       }
     } catch (error) {
       console.error('Error checking auth status:', error);
@@ -148,7 +156,7 @@ export default function App() {
       // Update authentication state which will trigger navigator change
       setIsAuthenticated(false);
       setUser(null);
-      setInitialRoute('Auth');
+      // Note: initialRoute is now determined dynamically based on isAuthenticated
       
       console.log('User logged out successfully');
     } catch (error) {
@@ -156,7 +164,7 @@ export default function App() {
     }
   };
   
-  // Auth context value - using the improved auth service
+  // Auth context value - using the enhanced secure auth service
   const authContext = {
     signIn: async (username, password) => {
       try {
@@ -180,6 +188,40 @@ export default function App() {
     resendConfirmationCode: (username) => {
       return AuthService.resendConfirmationCode(username);
     },
+    checkAuthAndRedirect: async (navigation) => {
+      // Function to check auth status and redirect to login if needed
+      const { isAuthenticated: stillAuthenticated, error } = await AuthService.isAuthenticated();
+      
+      if (!stillAuthenticated) {
+        console.warn('Session expired or invalid, redirecting to login');
+        
+        // First update the authentication state
+        setIsAuthenticated(false);
+        setUser(null);
+        
+        // If navigation is available, show error and handle redirection
+        if (navigation) {
+          // Provide a reason via alert if possible
+          const errorMessage = error 
+            ? `Your session has expired: ${error}` 
+            : 'Your session has expired. Please log in again.';
+            
+          // Show alert and let the user know they need to log in again
+          Alert.alert('Session Expired', errorMessage, [
+            { text: 'OK', onPress: () => {
+              // We don't need to explicitly navigate since the state change will
+              // trigger a re-render with the unauthenticated navigation stack
+              // The next render cycle will show the Auth screen automatically
+              console.log('Authentication state updated, App will render Auth screen');
+            }}
+          ]);
+        }
+        
+        return false;
+      }
+      return true; // Auth is still valid
+    },
+    isAuthenticated,
     user,
     handleLogout
   };
@@ -210,7 +252,7 @@ export default function App() {
               }
             }}>
             <Stack.Navigator
-              initialRouteName={initialRoute}
+              initialRouteName={isAuthenticated ? "Map" : "Auth"}
               screenOptions={{
                 cardStyle: { backgroundColor: '#FFFFFF' },
                 headerStyle: { backgroundColor: '#FFFFFF' },

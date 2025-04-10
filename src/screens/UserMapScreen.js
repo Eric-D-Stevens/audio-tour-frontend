@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated, Platform } from 'react-native';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated, Platform, Alert } from 'react-native';
 import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
 import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,7 +13,7 @@ import audioManager from '../services/audioManager';
 
 const UserMapScreen = ({ navigation }) => {
   const { tourParams } = useContext(TourContext);
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, checkAuthAndRedirect } = useContext(AuthContext);
   const [region, setRegion] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [tourPoints, setTourPoints] = useState([]);
@@ -28,6 +28,14 @@ const UserMapScreen = ({ navigation }) => {
   useEffect(() => {
     (async () => {
       try {
+        // First verify authentication is still valid
+        const isAuthValid = await checkAuthAndRedirect(navigation);
+        if (!isAuthValid) {
+          console.log('Authentication validation failed on initial load');
+          setLoading(false);
+          return;
+        }
+        
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
           setError('Permission to access location was denied');
@@ -114,6 +122,12 @@ const UserMapScreen = ({ navigation }) => {
       // Get fresh location when tour parameters change
       (async () => {
         try {
+          // Verify authentication is still valid before proceeding
+          const isAuthValid = await checkAuthAndRedirect(navigation);
+          if (!isAuthValid) {
+            console.log('Authentication validation failed, aborting operation');
+            return;
+          }
           // 1. Get fresh location
           const location = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.Balanced,
@@ -152,6 +166,15 @@ const UserMapScreen = ({ navigation }) => {
   // Fetch nearby places based on location and tour parameters
   const fetchNearbyPlacesData = async (latitude, longitude) => {
     try {
+      // Verify authentication is still valid before proceeding with API request
+      const isAuthValid = await checkAuthAndRedirect(navigation);
+      if (!isAuthValid) {
+        console.log('Authentication validation failed, aborting fetch');
+        setLoadingPoints(false);
+        setLoading(false);
+        return;
+      }
+      
       setLoading(true);
       setLoadingPoints(true);
       
@@ -209,6 +232,13 @@ const UserMapScreen = ({ navigation }) => {
   // Center the map on the user's location and refresh data
   const centerOnUser = async () => {
     try {
+      // Verify authentication is still valid before proceeding
+      const isAuthValid = await checkAuthAndRedirect(navigation);
+      if (!isAuthValid) {
+        console.log('Authentication validation failed, aborting location refresh');
+        return;
+      }
+      
       // Get fresh location
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
@@ -257,7 +287,14 @@ const UserMapScreen = ({ navigation }) => {
                 coordinate={point.coordinate}
               >
                 <Callout
-                  onPress={() => {
+                  onPress={async () => {
+                    // Verify authentication is still valid before navigating
+                    const isAuthValid = await checkAuthAndRedirect(navigation);
+                    if (!isAuthValid) {
+                      console.log('Authentication validation failed, aborting navigation to AudioScreen');
+                      return;
+                    }
+                    
                     // Navigate to Audio screen
                     // Include the tour type from TourContext when navigating to AudioScreen
                     const placeWithTourType = {

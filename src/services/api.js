@@ -18,15 +18,17 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
     // Add authentication token if required
     if (requiresAuth) {
       // First try to get token from our storage
-      const token = await getAuthToken();
+      // The getAuthToken now returns an object with {token, error} structure
+      const authResult = await getAuthToken();
       
-      if (token) {
+      if (authResult && authResult.token) {
         // For API Gateway with Cognito User Pools Authorizer
-        headers['Authorization'] = token;
-        console.log(`Using stored auth token, length: ${token.length}`);
+        headers['Authorization'] = authResult.token;
+        console.log(`Using stored auth token, length: ${authResult.token.length}`);
       } else {
-        console.log('No authentication token available');
-        throw new Error('Authentication required');
+        const errorMsg = authResult?.error || 'No authentication token available';
+        console.log(errorMsg);
+        throw new Error(errorMsg);
       }
     }
 

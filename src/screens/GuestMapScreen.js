@@ -195,14 +195,6 @@ const GuestMapScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <AppHeader navigation={navigation} title="TensorTours Preview" />
       <View style={styles.mapContainer}>
-        {loading && (
-          <Animated.View style={[styles.loadingOverlay, { opacity: fadeAnim }]}>
-            <View style={styles.loadingContent}>
-              <ActivityIndicator size="large" color="#FF5722" />
-              <Text style={styles.loadingOverlayText}>Loading places...</Text>
-            </View>
-          </Animated.View>
-        )}
         {region ? (
           <MapView
             ref={mapRef}
@@ -257,6 +249,15 @@ const GuestMapScreen = ({ navigation }) => {
             <ActivityIndicator size="large" color="#FF5722" />
             <Text style={styles.loadingText}>Loading map...</Text>
           </View>
+        )}
+        
+        {loading && (
+          <Animated.View style={[styles.loadingOverlay, { opacity: fadeAnim }]}>
+            <View style={styles.loadingContent}>
+              <ActivityIndicator size="large" color="#FF5722" />
+              <Text style={styles.loadingOverlayText}>Loading places...</Text>
+            </View>
+          </Animated.View>
         )}
         
         {/* Center on city button */}
@@ -360,7 +361,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1000,
+    zIndex: 5,
   },
   loadingContent: {
     backgroundColor: 'white',
@@ -449,6 +450,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f8f8',
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
+    zIndex: 10,
   },
   leftControls: {
     flexDirection: 'row',

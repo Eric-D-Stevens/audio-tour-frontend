@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import AppHeader from '../components/AppHeader';
 
 const AboutScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" backgroundColor="#FFFFFF" />
       <AppHeader navigation={navigation} title="About TensorTours" />
       <ScrollView style={styles.content}>
         <View style={styles.logoContainer}>
@@ -59,7 +61,7 @@ const AboutScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#FFFFFF',
   },
   content: {
     flex: 1,

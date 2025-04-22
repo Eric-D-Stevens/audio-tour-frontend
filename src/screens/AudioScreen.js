@@ -36,7 +36,7 @@ const AudioScreen = ({ route, navigation }) => {
           return;
         }
         
-        console.log(`Using tour type: ${tourType} for place: ${place.name}`);
+        console.log(`Using tour type: ${tourType} for place: ${place.place_id}`);
         const response = await getTour(place.place_id, tourType);
         setTourData(response.tour || null);
         

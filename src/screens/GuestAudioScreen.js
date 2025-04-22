@@ -29,7 +29,7 @@ const GuestAudioScreen = ({ route, navigation }) => {
         // If not available, fall back to the tour type from guestTourParams
         const tourType = place.tourType || guestTourParams?.category || 'history';
         
-        console.log(`Using tour type: ${tourType} for place: ${place.name}`);
+        console.log(`Using tour type: ${tourType} for place: ${place.place_id}`);
         
         // For guest mode, we use the preview audio endpoint
         const response = await fetchPreviewAudioTour(place.place_id, tourType);

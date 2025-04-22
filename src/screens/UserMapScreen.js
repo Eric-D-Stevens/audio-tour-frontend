@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import AppHeader from '../components/AppHeader';
 import MiniAudioPlayer from '../components/MiniAudioPlayer';
-import { TourContext, AuthContext } from '../../App';
+import { TourContext, AuthContext } from '../contexts';
 import { fetchNearbyPlaces } from '../services/api';
 import audioManager from '../services/audioManager';
 

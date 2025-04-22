@@ -1,7 +1,8 @@
-import React, { useState, useContext } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import React, { useState, useContext, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView, Switch } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AuthContext } from '../../App';
+import { AuthContext } from '../contexts';
 
 const AuthScreen = ({ navigation }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,6 +11,23 @@ const AuthScreen = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  
+  // Load previous remember me preference on component mount
+  useEffect(() => {
+    const loadRememberMePreference = async () => {
+      try {
+        const savedPreference = await AsyncStorage.getItem('tensortours_remember_me');
+        if (savedPreference !== null) {
+          setRememberMe(JSON.parse(savedPreference));
+        }
+      } catch (error) {
+        console.error('Error loading remember me preference:', error);
+      }
+    };
+    
+    loadRememberMePreference();
+  }, []);
 
   const auth = useContext(AuthContext);
 
@@ -29,8 +47,8 @@ const AuthScreen = ({ navigation }) => {
 
     try {
       if (isLogin) {
-        // Sign in
-        await auth.signIn(email, password);
+        // Sign in with the remember me preference
+        await auth.signIn(email, password, rememberMe);
       } else {
         // Sign up
         await auth.signUp(email, password, email);
@@ -99,6 +117,18 @@ const AuthScreen = ({ navigation }) => {
                 onChangeText={setConfirmPassword}
                 secureTextEntry
               />
+            )}
+
+            {isLogin && (
+              <View style={styles.rememberMeContainer}>
+                <Switch
+                  value={rememberMe}
+                  onValueChange={setRememberMe}
+                  trackColor={{ false: '#d1d1d1', true: '#FF8a65' }}
+                  thumbColor={rememberMe ? '#FF5722' : '#f4f3f4'}
+                />
+                <Text style={styles.rememberMeText}>Remember me</Text>
+              </View>
             )}
 
             <TouchableOpacity
@@ -184,6 +214,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  guestButtonSubtext: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 5,
+    textAlign: 'center',
+  },
+  rememberMeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  rememberMeText: {
+    marginLeft: 10,
+    color: '#666',
   },
   formTitle: {
     fontSize: 24,

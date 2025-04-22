@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../components/AppHeader';
 import MiniAudioPlayer from '../components/MiniAudioPlayer';
-import { TourContext } from '../../App';
+import { TourContext } from '../contexts';
 import { fetchCityPreview } from '../services/api';
 import { PRESET_CITIES, getCityById, getDefaultCity } from '../constants/cities';
 import audioManager from '../services/audioManager';

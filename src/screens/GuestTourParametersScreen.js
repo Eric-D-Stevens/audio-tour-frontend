@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { TourContext } from '../../App';
+import { TourContext } from '../contexts';
 import { PRESET_CITIES } from '../constants/cities';
 
 const GuestTourParametersScreen = ({ navigation }) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator, Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -23,12 +23,8 @@ import ContactScreen from './src/screens/ContactScreen';
 import * as AuthService from './src/services/auth';
 import { COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID, REGION } from './src/constants/config';
 
-// Auth service is already initialized in ./src/services/auth.js
-
-// Create contexts for the app
-const AuthContext = createContext();
-const TourContext = createContext();
-export { AuthContext, TourContext };
+// Import contexts from the separate contexts file
+import { AuthContext, TourContext } from './src/contexts';
 
 // Create navigator
 const Stack = createStackNavigator();
@@ -147,11 +143,11 @@ export default function App() {
   };
 
   // Handle logout using the auth service
-  const handleLogout = async () => {
+  const handleLogout = async (clearRememberMe = false) => {
     try {
       console.log('Logging out user...');
-      // Sign out and update state
-      await AuthService.signOut();
+      // Sign out and update state, passing the clearRememberMe flag
+      await AuthService.signOut(clearRememberMe);
       
       // Update authentication state which will trigger navigator change
       setIsAuthenticated(false);
@@ -166,9 +162,9 @@ export default function App() {
   
   // Auth context value - using the enhanced secure auth service
   const authContext = {
-    signIn: async (username, password) => {
+    signIn: async (username, password, rememberMe) => {
       try {
-        const result = await AuthService.signIn(username, password);
+        const result = await AuthService.signIn(username, password, rememberMe);
         setUser(await AuthService.getCurrentUserData());
         setIsAuthenticated(true);
         return result;
@@ -176,8 +172,9 @@ export default function App() {
         throw error;
       }
     },
-    signOut: async () => {
-      await handleLogout();
+    signOut: async (clearRememberMe = false) => {
+      // Pass the clearRememberMe flag to handleLogout
+      await handleLogout(clearRememberMe);
     },
     signUp: (username, password, email) => {
       return AuthService.signUp(username, password, email);

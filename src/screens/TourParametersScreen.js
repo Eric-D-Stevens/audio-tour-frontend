@@ -9,7 +9,7 @@ import {
 import { Slider } from '@miblanchard/react-native-slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { TourContext } from '../../App';
+import { TourContext } from '../contexts';
 
 const TourParametersScreen = ({ navigation }) => {
   const { tourParams, setTourParams } = useContext(TourContext);

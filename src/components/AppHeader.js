@@ -10,7 +10,7 @@ import {
   Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AuthContext } from '../../App';
+import { AuthContext } from '../contexts';
 
 const AppHeader = ({ navigation, title }) => {
   const { user, handleLogout } = useContext(AuthContext);

@@ -56,7 +56,7 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
             // Clear stored tokens to force a fresh login on next attempt
             const { signOut } = await import('./auth');
             await signOut();
-            console.log('User signed out due to authentication error');
+            // Silent signout, no console logs
           } catch (authError) {
             // Silently catch auth cleanup errors to prevent app crashes
           }
@@ -77,8 +77,10 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
     // Return data without logging
     return data;
   } catch (error) {
-    // Only log non-auth errors that might be important for debugging
-    if (!error.message.includes('Authentication') && !error.message.includes('auth')) {
+    // Only log critical errors, not auth-related ones
+    if (!error.message.includes('Authentication') && 
+        !error.message.includes('auth') && 
+        !error.message.includes('token')) {
       console.error(`API error: ${error.message}`);
     }
     throw error;
@@ -95,7 +97,6 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
  * @returns {Promise<Object>} - Places data
  */
 export const fetchNearbyPlaces = async (lat, lng, radius = 500, tourType = 'history', maxResults = 5) => {
-  console.log(`fetchNearbyPlaces called with: lat=${lat}, lng=${lng}, radius=${radius}, tourType=${tourType}`);
   const endpoint = `/getPlaces`;
   const startTime = Date.now();
   
@@ -113,11 +114,8 @@ export const fetchNearbyPlaces = async (lat, lng, radius = 500, tourType = 'hist
       method: 'POST',
       body: JSON.stringify(requestBody)
     }, true);
-    const duration = Date.now() - startTime;
-    console.log(`fetchNearbyPlaces completed in ${duration}ms with ${result.places?.length || 0} places`);
     return result;
   } catch (error) {
-    console.error(`fetchNearbyPlaces failed after ${Date.now() - startTime}ms:`, error);
     throw error;
   }
 };

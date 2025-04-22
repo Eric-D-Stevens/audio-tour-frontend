@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AuthContext } from '../../App';
+import { AuthContext } from '../contexts';
 
 const EmailVerificationScreen = ({ route, navigation }) => {
   const [verificationCode, setVerificationCode] = useState('');

@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import GuestAudioPlayer from '../components/GuestAudioPlayer';
 import { fetchPreviewAudioTour } from '../services/api';
-import { TourContext } from '../../App';
+import { TourContext } from '../contexts';
 
 const GuestAudioScreen = ({ route, navigation }) => {
   const { place } = route.params || {};

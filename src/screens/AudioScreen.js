@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AudioPlayer from '../components/AudioPlayer';
 import { getTour } from '../services/api';
-import { TourContext } from '../../App';
+import { AuthContext, TourContext } from '../contexts';
 
 const AudioScreen = ({ route, navigation }) => {
   const { place } = route.params || {};
@@ -167,11 +167,22 @@ const AudioScreen = ({ route, navigation }) => {
           ) : null}
           
           <View style={styles.audioPlayerContainer}>
-            <AudioPlayer 
-              placeId={place.place_id} 
-              audioUrl={tourData?.audio?.cloudfront_url} 
-              placeName={tourData?.place_info?.place_name || place.name}
-            />
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#4285F4" />
+                <Text style={styles.loadingText}>Loading audio tour...</Text>
+              </View>
+            ) : tourData?.audio?.cloudfront_url ? (
+              <AudioPlayer 
+                placeId={place.place_id} 
+                audioUrl={tourData.audio.cloudfront_url} 
+                placeName={tourData?.place_info?.place_name || place.name}
+              />
+            ) : (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>Audio not available for this location.</Text>
+              </View>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -221,6 +232,35 @@ const styles = StyleSheet.create({
     color: '#FF5722',
     textAlign: 'center',
     fontWeight: '500',
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    minHeight: 120,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff8f7',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ffcdd2',
+    minHeight: 100,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#d32f2f',
+    textAlign: 'center',
   },
   imageSlider: {
     height: 250,

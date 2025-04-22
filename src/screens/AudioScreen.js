@@ -3,12 +3,13 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIn
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AudioPlayer from '../components/AudioPlayer';
-import { fetchAudioTour } from '../services/api';
+import { getTour } from '../services/api';
 import { TourContext } from '../../App';
 
 const AudioScreen = ({ route, navigation }) => {
   const { place } = route.params || {};
   const { tourParams } = useContext(TourContext);
+  const [tourData, setTourData] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
@@ -36,8 +37,12 @@ const AudioScreen = ({ route, navigation }) => {
         }
         
         console.log(`Using tour type: ${tourType} for place: ${place.name}`);
-        const response = await fetchAudioTour(place.place_id, tourType);
-        setPhotos(response.photos || []);
+        const response = await getTour(place.place_id, tourType);
+        setTourData(response.tour || null);
+        
+        // Extract photo URLs from tour data
+        const photoUrls = response.tour?.photos?.map(photo => photo.cloudfront_url) || [];
+        setPhotos(photoUrls);
       } catch (error) {
         console.error('Error fetching audio tour:', error);
         setError('Failed to load audio tour data');
@@ -137,13 +142,34 @@ const AudioScreen = ({ route, navigation }) => {
         )}
         
         <View style={styles.contentContainer}>
-          <Text style={styles.tourTitle}>{place.name}</Text>
-          <Text style={styles.tourDescription}>{place.vicinity || place.description || 'Explore this fascinating location with our AI-powered audio guide.'}</Text>
+          {/* Place Information Section */}
+          <Text style={styles.tourTitle}>{tourData?.place_info?.place_name || place.name}</Text>
+          
+          {/* Address */}
+          {tourData?.place_info?.place_address && (
+            <View style={styles.infoSection}>
+              <Ionicons name="location-outline" size={18} color="#555" style={styles.infoIcon} />
+              <Text style={styles.addressText}>{tourData.place_info.place_address}</Text>
+            </View>
+          )}
+          
+          {/* Editorial Description with Title */}
+          {tourData?.place_info?.place_editorial_summary && tourData.place_info.place_editorial_summary.length > 0 ? (
+            <View style={styles.descriptionContainer}>
+              <Text style={styles.descriptionTitle}>About This Location</Text>
+              <Text style={styles.tourDescription}>{tourData.place_info.place_editorial_summary}</Text>
+            </View>
+          ) : place.vicinity || place.description ? (
+            <View style={styles.descriptionContainer}>
+              <Text style={styles.descriptionTitle}>Location Details</Text>
+              <Text style={styles.tourDescription}>{place.vicinity || place.description}</Text>
+            </View>
+          ) : null}
           
           <View style={styles.audioPlayerContainer}>
             <AudioPlayer 
               placeId={place.place_id} 
-              tourType={place.tourType || 'history'} 
+              tourType={place.tourType || tourParams.category || 'history'} 
             />
           </View>
         </View>
@@ -153,6 +179,32 @@ const AudioScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  // New styles for place information
+  infoSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 2,
+  },
+  infoIcon: {
+    marginRight: 8,
+  },
+  addressText: {
+    fontSize: 14,
+    color: '#555',
+    flex: 1,
+    lineHeight: 20,
+  },
+  descriptionContainer: {
+    marginBottom: 15,
+    paddingVertical: 5,
+  },
+  descriptionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
   styledLoadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -231,19 +283,19 @@ const styles = StyleSheet.create({
   },
 
   contentContainer: {
-    padding: 20,
+    padding: 15,
   },
   tourTitle: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 12,
     color: '#333',
-    marginBottom: 10,
   },
   tourDescription: {
     fontSize: 16,
-    color: '#666',
+    color: '#555',
+    marginBottom: 20,
     lineHeight: 24,
-    marginBottom: 30,
   },
   audioPlayerContainer: {
     marginTop: 10,

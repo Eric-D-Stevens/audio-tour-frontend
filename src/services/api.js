@@ -212,11 +212,7 @@ export const getTour = async (placeId, tourType) => {
       const duration = Date.now() - now;
       
       // Log successful tour retrieval with details
-      console.log(`getTour completed in ${duration}ms`);
-      console.log(`Tour data: place=${result.tour?.place_info?.place_name}, ` +
-                 `photos=${result.tour?.photos?.length || 0}, ` +
-                 `script=${result.tour?.script ? 'available' : 'unavailable'}, ` +
-                 `audio=${result.tour?.audio ? 'available' : 'unavailable'}`);
+      console.log(`getTour completed in ${duration}ms: ${result.tour?.place_info?.place_name}`);
       
       return result;
     } catch (error) {

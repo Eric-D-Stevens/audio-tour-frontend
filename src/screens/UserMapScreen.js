@@ -190,10 +190,6 @@ const UserMapScreen = ({ navigation }) => {
       if (data && data.places) {
         // Transform the places data to match the expected format for markers
         const transformedPlaces = data.places.map((place, index) => {
-          // Log the first place to see its structure for debugging
-          if (index === 0) {
-            console.log('Place structure:', JSON.stringify(place));
-          }
           
           // Handle the new TTPlaceInfo model structure
           return {

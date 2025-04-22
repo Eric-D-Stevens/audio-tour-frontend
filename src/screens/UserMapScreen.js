@@ -189,17 +189,34 @@ const UserMapScreen = ({ navigation }) => {
       
       if (data && data.places) {
         // Transform the places data to match the expected format for markers
-        const transformedPlaces = data.places.map((place, index) => ({
-          id: place.place_id || String(index),
-          title: place.name,
-          description: place.vicinity || place.description || '',
-          coordinate: {
-            latitude: place.location.lat,
-            longitude: place.location.lng
-          },
-          // Keep the original data for detailed view
-          originalData: place
-        }));
+        const transformedPlaces = data.places.map((place, index) => {
+          // Log the first place to see its structure for debugging
+          if (index === 0) {
+            console.log('Place structure:', JSON.stringify(place));
+          }
+          
+          // Handle the new TTPlaceInfo model structure
+          return {
+            id: place.place_id || String(index),
+            title: place.place_name || place.name || 'Unknown Place',
+            description: place.place_editorial_summary || place.place_address || place.vicinity || '',
+            coordinate: {
+              // Check for different location field structures
+              latitude: place.place_location?.latitude || 
+                      place.place_location?.lat || 
+                      place.location?.lat || 
+                      place.latitude || 
+                      0,
+              longitude: place.place_location?.longitude || 
+                       place.place_location?.lng || 
+                       place.location?.lng || 
+                       place.longitude || 
+                       0
+            },
+            // Keep the original data for detailed view
+            originalData: place
+          };
+        });
         
         // Set the tour points with the new data
         setTourPoints(transformedPlaces);

@@ -107,11 +107,23 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
  */
 export const fetchNearbyPlaces = async (lat, lng, radius = 500, tourType = 'history', maxResults = 5) => {
   console.log(`fetchNearbyPlaces called with: lat=${lat}, lng=${lng}, radius=${radius}, tourType=${tourType}`);
-  const endpoint = `/places?lat=${lat}&lng=${lng}&radius=${radius}&tour_type=${tourType}&max_results=${maxResults}`;
+  const endpoint = `/getPlaces`;
   const startTime = Date.now();
   
+  // New endpoint uses POST with a JSON body instead of query parameters
+  const requestBody = {
+    latitude: lat,
+    longitude: lng,
+    radius: radius,
+    tour_type: tourType,
+    max_results: maxResults
+  };
+  
   try {
-    const result = await apiRequest(endpoint, { method: 'GET' }, true);
+    const result = await apiRequest(endpoint, { 
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    }, true);
     const duration = Date.now() - startTime;
     console.log(`fetchNearbyPlaces completed in ${duration}ms with ${result.places?.length || 0} places`);
     return result;

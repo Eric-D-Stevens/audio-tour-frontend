@@ -179,32 +179,48 @@ export const fetchCityPreview = async (city, tourType = 'history') => {
 };
 
 /**
- * Fetch audio tour for a place
+ * Fetch complete tour data for a place using the new getTour endpoint
  * @param {string} placeId - Google Place ID
  * @param {string} tourType - Type of tour (history, cultural, etc.)
- * @returns {Promise<Object>} - Audio tour data
+ * @returns {Promise<Object>} - Complete tour data including place info, photos, script and audio
  */
-export const fetchAudioTour = async (placeId, tourType) => {
-  console.log(`fetchAudioTour called with: placeId=${placeId}, tourType=${tourType}`);
-  const endpoint = `/audio/${placeId}?tourType=${tourType}`;
-  const cacheKey = `audio-${placeId}-${tourType}`;
+export const getTour = async (placeId, tourType) => {
+  console.log(`getTour called with: placeId=${placeId}, tourType=${tourType}`);
+  const endpoint = `/getTour`;
+  const cacheKey = `tour-${placeId}-${tourType}`;
   const now = Date.now();
   
   // Check if there's already a pending request for this place/tour type
   if (pendingRequests[cacheKey]) {
-    console.log(`Using in-flight audio request for ${placeId} (${tourType})`);
+    console.log(`Using in-flight tour request for ${placeId} (${tourType})`);
     return pendingRequests[cacheKey];
   }
+  
+  // Create request body
+  const requestBody = {
+    place_id: placeId,
+    tour_type: tourType
+  };
   
   // Create a promise that will be stored and returned for parallel requests
   pendingRequests[cacheKey] = (async () => {
     try {
-      const result = await apiRequest(endpoint, { method: 'GET' }, true);
+      const result = await apiRequest(endpoint, { 
+        method: 'POST',
+        body: JSON.stringify(requestBody)
+      }, true);
       const duration = Date.now() - now;
-      console.log(`fetchAudioTour completed in ${duration}ms, audio length: ${result.audio_url ? 'available' : 'unavailable'}`);
+      
+      // Log successful tour retrieval with details
+      console.log(`getTour completed in ${duration}ms`);
+      console.log(`Tour data: place=${result.tour?.place_info?.place_name}, ` +
+                 `photos=${result.tour?.photos?.length || 0}, ` +
+                 `script=${result.tour?.script ? 'available' : 'unavailable'}, ` +
+                 `audio=${result.tour?.audio ? 'available' : 'unavailable'}`);
+      
       return result;
     } catch (error) {
-      console.error(`fetchAudioTour failed after ${Date.now() - now}ms:`, error);
+      console.error(`getTour failed after ${Date.now() - now}ms:`, error);
       throw error;
     } finally {
       // Remove the pending request reference after completion
@@ -213,6 +229,35 @@ export const fetchAudioTour = async (placeId, tourType) => {
   })();
   
   return pendingRequests[cacheKey];
+};
+
+/**
+ * Fetch audio tour for a place (legacy endpoint - use getTour instead for complete data)
+ * @param {string} placeId - Google Place ID
+ * @param {string} tourType - Type of tour (history, cultural, etc.)
+ * @returns {Promise<Object>} - Audio tour data
+ * @deprecated Use getTour instead for complete tour data
+ */
+export const fetchAudioTour = async (placeId, tourType) => {
+  console.log(`fetchAudioTour called (legacy) - consider using getTour instead`);
+  
+  try {
+    // Use the new getTour endpoint instead
+    const tourData = await getTour(placeId, tourType);
+    
+    // Convert the result to maintain backwards compatibility
+    return {
+      place_id: tourData.tour.place_id,
+      place_name: tourData.tour.place_info.place_name,
+      tour_type: tourData.tour.tour_type,
+      script_text: tourData.tour.script?.s3_url,
+      audio_url: tourData.tour.audio?.cloudfront_url,
+      photos: tourData.tour.photos?.map(photo => photo.cloudfront_url) || []
+    };
+  } catch (error) {
+    console.error(`fetchAudioTour failed:`, error);
+    throw error;
+  }
 };
 
 /**

@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
-import { fetchAudioTour } from '../services/api';
 import audioManager from '../services/audioManager';
 
-const AudioPlayer = ({ placeId, tourType = 'history' }) => {
+const AudioPlayer = ({ placeId, audioUrl, placeName }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,23 +23,25 @@ const AudioPlayer = ({ placeId, tourType = 'history' }) => {
     return () => {
       unsubscribe();
     };
-  }, [placeId, tourType]);
+  }, [placeId, audioUrl, placeName]);
 
-  // Load audio data from API
+  // Load audio directly from props
   const loadAudioData = async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      // Fetch audio data from the API
-      const data = await fetchAudioTour(placeId, tourType);
+      // Create a simplified data structure for UI display
+      const data = {
+        place_id: placeId,
+        place_name: placeName,
+        audio_url: audioUrl
+      };
+      
       setAudioData(data);
       
-      // Load the audio file
-      const placeName = typeof data.place_details?.name === 'object'
-        ? data.place_details?.name?.text
-        : data.place_details?.name;
-      await audioManager.loadAudio(data.audio_url, placeId, placeName);
+      // Load the audio file directly
+      await audioManager.loadAudio(audioUrl, placeId, placeName);
       
       // Get initial status
       const status = await audioManager.getStatus();

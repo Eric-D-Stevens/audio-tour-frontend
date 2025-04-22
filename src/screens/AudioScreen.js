@@ -169,7 +169,8 @@ const AudioScreen = ({ route, navigation }) => {
           <View style={styles.audioPlayerContainer}>
             <AudioPlayer 
               placeId={place.place_id} 
-              tourType={place.tourType || tourParams.category || 'history'} 
+              audioUrl={tourData?.audio?.cloudfront_url} 
+              placeName={tourData?.place_info?.place_name || place.name}
             />
           </View>
         </View>

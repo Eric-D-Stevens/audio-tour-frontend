@@ -28,20 +28,14 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
         if (authResult && authResult.token) {
           // For API Gateway with Cognito User Pools Authorizer
           headers['Authorization'] = authResult.token;
-          console.log(`Using stored auth token, length: ${authResult.token.length}`);
         } else {
           const errorMsg = authResult?.error || 'No authentication token available';
-          console.log(errorMsg);
           throw new Error(errorMsg);
         }
       } catch (authError) {
-        // For authenticated endpoints, we need to propagate the error
-        console.error('Authentication error:', authError.message);
+        // For authenticated endpoints, propagate the error
         throw new Error(`Authentication required: ${authError.message}`);
       }
-    } else {
-      // For guest endpoints, explicitly log that we're proceeding without auth
-      console.log(`Proceeding with guest access for endpoint: ${endpoint}`);
     }
 
     // Simplified request logging
@@ -53,11 +47,8 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
     // Handle response errors
     if (!response.ok) {
       const errorText = await response.text();
-      console.log(`API error response (${response.status}):`, errorText);
-      
       // For 401 errors, try to provide more helpful information
       if (response.status === 401) {
-        console.log('Authentication error detected. Token may be invalid or expired.');
         // Only attempt to refresh the token on auth errors for endpoints that require auth
         // This avoids unnecessary sign-out operations in guest mode
         if (requiresAuth) {
@@ -67,11 +58,8 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
             await signOut();
             console.log('User signed out due to authentication error');
           } catch (authError) {
-            // Prevent auth errors from completely crashing the app
-            console.error('Error during authentication cleanup:', authError);
+            // Silently catch auth cleanup errors to prevent app crashes
           }
-        } else {
-          console.log('Authentication error on non-auth endpoint - continuing in guest mode');
         }
       }
       
@@ -86,12 +74,13 @@ const apiRequest = async (endpoint, options = {}, requiresAuth = true) => {
     // Parse JSON response
     const data = await response.json();
     
-    // Log successful API response - simplified
-    console.log(`API: ${endpoint} completed (${response.status})`);
-    
+    // Return data without logging
     return data;
   } catch (error) {
-    console.error(`API request error: ${error.message}`);
+    // Only log non-auth errors that might be important for debugging
+    if (!error.message.includes('Authentication') && !error.message.includes('auth')) {
+      console.error(`API error: ${error.message}`);
+    }
     throw error;
   }
 };

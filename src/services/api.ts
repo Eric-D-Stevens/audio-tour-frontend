@@ -7,6 +7,7 @@ import {
   GetPregeneratedTourResponse,
   GenerateTourRequest,
   GenerateTourResponse,
+  GetPreviewRequest,
   TourType 
 } from '../types/api-types';
 
@@ -373,6 +374,61 @@ export const getOnDemandTour = async (
       
       resolve(result);
     } catch (error) {
+      reject(error);
+    } finally {
+      // Clean up the pending request
+      delete pendingRequests[requestKey];
+    }
+  });
+  
+  // Store the promise so we can return it for duplicate requests
+  pendingRequests[requestKey] = requestPromise;
+  
+  return requestPromise;
+};
+
+/**
+ * Fetch preview tour for a place (no authentication required)
+ * @param placeId - Google Place ID
+ * @param tourType - Type of tour
+ * @returns Audio tour preview data
+ */
+export const fetchPreviewTour = async (
+  placeId: string, 
+  tourType: TourType = 'history'
+): Promise<any> => {
+  // Create a unique key for this request to prevent duplicates
+  const requestKey = `preview_tour_${placeId}_${tourType}`;
+  
+  // If this exact request is already in progress, return the existing promise
+  const existingRequest = pendingRequests[requestKey];
+  if (existingRequest) {
+    return existingRequest;
+  }
+  
+  // Create a new promise for this request
+  const requestPromise = new Promise(async (resolve, reject) => {
+    try {
+      const endpoint = `/getPreviewTour`;
+      
+      const requestBody: GetPreviewRequest = {
+        place_id: placeId,
+        tour_type: tourType,
+        request_id: requestKey,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log(`Fetching preview tour for place: ${placeId}, type: ${tourType}`);
+      
+      const result = await apiRequest(endpoint, {
+        method: 'POST',
+        body: JSON.stringify(requestBody)
+      }, false); // Preview tours don't require auth
+      
+      console.log(`Successfully fetched preview tour for place: ${placeId}`);
+      resolve(result);
+    } catch (error) {
+      console.error(`Error fetching preview tour for place: ${placeId}:`, error);
       reject(error);
     } finally {
       // Clean up the pending request

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIn
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import GuestAudioPlayer from '../components/GuestAudioPlayer';
-import { fetchPreviewAudioTour } from '../services/api';
+import { fetchPreviewTour } from '../services/api';
 import { TourContext } from '../contexts';
 
 const GuestAudioScreen = ({ route, navigation }) => {
@@ -31,9 +31,18 @@ const GuestAudioScreen = ({ route, navigation }) => {
         
         console.log(`Using tour type: ${tourType} for place: ${place.place_id}`);
         
-        // For guest mode, we use the preview audio endpoint
-        const response = await fetchPreviewAudioTour(place.place_id, tourType);
-        setPhotos(response.photos || []);
+        // For guest mode, we use the preview tour endpoint
+        const response = await fetchPreviewTour(place.place_id, tourType);
+        console.log('Preview tour response:', JSON.stringify(response, null, 2));
+        
+        // Extract photos from the new response structure
+        // Photos are now in response.tour.photos[].cloudfront_url
+        if (response?.tour?.photos && Array.isArray(response.tour.photos)) {
+          const photoUrls = response.tour.photos
+            .filter(photo => photo?.cloudfront_url)
+            .map(photo => photo.cloudfront_url);
+          setPhotos(photoUrls);
+        }
       } catch (error) {
         console.error('Error fetching audio tour:', error);
         setError('Failed to load audio tour data');

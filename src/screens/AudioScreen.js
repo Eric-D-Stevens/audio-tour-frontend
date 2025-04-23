@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AudioPlayer from '../components/AudioPlayer';
@@ -15,10 +15,15 @@ const AudioScreen = ({ route, navigation }) => {
   const [imageLoading, setImageLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [error, setError] = useState(null);
+  const [scriptModalVisible, setScriptModalVisible] = useState(false);
   
   // Fetch audio tour data including photos
   useEffect(() => {
     const fetchData = async () => {
+      // Reset the isOnDemand flag
+      if (place) {
+        place.isOnDemand = false;
+      }
       if (!place || !place.place_id) {
         setError('Invalid place data. Please try again.');
         return;
@@ -51,10 +56,14 @@ const AudioScreen = ({ route, navigation }) => {
         } catch (tourError) {
           console.log('Pre-generated tour not found, generating on-demand:', tourError.message);
           
-          // Set a temporary loading message
-          setError('Generating tour on-demand...');
+          // We don't want to show an error, but rather a loading state
+          setError(null);
+          setLoading(true);
           
           try {
+            // Mark this place as being generated on-demand
+            place.isOnDemand = true;
+            
             // Fallback to generating a tour on demand
             const onDemandResponse = await getOnDemandTour(place.place_id, tourType);
             setTourData(onDemandResponse.tour || null);
@@ -80,6 +89,8 @@ const AudioScreen = ({ route, navigation }) => {
 
     fetchData();
   }, [place]);
+  
+
   
   // If there's an error, show error screen
   if (error) {
@@ -108,6 +119,49 @@ const AudioScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          {/* Loading indicator with message */}
+          <View style={styles.loadingIndicatorContainer}>
+            <ActivityIndicator size="large" color="#FF5722" style={{transform: [{scale: 1.5}]}} />
+            <Text style={styles.loadingText}>
+              {place.isOnDemand 
+                ? "Generating AI Tour" 
+                : "Loading Tour"}
+            </Text>
+          </View>
+          
+          {/* Semi-transparent content placeholders */}
+          <View style={styles.skeletonContainer}>
+            {/* Image placeholder */}
+            <View style={styles.skeletonImageContainer}>
+              <Ionicons name="image-outline" size={40} color="#ddd" />
+            </View>
+            
+            {/* Title placeholder */}
+            <View style={styles.skeletonTitleBar} />
+            
+            {/* Address placeholder */}
+            <View style={styles.skeletonAddressContainer}>
+              <View style={styles.skeletonAddressIcon} />
+              <View style={styles.skeletonAddressBar} />
+            </View>
+            
+            {/* Description placeholder */}
+            <View style={styles.skeletonDescriptionContainer}>
+              <View style={styles.skeletonDescriptionTitle} />
+              <View style={styles.skeletonDescriptionLine} />
+              <View style={styles.skeletonDescriptionLine} />
+              <View style={[styles.skeletonDescriptionLine, { width: '70%' }]} />
+            </View>
+            
+            {/* Audio player placeholder */}
+            <View style={styles.skeletonAudioPlayerContainer}>
+              <View style={styles.skeletonAudioPlayerContent} />
+            </View>
+          </View>
+        </View>
+      )}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -154,17 +208,10 @@ const AudioScreen = ({ route, navigation }) => {
           </View>
         ) : (
           <View style={styles.imagePlaceholder}>
-            {loading ? (
-              <View style={styles.styledLoadingContainer}>
-                <ActivityIndicator size="large" color="#FF5722" />
-                <Text style={styles.styledLoadingText}>Generating AI-powered tour...</Text>
-              </View>
-            ) : (
-              <>
-                <Ionicons name="image-outline" size={50} color="#999" />
-                <Text style={styles.imagePlaceholderText}>No Image Available</Text>
-              </>
-            )}
+            <>
+              <Ionicons name="image-outline" size={50} color="#999" />
+              <Text style={styles.imagePlaceholderText}>No Image Available</Text>
+            </>
           </View>
         )}
         
@@ -194,17 +241,21 @@ const AudioScreen = ({ route, navigation }) => {
           ) : null}
           
           <View style={styles.audioPlayerContainer}>
-            {loading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#4285F4" />
-                <Text style={styles.loadingText}>Loading audio tour...</Text>
+            {tourData?.audio?.cloudfront_url ? (
+              <View style={styles.audioPlayerWithButtons}>
+                <AudioPlayer 
+                  placeId={place.place_id} 
+                  audioUrl={tourData.audio.cloudfront_url} 
+                  placeName={tourData?.place_info?.place_name || place.name}
+                />
+                <TouchableOpacity 
+                  style={styles.viewScriptButton}
+                  onPress={() => setScriptModalVisible(true)}
+                >
+                  <Ionicons name="document-text-outline" size={18} color="white" style={styles.viewScriptIcon} />
+                  <Text style={styles.viewScriptText}>View Script</Text>
+                </TouchableOpacity>
               </View>
-            ) : tourData?.audio?.cloudfront_url ? (
-              <AudioPlayer 
-                placeId={place.place_id} 
-                audioUrl={tourData.audio.cloudfront_url} 
-                placeName={tourData?.place_info?.place_name || place.name}
-              />
             ) : (
               <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>Audio not available for this location.</Text>
@@ -213,6 +264,36 @@ const AudioScreen = ({ route, navigation }) => {
           </View>
         </View>
       </ScrollView>
+      
+      {/* Script Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={scriptModalVisible}
+        onRequestClose={() => setScriptModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{tourData?.place_info?.place_name || place.name}</Text>
+              {tourData?.place_info?.place_address && (
+                <Text style={styles.modalSubtitle}>{tourData.place_info.place_address}</Text>
+              )}
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={() => setScriptModalVisible(false)}
+              >
+                <Ionicons name="close" size={24} color="#555" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.scriptScrollView}>
+              <Text style={styles.scriptTitle}>Tour Script</Text>
+              <Text style={styles.scriptText}>{tourData?.script?.text || (tourData?.script) || "Script not available"}</Text>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -244,35 +325,115 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 8,
   },
-  styledLoadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: 'rgba(255, 87, 34, 0.1)',
-    borderRadius: 12,
-    minHeight: 200,
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    zIndex: 1000,
   },
-  styledLoadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#FF5722',
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  loadingContainer: {
-    padding: 20,
+  loadingIndicatorContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -90 }, { translateY: -60 }],
+    backgroundColor: 'white',
+    borderRadius: 16,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f8f8f8',
-    borderRadius: 8,
-    minHeight: 120,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 8,
+    width: 180,
+    height: 120,
+    zIndex: 1001,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 87, 34, 0.15)',
   },
   loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#666',
+    marginTop: 16,
+    fontSize: 16,
+    color: '#333',
     textAlign: 'center',
+    fontWeight: '600',
+    width: '100%',
+  },
+  skeletonContainer: {
+    width: '100%',
+    paddingHorizontal: 16,
+    paddingTop: 60, // Account for header height
+  },
+  skeletonImageContainer: {
+    width: '100%',
+    height: 200,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 8,
+    marginBottom: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  skeletonTitleBar: {
+    width: '70%',
+    height: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    borderRadius: 4,
+    marginBottom: 16,
+  },
+  skeletonAddressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  skeletonAddressIcon: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    marginRight: 8,
+  },
+  skeletonAddressBar: {
+    flex: 1,
+    height: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    borderRadius: 4,
+  },
+  skeletonDescriptionContainer: {
+    marginBottom: 24,
+  },
+  skeletonDescriptionTitle: {
+    width: '40%',
+    height: 18,
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    borderRadius: 4,
+    marginBottom: 12,
+  },
+  skeletonDescriptionLine: {
+    width: '100%',
+    height: 14,
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonAudioPlayerContainer: {
+    padding: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  skeletonAudioPlayerContent: {
+    width: '100%',
+    height: 80,
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    borderRadius: 4,
   },
   errorContainer: {
     padding: 16,
@@ -287,7 +448,94 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 14,
     color: '#d32f2f',
-    textAlign: 'center',
+  },
+  audioPlayerWithButtons: {
+    width: '100%',
+  },
+  viewScriptButton: {
+    backgroundColor: '#FF5722',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginTop: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  viewScriptIcon: {
+    marginRight: 8,
+  },
+  viewScriptText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    width: '100%',
+    height: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    backgroundColor: 'rgba(255, 87, 34, 0.05)',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 6,
+  },
+  closeButton: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 15,
+  },
+  scriptScrollView: {
+    padding: 20,
+  },
+  scriptTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+  },
+  scriptText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#333',
+    textAlign: 'left',
   },
   imageSlider: {
     height: 250,

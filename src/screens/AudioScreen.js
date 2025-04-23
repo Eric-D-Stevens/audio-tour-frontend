@@ -12,6 +12,7 @@ const AudioScreen = ({ route, navigation }) => {
   const [tourData, setTourData] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isGeneratingOnDemand, setIsGeneratingOnDemand] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [error, setError] = useState(null);
@@ -81,11 +82,11 @@ const AudioScreen = ({ route, navigation }) => {
           
           // We don't want to show an error, but rather a loading state
           setError(null);
-          setLoading(true);
           
           try {
-            // Mark this place as being generated on-demand
-            place.isOnDemand = true;
+            // Set the proper React state for on-demand generation
+            setIsGeneratingOnDemand(true);
+            console.log('Switching to on-demand generation mode');
             
             // Fallback to generating a tour on demand
             const onDemandResponse = await getOnDemandTour(place.place_id, tourType);
@@ -148,8 +149,8 @@ const AudioScreen = ({ route, navigation }) => {
           <View style={styles.loadingIndicatorContainer}>
             <ActivityIndicator size="large" color="#FF5722" style={{transform: [{scale: 1.5}]}} />
             <Text style={styles.loadingText}>
-              {place.isOnDemand 
-                ? "Generating AI Tour" 
+              {isGeneratingOnDemand 
+                ? "No Tour Found, Generating AI Tour" 
                 : "Loading Tour"}
             </Text>
           </View>
@@ -368,11 +369,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '50%',
     left: '50%',
-    transform: [{ translateX: -90 }, { translateY: -60 }],
+    transform: [{ translateX: -125 }, { translateY: -70 }],  // Widened container positioning
     backgroundColor: 'white',
     borderRadius: 16,
     paddingVertical: 24,
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,  // Increased horizontal padding
+    width: 270,  // Fixed width to accommodate longer text
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -380,19 +382,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 10,
     elevation: 8,
-    width: 180,
-    height: 120,
+    minHeight: 140,  // Increased height for potentially wrapping text
     zIndex: 1001,
     borderWidth: 1,
     borderColor: 'rgba(255, 87, 34, 0.15)',
   },
   loadingText: {
-    marginTop: 16,
+    marginTop: 12,
     fontSize: 16,
+    fontWeight: '500',
     color: '#333',
-    textAlign: 'center',
-    fontWeight: '600',
-    width: '100%',
+    textAlign: 'center',  // Ensure text is centered
+    width: '100%',  // Allow text to use full container width
   },
   skeletonContainer: {
     width: '100%',

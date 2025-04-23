@@ -125,7 +125,7 @@ const AudioScreen = ({ route, navigation }) => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Audio Tour</Text>
+          <Text style={styles.headerTitle}>{tourData?.place_info?.place_name || place?.name || "TensorTours"}</Text>
         </View>
         
         <View style={styles.errorContainer}>
@@ -180,9 +180,15 @@ const AudioScreen = ({ route, navigation }) => {
               <View style={[styles.skeletonDescriptionLine, { width: '70%' }]} />
             </View>
             
-            {/* Audio player placeholder */}
-            <View style={styles.skeletonAudioPlayerContainer}>
-              <View style={styles.skeletonAudioPlayerContent} />
+            {/* Audio player skeleton */}
+            <View style={styles.skeletonAudioPlayer}>
+              {/* Audio player skeleton elements */}
+            </View>
+            
+            {/* View Script button skeleton */}
+            <View style={[styles.viewScriptButton, styles.skeletonButton]}>            
+              <View style={styles.skeletonIcon}></View>
+              <View style={styles.skeletonButtonText}></View>
             </View>
           </View>
         </View>
@@ -448,12 +454,32 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginBottom: 8,
   },
-  skeletonAudioPlayerContainer: {
-    padding: 16,
+  skeletonAudioPlayer: {
+    height: 160,
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    borderRadius: 8,
+    borderRadius: 10,
+    marginBottom: 8,
+    width: '100%',
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.08)',
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  skeletonButton: {
+    backgroundColor: 'rgba(255, 87, 34, 0.15)',
+    borderColor: 'rgba(255, 87, 34, 0.2)',
+    marginTop: 0,
+  },
+  skeletonIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    marginRight: 10,
+  },
+  skeletonButtonText: {
+    width: 80,
+    height: 16,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
   },
   skeletonAudioPlayerContent: {
     width: '100%',

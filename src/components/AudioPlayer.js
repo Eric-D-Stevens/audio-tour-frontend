@@ -65,6 +65,8 @@ const AudioPlayer = ({ placeId, audioUrl, placeName }) => {
       
       if (status.didJustFinish) {
         setIsPlaying(false);
+        // Reset position to beginning when playback finishes
+        audioManager.seekTo(0).catch(err => console.error('Error resetting position:', err));
       }
     }
   };
@@ -117,8 +119,8 @@ const AudioPlayer = ({ placeId, audioUrl, placeName }) => {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Generating AI-powered tour from scratch, this may take a few seconds...</Text>
+        <ActivityIndicator size="large" color="#FF5722" />
+        <Text style={styles.loadingText}>Generating tour...</Text>
       </View>
     );
   }
@@ -138,8 +140,8 @@ const AudioPlayer = ({ placeId, audioUrl, placeName }) => {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Generating AI-powered tour from scratch, this may take a few seconds...</Text>
+        <ActivityIndicator size="large" color="#FF5722" />
+        <Text style={styles.loadingText}>Generating tour...</Text>
       </View>
     );
   }
@@ -160,21 +162,7 @@ const AudioPlayer = ({ placeId, audioUrl, placeName }) => {
     <View style={styles.container}>
       {audioData && (
         <>
-          <View style={styles.headerContainer}>
-            <View style={styles.titleContainer}>
-              <Text 
-                style={styles.title} 
-                numberOfLines={1} 
-                ellipsizeMode="tail"
-              >
-                {typeof audioData.place_details?.name === 'object' 
-                  ? audioData.place_details?.name?.text || 'Audio Tour'
-                  : audioData.place_details?.name || 'Audio Tour'
-                }
-              </Text>
-              {audioData.cached && <Text style={styles.cachedBadge}>Cached</Text>}
-            </View>
-          </View>
+          {/* Removed header text as requested */}
           
           <View style={styles.sliderContainer}>
             <Text style={styles.timeText}>{formatTime(position)}</Text>

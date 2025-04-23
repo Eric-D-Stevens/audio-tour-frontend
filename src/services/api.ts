@@ -162,55 +162,6 @@ export const getPlaces = async (
 };
 
 /**
- * Fetch city preview data
- * @param city - City name
- * @param tourType - Type of tour
- * @returns City preview data
- */
-export const fetchCityPreview = async (
-  city: string, 
-  tourType: TourType = 'history'
-): Promise<any> => {
-  // Create a unique key for this request to prevent duplicates
-  const requestKey = `city_${city}_${tourType}`;
-  
-  // If this exact request is already in progress, return the existing promise
-  const existingRequest = pendingRequests[requestKey];
-  if (existingRequest) {
-    return existingRequest;
-  }
-  
-  // Create a new promise for this request
-  const requestPromise = new Promise(async (resolve, reject) => {
-    try {
-      const endpoint = `/getCityPreview`;
-      
-      const requestBody = {
-        city: city,
-        tour_type: tourType,
-      };
-      
-      const result = await apiRequest(endpoint, {
-        method: 'POST',
-        body: JSON.stringify(requestBody)
-      }, false); // City previews don't require auth
-      
-      resolve(result);
-    } catch (error) {
-      reject(error);
-    } finally {
-      // Clean up the pending request
-      delete pendingRequests[requestKey];
-    }
-  });
-  
-  // Store the promise so we can return it for duplicate requests
-  pendingRequests[requestKey] = requestPromise;
-  
-  return requestPromise;
-};
-
-/**
  * Fetch complete tour data for a place
  * @param placeId - Google Place ID
  * @param tourType - Type of tour
@@ -380,54 +331,6 @@ export const getPreviewPlaces = async (
   return requestPromise;
 };
 
-/**
- * Fetch preview audio tour for a place (no authentication required)
- * @param placeId - Google Place ID
- * @param tourType - Type of tour
- * @returns Audio tour preview data
- */
-export const fetchPreviewAudioTour = async (
-  placeId: string, 
-  tourType: TourType = 'history'
-): Promise<any> => {
-  // Create a unique key for this request to prevent duplicates
-  const requestKey = `preview_${placeId}_${tourType}`;
-  
-  // If this exact request is already in progress, return the existing promise
-  const existingRequest = pendingRequests[requestKey];
-  if (existingRequest) {
-    return existingRequest;
-  }
-  
-  // Create a new promise for this request
-  const requestPromise = new Promise(async (resolve, reject) => {
-    try {
-      const endpoint = `/getPreviewTour`;
-      
-      const requestBody = {
-        place_id: placeId,
-        tour_type: tourType,
-      };
-      
-      const result = await apiRequest(endpoint, {
-        method: 'POST',
-        body: JSON.stringify(requestBody)
-      }, false); // Preview tours don't require auth
-      
-      resolve(result);
-    } catch (error) {
-      reject(error);
-    } finally {
-      // Clean up the pending request
-      delete pendingRequests[requestKey];
-    }
-  });
-  
-  // Store the promise so we can return it for duplicate requests
-  pendingRequests[requestKey] = requestPromise;
-  
-  return requestPromise;
-};
 
 /**
  * Generate a tour on-demand for a specific place

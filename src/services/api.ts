@@ -40,7 +40,8 @@ const apiRequest = async (
         
         if (authResult && authResult.token) {
           // For API Gateway with Cognito User Pools Authorizer
-          headers['Authorization'] = authResult.token;
+          // Use indexer syntax with type assertion to avoid TypeScript errors
+          (headers as Record<string, string>)['Authorization'] = authResult.token;
         } else {
           const errorMsg = authResult?.error || 'No authentication token available';
           throw new Error(errorMsg);
@@ -90,7 +91,10 @@ const apiRequest = async (
     // Return data without logging
     return data;
   } catch (error: any) {
-    if (!error.message.includes('Authentication')) {
+    // Only log errors that aren't authentication errors and aren't 404s from getTour
+    // This helps suppress expected 404s when a tour doesn't exist yet
+    if (!error.message.includes('Authentication') && 
+        !(error.message.includes('Tour not found') || error.message.includes('status 404'))) {
       console.error(`API Error:`, error.message);
     }
     throw error;
@@ -117,8 +121,9 @@ export const getPlaces = async (
   const requestKey = `places_${lat}_${lng}_${radius}_${tourType}`;
   
   // If this exact request is already in progress, return the existing promise
-  if (pendingRequests[requestKey]) {
-    return pendingRequests[requestKey];
+  const existingRequest = pendingRequests[requestKey];
+  if (existingRequest) {
+    return existingRequest;
   }
   
   // Create a new promise for this request
@@ -170,8 +175,9 @@ export const fetchCityPreview = async (
   const requestKey = `city_${city}_${tourType}`;
   
   // If this exact request is already in progress, return the existing promise
-  if (pendingRequests[requestKey]) {
-    return pendingRequests[requestKey];
+  const existingRequest = pendingRequests[requestKey];
+  if (existingRequest) {
+    return existingRequest;
   }
   
   // Create a new promise for this request
@@ -218,8 +224,9 @@ export const getTour = async (
   const requestKey = `tour_${placeId}_${tourType}`;
   
   // If this exact request is already in progress, return the existing promise
-  if (pendingRequests[requestKey]) {
-    return pendingRequests[requestKey];
+  const existingRequest = pendingRequests[requestKey];
+  if (existingRequest) {
+    return existingRequest;
   }
   
   // Create a new promise for this request
@@ -276,8 +283,9 @@ export const fetchPreviewAudioTour = async (
   const requestKey = `preview_${placeId}_${tourType}`;
   
   // If this exact request is already in progress, return the existing promise
-  if (pendingRequests[requestKey]) {
-    return pendingRequests[requestKey];
+  const existingRequest = pendingRequests[requestKey];
+  if (existingRequest) {
+    return existingRequest;
   }
   
   // Create a new promise for this request
@@ -326,8 +334,9 @@ export const getOnDemandTour = async (
   const requestKey = `ondemand_${placeId}_${tourType}_${languageCode}_${Date.now()}`;
   
   // If this exact request is already in progress, return the existing promise
-  if (pendingRequests[requestKey]) {
-    return pendingRequests[requestKey];
+  const existingRequest = pendingRequests[requestKey];
+  if (existingRequest) {
+    return existingRequest;
   }
   
   // Create a new promise for this request

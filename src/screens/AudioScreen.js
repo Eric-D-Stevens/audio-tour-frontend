@@ -16,7 +16,32 @@ const AudioScreen = ({ route, navigation }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [error, setError] = useState(null);
   const [scriptModalVisible, setScriptModalVisible] = useState(false);
+  const [scriptText, setScriptText] = useState("");
   
+  // Function to open the script modal and fetch script content
+  const openModal = async () => {
+    try {
+      setScriptModalVisible(true);
+      
+      if (tourData?.script?.cloudfront_url) {
+        setScriptText("Loading script...");
+        
+        const response = await fetch(tourData.script.cloudfront_url);
+        if (!response.ok) {
+          throw new Error(`Failed to load script: ${response.status}`);
+        }
+        
+        const text = await response.text();
+        setScriptText(text);
+      } else {
+        setScriptText("Script not available for this tour.");
+      }
+    } catch (error) {
+      console.error("Error loading script:", error);
+      setScriptText(`Error loading script: ${error.message}`);
+    }
+  };
+
   // Fetch audio tour data including photos
   useEffect(() => {
     const fetchData = async () => {
@@ -248,11 +273,13 @@ const AudioScreen = ({ route, navigation }) => {
                   audioUrl={tourData.audio.cloudfront_url} 
                   placeName={tourData?.place_info?.place_name || place.name}
                 />
+                
+                {/* View Script button - positioned below audio player */}
                 <TouchableOpacity 
                   style={styles.viewScriptButton}
-                  onPress={() => setScriptModalVisible(true)}
+                  onPress={openModal}
                 >
-                  <Ionicons name="document-text-outline" size={18} color="white" style={styles.viewScriptIcon} />
+                  <Ionicons name="document-text-outline" size={20} color="white" style={styles.viewScriptIcon} />
                   <Text style={styles.viewScriptText}>View Script</Text>
                 </TouchableOpacity>
               </View>
@@ -275,10 +302,8 @@ const AudioScreen = ({ route, navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{tourData?.place_info?.place_name || place.name}</Text>
-              {tourData?.place_info?.place_address && (
-                <Text style={styles.modalSubtitle}>{tourData.place_info.place_address}</Text>
-              )}
+              <Text style={styles.modalTitle}>{tourData?.place_info?.place_name || place?.name || "Tour"}</Text>
+              <Text style={styles.modalSubtitle}>{tourData?.place_info?.place_address || place?.vicinity || ""}</Text>
               <TouchableOpacity 
                 style={styles.closeButton}
                 onPress={() => setScriptModalVisible(false)}
@@ -288,8 +313,9 @@ const AudioScreen = ({ route, navigation }) => {
             </View>
             
             <ScrollView style={styles.scriptScrollView}>
-              <Text style={styles.scriptTitle}>Tour Script</Text>
-              <Text style={styles.scriptText}>{tourData?.script?.text || (tourData?.script) || "Script not available"}</Text>
+              <Text style={styles.scriptText}>
+                {scriptText}
+              </Text>
             </ScrollView>
           </View>
         </View>
@@ -460,20 +486,23 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
-    marginTop: 16,
-    elevation: 2,
+    marginTop: 8,
+    marginBottom: 4,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 2,
+    shadowRadius: 3,
+    width: '100%',
+    zIndex: 100,
   },
   viewScriptIcon: {
     marginRight: 8,
   },
   viewScriptText: {
     color: 'white',
-    fontWeight: '600',
-    fontSize: 15,
+    fontWeight: '700',
+    fontSize: 16,
   },
   modalOverlay: {
     flex: 1,

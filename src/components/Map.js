@@ -4,7 +4,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { fetchNearbyPlaces } from '../services/api';
+import { getPlaces } from '../services/api.ts';
 import PlacesList from './PlacesList';
 
 const { width, height } = Dimensions.get('window');
@@ -62,7 +62,7 @@ const Map = ({ tourType = 'history' }) => {
   const fetchPlaces = async (latitude, longitude) => {
     try {
       setLoading(true);
-      const data = await fetchNearbyPlaces(latitude, longitude, 500, tourType);
+      const data = await getPlaces(latitude, longitude, 500, tourType);
       
       if (data && data.places) {
         setPlaces(data.places);

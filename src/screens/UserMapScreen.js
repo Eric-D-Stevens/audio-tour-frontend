@@ -8,7 +8,7 @@ import * as Location from 'expo-location';
 import AppHeader from '../components/AppHeader';
 import MiniAudioPlayer from '../components/MiniAudioPlayer';
 import { TourContext, AuthContext } from '../contexts';
-import { fetchNearbyPlaces } from '../services/api';
+import { getPlaces } from '../services/api.ts';
 import audioManager from '../services/audioManager';
 
 const UserMapScreen = ({ navigation }) => {
@@ -185,7 +185,7 @@ const UserMapScreen = ({ navigation }) => {
       const maxResults = tourParams?.numAttractions || 15;
       
       console.log(`Fetching places with params: ${tourType}, ${distance}m, max results: ${maxResults}`);
-      const data = await fetchNearbyPlaces(latitude, longitude, distance, tourType, maxResults);
+      const data = await getPlaces(latitude, longitude, distance, tourType, maxResults);
       
       if (data && data.places) {
         // Transform the places data to match the expected format for markers

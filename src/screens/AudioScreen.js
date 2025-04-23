@@ -150,7 +150,7 @@ const AudioScreen = ({ route, navigation }) => {
             <ActivityIndicator size="large" color="#FF5722" style={{transform: [{scale: 1.5}]}} />
             <Text style={styles.loadingText}>
               {isGeneratingOnDemand 
-                ? "No Tour Found, Generating AI Tour" 
+                ? "No Tour Found\nGenerating New AI Tour" 
                 : "Loading Tour"}
             </Text>
           </View>

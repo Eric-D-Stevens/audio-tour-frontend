@@ -25,6 +25,10 @@ export type TourType3 = "history" | "cultural" | "architecture" | "art" | "natur
  * Types of tours available
  */
 export type TourType4 = "history" | "cultural" | "architecture" | "art" | "nature";
+/**
+ * Types of tours available
+ */
+export type TourType5 = "history" | "cultural" | "architecture" | "art" | "nature";
 
 /**
  * Base request model with user information
@@ -286,6 +290,44 @@ export interface GetPregeneratedTourRequest {
  * Response model for getting a pregenerated tour
  */
 export interface GetPregeneratedTourResponse {
+  tour: TTour;
+  /**
+   * Whether the request was authenticated
+   */
+  is_authenticated?: boolean;
+}
+/**
+ * Request model for getting a preview tour
+ *
+ * This model is used specifically for requesting preview tours that are
+ * pre-generated and available in the preview dataset.
+ */
+export interface GetPreviewRequest {
+  /**
+   * User information from Cognito
+   */
+  user?: CognitoUser | null;
+  /**
+   * Unique request identifier
+   */
+  request_id?: string | null;
+  /**
+   * Request timestamp
+   */
+  timestamp?: string | null;
+  /**
+   * ID of the place to get a preview tour for
+   */
+  place_id: string;
+  tour_type: TourType5;
+}
+/**
+ * Response model for getting a preview tour
+ *
+ * This model is used for returning preview tours that are pre-generated
+ * and available in the preview dataset.
+ */
+export interface GetPreviewResponse {
   tour: TTour;
   /**
    * Whether the request was authenticated

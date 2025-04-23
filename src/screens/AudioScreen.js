@@ -68,8 +68,6 @@ const AudioScreen = ({ route, navigation }) => {
         
         console.log(`Using tour type: ${tourType} for place: ${place.place_id}`);
         try {
-          // TEMPORARY: Force error to test on-demand tour generation
-          throw new Error('Forced error to test on-demand tour generation');
           
           // First, try to get a pre-generated tour
           const response = await getTour(place.place_id, tourType);

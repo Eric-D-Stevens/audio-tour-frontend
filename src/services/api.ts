@@ -5,6 +5,8 @@ import {
   GetPlacesResponse, 
   GetPregeneratedTourRequest,
   GetPregeneratedTourResponse,
+  GenerateTourRequest,
+  GenerateTourResponse,
   TourType 
 } from '../types/api-types';
 
@@ -292,6 +294,59 @@ export const fetchPreviewAudioTour = async (
         method: 'POST',
         body: JSON.stringify(requestBody)
       }, false); // Preview tours don't require auth
+      
+      resolve(result);
+    } catch (error) {
+      reject(error);
+    } finally {
+      // Clean up the pending request
+      delete pendingRequests[requestKey];
+    }
+  });
+  
+  // Store the promise so we can return it for duplicate requests
+  pendingRequests[requestKey] = requestPromise;
+  
+  return requestPromise;
+};
+
+/**
+ * Generate a tour on-demand for a specific place
+ * @param placeId - Google Place ID
+ * @param tourType - Type of tour
+ * @param languageCode - Language code for the tour
+ * @returns Generated tour data
+ */
+export const getOnDemandTour = async (
+  placeId: string,
+  tourType: TourType = 'history',
+  languageCode: string = 'en'
+): Promise<GenerateTourResponse> => {
+  // Create a unique key for this request to prevent duplicates
+  const requestKey = `ondemand_${placeId}_${tourType}_${languageCode}_${Date.now()}`;
+  
+  // If this exact request is already in progress, return the existing promise
+  if (pendingRequests[requestKey]) {
+    return pendingRequests[requestKey];
+  }
+  
+  // Create a new promise for this request
+  const requestPromise = new Promise<GenerateTourResponse>(async (resolve, reject) => {
+    try {
+      const endpoint = `/getOnDemandTour`;
+      
+      const requestBody: GenerateTourRequest = {
+        place_id: placeId,
+        tour_type: tourType,
+        language_code: languageCode,
+        request_id: requestKey,
+        timestamp: new Date().toISOString()
+      };
+      
+      const result = await apiRequest(endpoint, {
+        method: 'POST',
+        body: JSON.stringify(requestBody)
+      }, true); // Explicitly require authentication
       
       resolve(result);
     } catch (error) {

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIn
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AudioPlayer from '../components/AudioPlayer';
-import { getTour } from '../services/api';
+import { getTour, getOnDemandTour } from '../services/api';
 import { AuthContext, TourContext } from '../contexts';
 
 const AudioScreen = ({ route, navigation }) => {
@@ -37,12 +37,39 @@ const AudioScreen = ({ route, navigation }) => {
         }
         
         console.log(`Using tour type: ${tourType} for place: ${place.place_id}`);
-        const response = await getTour(place.place_id, tourType);
-        setTourData(response.tour || null);
-        
-        // Extract photo URLs from tour data
-        const photoUrls = response.tour?.photos?.map(photo => photo.cloudfront_url) || [];
-        setPhotos(photoUrls);
+        try {
+          // TEMPORARY: Force error to test on-demand tour generation
+          throw new Error('Forced error to test on-demand tour generation');
+          
+          // First, try to get a pre-generated tour
+          const response = await getTour(place.place_id, tourType);
+          setTourData(response.tour || null);
+          
+          // Extract photo URLs from tour data
+          const photoUrls = response.tour?.photos?.map(photo => photo.cloudfront_url) || [];
+          setPhotos(photoUrls);
+        } catch (tourError) {
+          console.log('Pre-generated tour not found, generating on-demand:', tourError.message);
+          
+          // Set a temporary loading message
+          setError('Generating tour on-demand...');
+          
+          try {
+            // Fallback to generating a tour on demand
+            const onDemandResponse = await getOnDemandTour(place.place_id, tourType);
+            setTourData(onDemandResponse.tour || null);
+            
+            // Extract photo URLs from the on-demand tour data
+            const photoUrls = onDemandResponse.tour?.photos?.map(photo => photo.cloudfront_url) || [];
+            setPhotos(photoUrls);
+            
+            // Clear any error messages
+            setError(null);
+          } catch (onDemandError) {
+            console.error('Failed to generate on-demand tour:', onDemandError);
+            throw new Error(`Unable to generate tour: ${onDemandError.message}`);
+          }
+        }
       } catch (error) {
         console.error('Error fetching audio tour:', error);
         setError('Failed to load audio tour data');

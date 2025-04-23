@@ -21,6 +21,10 @@ export type TourType2 = "history" | "cultural" | "architecture" | "art" | "natur
  * Types of tours available
  */
 export type TourType3 = "history" | "cultural" | "architecture" | "art" | "nature";
+/**
+ * Types of tours available
+ */
+export type TourType4 = "history" | "cultural" | "architecture" | "art" | "nature";
 
 /**
  * Base request model with user information
@@ -166,6 +170,52 @@ export interface TTAudio {
   [k: string]: unknown;
 }
 /**
+ * Request model for getting an on-demand tour
+ *
+ * This model is similar to GetPregeneratedTourRequest but can also include place_info
+ * for places that don't have existing data in the database.
+ */
+export interface GetOnDemandTourRequest {
+  /**
+   * User information from Cognito
+   */
+  user?: CognitoUser | null;
+  /**
+   * Unique request identifier
+   */
+  request_id?: string | null;
+  /**
+   * Request timestamp
+   */
+  timestamp?: string | null;
+  /**
+   * ID of the place to get a tour for
+   */
+  place_id: string;
+  tour_type: TourType2;
+  /**
+   * JSON string with place information if not already in database
+   */
+  place_info_json?: string | null;
+}
+/**
+ * Response model for getting an on-demand tour
+ *
+ * This model is used for returning tours that are generated on-demand
+ * without using the tour table or generation queue.
+ */
+export interface GetOnDemandTourResponse {
+  tour: TTour;
+  /**
+   * Whether the request was authenticated
+   */
+  is_authenticated?: boolean;
+  /**
+   * Whether the tour was generated on-demand
+   */
+  generated_on_demand?: boolean;
+}
+/**
  * Request model for getting places near a location
  */
 export interface GetPlacesRequest {
@@ -181,7 +231,7 @@ export interface GetPlacesRequest {
    * Request timestamp
    */
   timestamp?: string | null;
-  tour_type: TourType2;
+  tour_type: TourType3;
   /**
    * Latitude of the search location
    */
@@ -230,7 +280,7 @@ export interface GetPregeneratedTourRequest {
    * ID of the place to get a tour for
    */
   place_id: string;
-  tour_type: TourType3;
+  tour_type: TourType4;
 }
 /**
  * Response model for getting a pregenerated tour

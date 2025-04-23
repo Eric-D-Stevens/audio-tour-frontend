@@ -62,29 +62,56 @@ const GuestMapScreen = ({ navigation }) => {
 
   // Effect to update tour points when guest tour parameters change
   useEffect(() => {
-    if (guestTourParams && guestTourParams.cityId) {
-      console.log('Guest tour parameters updated:', guestTourParams);
-      const city = getCityById(guestTourParams.cityId);
-      
-      if (city) {
-        setSelectedCity(city);
+    const handleTourParamsChange = async () => {
+      if (guestTourParams && guestTourParams.cityId) {
+        console.log('Guest tour parameters updated:', JSON.stringify(guestTourParams));
+        const city = getCityById(guestTourParams.cityId);
         
-        // Update map region to the new city
-        if (mapRef.current) {
-          const newRegion = {
-            latitude: city.coordinate.latitude,
-            longitude: city.coordinate.longitude,
-            latitudeDelta: 0.19,
-            longitudeDelta: 0.09,
-          };
-          mapRef.current.animateToRegion(newRegion, 500);
-          setRegion(newRegion);
+        if (city) {
+          console.log(`Processing city: ${city.name} (ID: ${city.id})`);
+          
+          // Clear existing points first
+          setTourPoints([]);
+          setLoading(true);
+          
+          // Update selected city in state
+          setSelectedCity(city);
+          
+          // Update map region to the new city
+          if (mapRef.current) {
+            const newRegion = {
+              latitude: city.coordinate.latitude,
+              longitude: city.coordinate.longitude,
+              latitudeDelta: 0.19,
+              longitudeDelta: 0.09,
+            };
+            console.log(`Animating map to: ${newRegion.latitude}, ${newRegion.longitude}`);
+            mapRef.current.animateToRegion(newRegion, 500);
+            setRegion(newRegion);
+          }
+          
+          // Wait a bit for the map to start moving
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          // Then fetch city preview data using the CITY ID directly from parameters
+          // This is critical - we need to use the ID from the parameters, not the name
+          console.log(`Fetching preview data for city ID: ${guestTourParams.cityId}`);
+          
+          try {
+            // Pass the city ID from parameters directly to prevent any mismatch
+            await fetchCityPreviewData(guestTourParams.cityId);
+            console.log(`Preview data fetched for ${city.name} (ID: ${guestTourParams.cityId})`);
+          } catch (err) {
+            console.error('Error fetching city preview data:', err);
+            setError('Failed to load city data. Please try again.');
+            setLoading(false);
+          }
         }
-        
-        // Fetch city preview data
-        fetchCityPreviewData(city.name);
       }
-    }
+    };
+    
+    // Execute the async function
+    handleTourParamsChange();
   }, [guestTourParams]);
 
   // Fetch city preview data
@@ -142,64 +169,80 @@ const GuestMapScreen = ({ navigation }) => {
     }
   }, [region, needsJiggle]);
 
-  const fetchCityPreviewData = async (city) => {
+  const fetchCityPreviewData = async (cityId) => {
     try {
-      setLoading(true);
+      // IMPORTANT: Use the cityId parameter directly and DO NOT override it
+      // This ensures we're using the ID from the tour parameters, not from the selectedCity state
+      console.log(`Fetching data for exact city ID: ${cityId}`);
       
-      // Log actual city value being passed
-      console.log(`Fetching preview data for city: "${city}" (raw value)`); 
-      
-      // Ensure the tour type is lowercase to match backend expectations
+      // Get tour type from parameters
       const tourType = (guestTourParams?.category || 'history').toLowerCase();
-      console.log(`Using tour type: ${tourType}`); 
       
-      // Use the city ID directly if available, which matches the format in PRESET_CITIES
-      // This ensures consistent naming format with the backend path structure
-      let cityId = city;
-      if (selectedCity && selectedCity.id) {
-        cityId = selectedCity.id;
-        console.log(`Using city ID from selectedCity: ${cityId}`);
-      }
+      console.log(`Making CloudFront request for ${cityId}/${tourType}...`);
       
-      // Use the new getPreviewPlaces function to fetch data from JSON endpoint
+      // Make the request using the EXACT cityId that was passed in
       const data = await getPreviewPlaces(cityId, tourType);
+      console.log(`CloudFront request completed with ${data?.places?.length || 0} places`);
       
-      if (data && data.places) {
-        // Transform the places data to match the expected format for markers
-        const transformedPlaces = data.places.map((place, index) => {
-          // Handle the new TTPlaceInfo model structure
-          return {
-            id: place.place_id || String(index),
-            title: place.place_name || place.name || 'Unknown Place',
-            description: place.place_editorial_summary || place.place_address || place.vicinity || '',
-            coordinate: {
-              // Check for different location field structures
-              latitude: place.place_location?.latitude || 
-                      place.place_location?.lat || 
-                      place.location?.lat || 
-                      place.latitude || 
-                      0,
-              longitude: place.place_location?.longitude || 
-                       place.place_location?.lng || 
-                       place.location?.lng || 
-                       place.longitude || 
-                       0
-            },
-            // Keep the original data for detailed view
-            originalData: place
-          };
-        });
+      // Process the places data
+      if (data && data.places && data.places.length > 0) {
+        // Transform the data for map markers
+        const transformedPlaces = [];
         
+        // Process each place item
+        for (const place of data.places) {
+          // Extract location data
+          const lat = Number(place.place_location?.latitude || 
+                         place.place_location?.lat || 
+                         place.location?.lat || 
+                         place.latitude || 
+                         0);
+          
+          const lng = Number(place.place_location?.longitude || 
+                          place.place_location?.lng || 
+                          place.location?.lng || 
+                          place.longitude || 
+                          0);
+          
+          // Only include places with valid coordinates
+          if (lat && lng) {
+            transformedPlaces.push({
+              id: place.place_id || `place-${transformedPlaces.length}`,
+              title: place.place_name || place.name || 'Unknown Place',
+              description: place.place_editorial_summary || place.place_address || place.vicinity || '',
+              coordinate: { latitude: lat, longitude: lng },
+              originalData: place
+            });
+          }
+        }
+        
+        // Clear existing points first
+        setTourPoints([]);
+        
+        // Brief delay to ensure old points are cleared
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Set the new points
+        console.log(`Setting ${transformedPlaces.length} valid tour points for ${cityId}`);
         setTourPoints(transformedPlaces);
+        
+        // Trigger map refresh with delay to ensure React has updated state
+        setTimeout(() => {
+          setNeedsJiggle(true);
+          console.log('Map jiggle triggered to refresh markers');
+        }, 300);
       } else {
-        // If no places are found, set empty array
+        console.log(`No places found in response for city ID: ${cityId}`);
         setTourPoints([]);
       }
     } catch (err) {
-      console.error('Error fetching preview places:', err);
+      console.error(`Error fetching preview places for city ID ${cityId}:`, err);
       setError('Error fetching places: ' + err.message);
     } finally {
-      setLoading(false);
+      // Ensure loading state is cleared
+      setTimeout(() => {
+        setLoading(false);
+      }, 500);
     }
   };
 

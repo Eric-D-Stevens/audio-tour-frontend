@@ -31,14 +31,24 @@ const GuestTourParametersScreen = ({ navigation }) => {
     { id: 'architecture', name: 'Architecture' }
   ];
   
-  const handleSave = () => {
-    // Update the global guest tour parameters
+  const handleSave = async () => {
+    // Update the global guest tour parameters with new values
+    console.log(`Setting tour params: city=${selectedCity}, category=${category}`);
+    
+    // In React context, setGuestTourParams won't accept a callback
+    // So we need to set the parameters and then wait for them to propagate
     setGuestTourParams({
       cityId: selectedCity,
       category
     });
     
-    // Navigate back without showing sign-in prompt
+    // Wait for React state and context to update
+    // This ensures the context value is updated before we navigate back
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    console.log('Tour parameters set, navigating back to map screen');
+    
+    // Navigate back to map screen
     navigation.goBack();
   };
   

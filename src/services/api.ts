@@ -270,6 +270,117 @@ export const getTour = async (
 // fetchAudioTour function has been removed - use getTour instead
 
 /**
+ * Get preview places from pre-generated JSON files
+ * @param city - City name (lowercase)
+ * @param tourType - Type of tour
+ * @returns Places data with places array (same format as getPlaces)
+ * Note: This endpoint does not require authentication
+ */
+export const getPreviewPlaces = async (
+  city: string,
+  tourType: TourType = 'history'
+): Promise<GetPlacesResponse> => {
+  // Create a unique key for this request to prevent duplicates
+  const requestKey = `preview_places_${city}_${tourType}`;
+  
+  // If this exact request is already in progress, return the existing promise
+  const existingRequest = pendingRequests[requestKey];
+  if (existingRequest) {
+    return existingRequest;
+  }
+  
+  // Create a new promise for this request
+  const requestPromise = new Promise<GetPlacesResponse>(async (resolve, reject) => {
+    try {
+      // Normalize city name to lowercase for the URL
+      let normalizedCity = city.toLowerCase().trim();
+      
+      // Handle common city name variations
+      if (normalizedCity === 'sf' || normalizedCity === 'san-francisco') {
+        normalizedCity = 'san-francisco';
+      } else if (normalizedCity === 'ny' || normalizedCity === 'new-york') {
+        normalizedCity = 'new-york';
+      } else if (normalizedCity === 'tokyo') {
+        normalizedCity = 'tokyo';
+      } else if (normalizedCity === 'london') {
+        normalizedCity = 'london';
+      }
+      
+      // Normalize tour type to lowercase
+      const normalizedTourType = tourType.toLowerCase();
+      
+      // Construct the URL to the JSON file
+      // This is a public endpoint that doesn't require authentication
+      const jsonUrl = `https://d2g5o5njd6p5e.cloudfront.net/preview/${normalizedCity}/${normalizedTourType}/places.json`;
+      
+      console.log(`Fetching preview places from: ${jsonUrl}`);
+      
+      try {
+        // Fetch the JSON directly with more detailed logging
+        console.log(`Attempting to fetch from exact URL: ${jsonUrl}`);
+        
+        const response = await fetch(jsonUrl);
+        
+        if (!response.ok) {
+          // If we get a 403 or 404, log it with more details
+          console.warn(`Preview data not accessible (${response.status} ${response.statusText})`);
+          console.warn(`Full URL that failed: ${jsonUrl}`);
+          
+          // Try to get more error details if possible
+          try {
+            const errorText = await response.text();
+            console.warn(`Error response body: ${errorText}`);
+          } catch (textError) {
+            console.warn('Could not read error response body');
+          }
+          
+          // Continue to fallback below
+          throw new Error(`Failed to fetch preview places: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log(`Successfully loaded preview data for ${normalizedCity}/${normalizedTourType}`);
+        // Result should follow the same format as GetPlacesResponse with places array
+        resolve(result);
+        return;
+      } catch (fetchError: any) {
+        // Log the error but continue to fallback
+        console.warn(`Error fetching preview places: ${fetchError.message || 'Unknown error'}. Using fallback data.`);
+        // Continue to fallback below
+      }
+      
+      // Fallback: Return mock data with empty places array
+      // This allows the app to continue working even when CloudFront/S3 has issues
+      const fallbackResponse: GetPlacesResponse = {
+        places: [],
+        total_count: 0,
+        is_authenticated: false
+      };
+      
+      console.log(`Using fallback data for ${normalizedCity}/${normalizedTourType} (empty places array)`);
+      resolve(fallbackResponse);
+    } catch (error) {
+      console.error('Error in getPreviewPlaces:', error);
+      // Instead of rejecting with an error, return an empty response
+      // This prevents the app from crashing when preview data isn't available
+      resolve({
+        places: [],
+        total_count: 0,
+        is_authenticated: false
+      });
+    } finally {
+      // Clean up the pending request
+      delete pendingRequests[requestKey];
+    }
+  });
+  
+  // Store the promise so we can return it for duplicate requests
+  pendingRequests[requestKey] = requestPromise;
+  
+  return requestPromise;
+};
+
+/**
  * Fetch preview audio tour for a place (no authentication required)
  * @param placeId - Google Place ID
  * @param tourType - Type of tour

@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../components/AppHeader';
 import MiniAudioPlayer from '../components/MiniAudioPlayer';
 import { TourContext } from '../contexts';
-import { fetchCityPreview } from '../services/api';
+import { getPreviewPlaces } from '../services/api.ts';
 import { PRESET_CITIES, getCityById, getDefaultCity } from '../constants/cities';
 import audioManager from '../services/audioManager';
 
@@ -145,10 +145,24 @@ const GuestMapScreen = ({ navigation }) => {
   const fetchCityPreviewData = async (city) => {
     try {
       setLoading(true);
+      
+      // Log actual city value being passed
+      console.log(`Fetching preview data for city: "${city}" (raw value)`); 
+      
       // Ensure the tour type is lowercase to match backend expectations
       const tourType = (guestTourParams?.category || 'history').toLowerCase();
+      console.log(`Using tour type: ${tourType}`); 
       
-      const data = await fetchCityPreview(city, tourType);
+      // Use the city ID directly if available, which matches the format in PRESET_CITIES
+      // This ensures consistent naming format with the backend path structure
+      let cityId = city;
+      if (selectedCity && selectedCity.id) {
+        cityId = selectedCity.id;
+        console.log(`Using city ID from selectedCity: ${cityId}`);
+      }
+      
+      // Use the new getPreviewPlaces function to fetch data from JSON endpoint
+      const data = await getPreviewPlaces(cityId, tourType);
       
       if (data && data.places) {
         // Transform the places data to match the expected format for markers
@@ -182,7 +196,7 @@ const GuestMapScreen = ({ navigation }) => {
         setTourPoints([]);
       }
     } catch (err) {
-      console.error('Error fetching places:', err);
+      console.error('Error fetching preview places:', err);
       setError('Error fetching places: ' + err.message);
     } finally {
       setLoading(false);

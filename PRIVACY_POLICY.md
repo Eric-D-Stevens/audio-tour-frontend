@@ -43,8 +43,9 @@ We use the information we collect to:
 
 TensorTrix uses the following third-party services:
 
-- **Google Places API**: We use Google Places API to retrieve photos and information about points of interest. Information about your location may be shared with Google to provide this service.
+- **Google Places API**: We use Google Places API to retrieve photos and information about points of interest. When you use our app, we may send anonymous location coordinates to Google's services to retrieve relevant place information. No personally identifiable information about you is shared with Google through this process.
 - **Amazon Web Services (AWS)**: We use AWS services, including Amazon Cognito for authentication and other AWS services for hosting our backend infrastructure.
+- **OpenAI**: We utilize OpenAI's technology to generate personalized audio tour content. Anonymous location data and points of interest information may be sent to their services to create tour narratives. No personally identifiable information about you is shared with OpenAI.
 - **Analytics Providers**: We may use analytics providers to help us understand how users interact with our Application.
 
 Each of these third parties has their own privacy policies addressing how they use such information.

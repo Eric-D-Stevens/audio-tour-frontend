@@ -6,21 +6,28 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "android": {
+        "disabled": true
+      }
     },
     "standalone": {
       "distribution": "internal",
       "developmentClient": false,
       "ios": {
         "resourceClass": "m1-medium"
+      },
+      "android": {
+        "disabled": true
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk",
-        "credentialsSource": "remote",
-        "withoutCredentials": true
+        "disabled": true
       },
       "ios": {
         "simulator": true

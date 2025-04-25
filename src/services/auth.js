@@ -406,7 +406,18 @@ export const signIn = async (username, password, rememberMe = false) => {
         resolve(result);
       },
       onFailure: (err) => {
-        reject(err);
+        // Handle unverified user accounts - this enables a better UX flow
+        if (err.code === 'UserNotConfirmedException') {
+          // Return special error object with flag indicating an unverified account
+          reject({
+            code: 'UserNotConfirmedException',
+            message: 'Account is not verified. Please check your email for verification code.',
+            username: username,
+            unverifiedAccount: true
+          });
+        } else {
+          reject(err);
+        }
       },
       // Add MFA support if ever needed
       mfaRequired: (challengeName, challengeParameters) => {
@@ -478,18 +489,38 @@ export const signOut = async (clearRememberMe = false) => {
  * @param {string} username - User's username or email
  * @param {string} password - User's password
  * @param {string} email - User's email
+ * @param {string} policyVersion - Version of the privacy policy agreed to
+ * @param {string} consentTimestamp - ISO timestamp when user agreed to policy
  * @returns {Promise<Object>} - Sign up result
  */
-export const signUp = (username, password, email) => {
+export const signUp = (username, password, email, policyVersion = '1.0', consentTimestamp = new Date().toISOString()) => {
   return new Promise((resolve, reject) => {
-    userPool.signUp(username, password, [
-      { Name: 'email', Value: email }
-    ], null, (err, result) => {
+    // Create attributes array with email and privacy policy consent data
+    const attributeList = [
+      { Name: 'email', Value: email },
+      { Name: 'custom:policyVersion', Value: policyVersion },
+      { Name: 'custom:consentDate', Value: consentTimestamp }
+    ];
+    
+    userPool.signUp(username, password, attributeList, null, (err, result) => {
       if (err) {
         console.error('Error during sign up:', err);
         reject(err);
         return;
       }
+      
+      // Also store consent data in AsyncStorage for local reference
+      try {
+        AsyncStorage.setItem('tensortrix_privacy_consent', JSON.stringify({
+          version: policyVersion,
+          timestamp: consentTimestamp,
+          username: username
+        }));
+      } catch (storageError) {
+        console.warn('Failed to store privacy consent locally:', storageError);
+        // Continue anyway as we've stored it in Cognito
+      }
+      
       resolve(result);
     });
   });

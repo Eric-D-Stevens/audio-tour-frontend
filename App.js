@@ -18,6 +18,7 @@ import TourParametersScreen from './src/screens/TourParametersScreen';
 import GuestTourParametersScreen from './src/screens/GuestTourParametersScreen';
 import AboutScreen from './src/screens/AboutScreen';
 import ContactScreen from './src/screens/ContactScreen';
+import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 
 // Import auth services
 import * as AuthService from './src/services/auth';
@@ -176,8 +177,8 @@ export default function App() {
       // Pass the clearRememberMe flag to handleLogout
       await handleLogout(clearRememberMe);
     },
-    signUp: (username, password, email) => {
-      return AuthService.signUp(username, password, email);
+    signUp: (username, password, email, policyVersion, consentTimestamp) => {
+      return AuthService.signUp(username, password, email, policyVersion, consentTimestamp);
     },
     confirmSignUp: (username, code) => {
       return AuthService.confirmSignUp(username, code);
@@ -295,6 +296,11 @@ export default function App() {
                   <Stack.Screen 
                     name="EmailVerification" 
                     component={EmailVerificationScreen} 
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen 
+                    name="PrivacyPolicy" 
+                    component={PrivacyPolicyScreen} 
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen 

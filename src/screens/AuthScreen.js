@@ -2,16 +2,28 @@ import React, { useState, useContext, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView, Switch } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../contexts';
 
-const AuthScreen = ({ navigation }) => {
+const AuthScreen = ({ route, navigation }) => {
+  // Check if we're coming back from email verification
+  const verifiedEmail = route.params?.verifiedEmail || '';
+  
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(verifiedEmail);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [privacyPolicyAgreed, setPrivacyPolicyAgreed] = useState(false);
+  
+  // If we have a verified email, show a success message
+  useEffect(() => {
+    if (verifiedEmail) {
+      setErrorMessage('Account verified! You can now log in.');
+    }
+  }, [verifiedEmail]);
   
   // Load previous remember me preference on component mount
   useEffect(() => {
@@ -41,6 +53,11 @@ const AuthScreen = ({ navigation }) => {
       setErrorMessage('Passwords do not match');
       return;
     }
+    
+    if (!isLogin && !privacyPolicyAgreed) {
+      setErrorMessage('You must agree to the Privacy Policy to create an account');
+      return;
+    }
 
     setIsLoading(true);
     setErrorMessage('');
@@ -50,8 +67,10 @@ const AuthScreen = ({ navigation }) => {
         // Sign in with the remember me preference
         await auth.signIn(email, password, rememberMe);
       } else {
-        // Sign up
-        await auth.signUp(email, password, email);
+        // Sign up with privacy policy consent data
+        const policyVersion = '1.0'; // Version of the privacy policy
+        const consentTimestamp = new Date().toISOString();
+        await auth.signUp(email, password, email, policyVersion, consentTimestamp);
         
         // Navigate to email verification screen
         navigation.navigate('EmailVerification', { email });
@@ -59,6 +78,19 @@ const AuthScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.log('Auth error:', error);
+      
+      // Special handling for unverified accounts
+      if (error.unverifiedAccount) {
+        // Redirect to email verification screen
+        setIsLoading(false);
+        navigation.navigate('EmailVerification', { 
+          email: email,
+          unverifiedLogin: true,
+          message: 'Your account needs verification to continue. Please check your email for a verification code or request a new one below.'
+        });
+        return;
+      }
+      
       setErrorMessage(error.message || 'Authentication failed');
     } finally {
       setIsLoading(false);
@@ -88,6 +120,7 @@ const AuthScreen = ({ navigation }) => {
 
             {errorMessage ? (
               <View style={styles.errorContainer}>
+                <Ionicons name="alert-circle-outline" size={20} style={styles.errorIcon} />
                 <Text style={styles.errorText}>{errorMessage}</Text>
               </View>
             ) : null}
@@ -110,13 +143,31 @@ const AuthScreen = ({ navigation }) => {
             />
 
             {!isLogin && (
-              <TextInput
-                style={styles.input}
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-              />
+              <>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry
+                />
+                <View style={styles.privacyPolicyContainer}>
+                  <Switch
+                    value={privacyPolicyAgreed}
+                    onValueChange={setPrivacyPolicyAgreed}
+                    trackColor={{ false: '#d1d1d1', true: '#FF8a65' }}
+                    thumbColor={privacyPolicyAgreed ? '#FF5722' : '#f4f3f4'}
+                  />
+                  <View style={styles.privacyTextContainer}>
+                    <Text style={styles.privacyText}>I agree to the </Text>
+                    <TouchableOpacity 
+                      onPress={() => navigation.navigate('PrivacyPolicy')}
+                    >
+                      <Text style={styles.privacyLink}>Privacy Policy</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </>
             )}
 
             {isLogin && (
@@ -238,14 +289,24 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   errorContainer: {
-    backgroundColor: '#ffebee',
-    padding: 10,
-    borderRadius: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 87, 34, 0.08)',
+    borderLeftWidth: 3,
+    borderLeftColor: '#FF5722',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 10,
     marginBottom: 15,
   },
+  errorIcon: {
+    color: '#FF5722',
+    marginRight: 10,
+  },
   errorText: {
-    color: '#d32f2f',
-    textAlign: 'center',
+    color: '#FF5722',
+    flex: 1,
+    fontSize: 14,
   },
   input: {
     backgroundColor: '#f5f5f5',
@@ -290,6 +351,28 @@ const styles = StyleSheet.create({
   dividerText: {
     marginHorizontal: 10,
     color: '#666',
+  },
+  privacyPolicyContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingVertical: 5,
+  },
+  privacyTextContainer: {
+    flexDirection: 'row',
+    marginLeft: 10,
+    flexShrink: 1,
+    flexWrap: 'wrap',
+  },
+  privacyText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  privacyLink: {
+    color: '#FF5722',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
   guestButton: {
     backgroundColor: '#FFF3E0',

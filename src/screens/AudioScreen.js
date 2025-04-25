@@ -649,7 +649,8 @@ const styles = StyleSheet.create({
   placeImage: {
     height: 250,
     width: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain',
+    backgroundColor: '#f5f5f5',
   },
 
   contentContainer: {

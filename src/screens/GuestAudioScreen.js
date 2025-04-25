@@ -459,7 +459,8 @@ const styles = StyleSheet.create({
   placeImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain',
+    backgroundColor: '#f5f5f5',
   },
   imagePlaceholder: {
     height: 250,

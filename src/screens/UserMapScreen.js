@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated, Platform, Alert, Modal } from 'react-native';
 import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
 import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,7 +13,7 @@ import audioManager from '../services/audioManager';
 
 const UserMapScreen = ({ navigation }) => {
   const { tourParams } = useContext(TourContext);
-  const { isAuthenticated, checkAuthAndRedirect } = useContext(AuthContext);
+  const { isAuthenticated, checkAuthAndRedirect, signOut } = useContext(AuthContext);
   const [region, setRegion] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [tourPoints, setTourPoints] = useState([]);
@@ -24,47 +24,77 @@ const UserMapScreen = ({ navigation }) => {
   const mapRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  // Get user's location and fetch nearby places on component mount
+  // State for permission modal - initially hidden until we check permission status
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+  
+  // Function to handle accepting location permission
+  const handleAcceptLocationPermission = async () => {
+    setShowPermissionModal(false);
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        // If permission still denied, show error
+        setError('Permission to access location was denied');
+        setLoading(false);
+        return;
+      }
+
+      // Permission granted, get location and proceed
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      
+      const { latitude, longitude } = location.coords;
+      setUserLocation({ latitude, longitude });
+      
+      // Set initial map region
+      const newRegion = {
+        latitude,
+        longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      };
+      setRegion(newRegion);
+
+      // Fetch nearby places based on location and tour parameters
+      await fetchNearbyPlacesData(latitude, longitude);
+    } catch (err) {
+      console.error('Error getting location:', err);
+      setError('Error getting location: ' + err.message);
+      setLoading(false);
+    }
+  };
+  
+  // Function to handle declining location permission
+  const handleDeclineLocationPermission = () => {
+    // Logout the user through the auth context
+    // This will automatically navigate to the Auth screen
+    signOut();
+  };
+  
+  // Initialize with authentication check and permission check
   useEffect(() => {
     (async () => {
-      try {
-        // First verify authentication is still valid
-        const isAuthValid = await checkAuthAndRedirect(navigation);
-        if (!isAuthValid) {
-          console.log('Authentication validation failed on initial load');
-          setLoading(false);
-          return;
-        }
-        
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setError('Permission to access location was denied');
-          setLoading(false);
-          return;
-        }
-
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        
-        const { latitude, longitude } = location.coords;
-        setUserLocation({ latitude, longitude });
-        
-        // Set initial map region
-        const newRegion = {
-          latitude,
-          longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        };
-        setRegion(newRegion);
-
-        // Fetch nearby places based on location and tour parameters
-        await fetchNearbyPlacesData(latitude, longitude);
-      } catch (err) {
-        console.error('Error getting location:', err);
-        setError('Error getting location: ' + err.message);
+      // First verify authentication is still valid
+      const isAuthValid = await checkAuthAndRedirect(navigation);
+      if (!isAuthValid) {
+        console.log('Authentication validation failed on initial load');
         setLoading(false);
+        return;
+      }
+      
+      // Check if we already have location permission
+      const { status } = await Location.getForegroundPermissionsAsync();
+      console.log('Current location permission status:', status);
+      
+      if (status !== 'granted') {
+        // Only show the modal if we don't have permission yet
+        console.log('No location permission, showing modal');
+        setShowPermissionModal(true);
+      } else {
+        console.log('Location permission already granted, proceeding');
+        // Since we have permission, get the user's location
+        handleAcceptLocationPermission();
       }
     })();
   }, []);
@@ -126,34 +156,53 @@ const UserMapScreen = ({ navigation }) => {
           const isAuthValid = await checkAuthAndRedirect(navigation);
           if (!isAuthValid) {
             console.log('Authentication validation failed, aborting operation');
+            setLoadingPoints(false);
             return;
           }
-          // 1. Get fresh location
-          const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          });
           
-          const { latitude, longitude } = location.coords;
-          const newUserLocation = { latitude, longitude };
+          // Check if we have location permission
+          const { status } = await Location.getForegroundPermissionsAsync();
+          console.log('Current location permission status for tour params update:', status);
           
-          // 2. Set the location in context
-          setUserLocation(newUserLocation);
-          
-          // 3. Recenter the map on user's location
-          if (mapRef.current) {
-            const newRegion = {
-              latitude,
-              longitude,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
-            };
-            mapRef.current.animateToRegion(newRegion);
-            // Update region state to keep it in sync with the map
-            setRegion(newRegion);
+          if (status !== 'granted') {
+            console.log('No location permission, showing modal');
+            setShowPermissionModal(true);
+            setLoadingPoints(false);
+            return;
           }
           
-          // 4. Fetch new places at current location
-          await fetchNearbyPlacesData(latitude, longitude);
+          // If we have permission, get fresh location
+          try {
+            const location = await Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.Balanced,
+            });
+            
+            const { latitude, longitude } = location.coords;
+            const newUserLocation = { latitude, longitude };
+            
+            // Set the location in context
+            setUserLocation(newUserLocation);
+            
+            // Recenter the map on user's location
+            if (mapRef.current) {
+              const newRegion = {
+                latitude,
+                longitude,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
+              };
+              mapRef.current.animateToRegion(newRegion);
+              // Update region state to keep it in sync with the map
+              setRegion(newRegion);
+            }
+            
+            // Fetch new places at current location
+            await fetchNearbyPlacesData(latitude, longitude);
+          } catch (locationError) {
+            console.error('Error getting current position:', locationError);
+            setError('Error getting current location. Please try again.');
+            setLoadingPoints(false);
+          }
         } catch (err) {
           console.error('Error updating location for tour parameters:', err);
           setError('Error updating location: ' + err.message);
@@ -283,6 +332,47 @@ const UserMapScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <AppHeader navigation={navigation} title="TensorTours Map" />
+      
+      {/* Location Permission Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showPermissionModal}
+        onRequestClose={() => navigation.navigate('Auth')}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Location Access</Text>
+            </View>
+            
+            <Text style={styles.modalText}>
+              TensorTours uses your location to create personalized audio tours for attractions near you. Your location is only used while you're using the app.
+            </Text>
+            
+            <Text style={styles.modalText}>
+              Without location access, the app cannot function properly.
+            </Text>
+            
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.secondaryButton]}
+                onPress={handleDeclineLocationPermission}
+              >
+                <Text style={styles.secondaryButtonText}>Decline</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.primaryButton]}
+                onPress={handleAcceptLocationPermission}
+              >
+                <Text style={styles.primaryButtonText}>Accept</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      
       <View style={styles.mapContainer}>
         {region ? (
           <MapView
@@ -552,6 +642,70 @@ const styles = StyleSheet.create({
   },
   calloutButtonIcon: {
     marginLeft: 4,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#555',
+    marginBottom: 15,
+    lineHeight: 22,
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  modalButton: {
+    borderRadius: 8,
+    padding: 12,
+    minWidth: '45%',
+    alignItems: 'center',
+  },
+  primaryButton: {
+    backgroundColor: '#FF5722',
+  },
+  primaryButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  secondaryButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  secondaryButtonText: {
+    color: '#555',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 

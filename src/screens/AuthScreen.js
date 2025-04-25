@@ -5,6 +5,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../contexts';
 
+// Get color based on strength percentage
+const getStrengthColor = (percentage) => {
+  if (percentage < 25) return '#E0E0E0'; // Light gray
+  if (percentage < 50) return '#FFCBB3'; // Lightest orange
+  if (percentage < 75) return '#FFA579'; // Light orange
+  if (percentage < 100) return '#FF8F59'; // Medium orange
+  return '#FF5722'; // TensorTrix orange
+};
+
 const AuthScreen = ({ route, navigation }) => {
   // Check if we're coming back from email verification
   const verifiedEmail = route.params?.verifiedEmail || '';
@@ -17,6 +26,16 @@ const AuthScreen = ({ route, navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [privacyPolicyAgreed, setPrivacyPolicyAgreed] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // Password validation states
+  const [lengthValid, setLengthValid] = useState(false);
+  const [hasUppercase, setHasUppercase] = useState(false);
+  const [hasLowercase, setHasLowercase] = useState(false);
+  const [hasNumber, setHasNumber] = useState(false);
+  const [passwordsMatch, setPasswordsMatch] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
   
   // If we have a verified email, show a success message
   useEffect(() => {
@@ -133,24 +152,143 @@ const AuthScreen = ({ route, navigation }) => {
               keyboardType="email-address"
               autoCapitalize="none"
             />
+            
+            {!isLogin && (
+              <View style={styles.passwordRequirementsContainer}>
+                <Text style={styles.passwordRequirementsTitle}>Password requirements:</Text>
+                
+                <View style={styles.passwordRequirementItem}>
+                  <Ionicons 
+                    name={lengthValid ? "checkmark-circle" : "checkmark-circle-outline"} 
+                    size={18} 
+                    color={lengthValid ? "#FF5722" : "#AAAAAA"} 
+                    style={{marginRight: 8}} 
+                  />
+                  <Text style={styles.requirementText}>At least 8 characters</Text>
+                </View>
+                
+                <View style={styles.passwordRequirementItem}>
+                  <Ionicons 
+                    name={hasUppercase ? "checkmark-circle" : "checkmark-circle-outline"} 
+                    size={18} 
+                    color={hasUppercase ? "#FF5722" : "#AAAAAA"} 
+                    style={{marginRight: 8}} 
+                  />
+                  <Text style={styles.requirementText}>Contains uppercase letter</Text>
+                </View>
+                
+                <View style={styles.passwordRequirementItem}>
+                  <Ionicons 
+                    name={hasLowercase ? "checkmark-circle" : "checkmark-circle-outline"} 
+                    size={18} 
+                    color={hasLowercase ? "#FF5722" : "#AAAAAA"} 
+                    style={{marginRight: 8}} 
+                  />
+                  <Text style={styles.requirementText}>Contains lowercase letter</Text>
+                </View>
+                
+                <View style={styles.passwordRequirementItem}>
+                  <Ionicons 
+                    name={hasNumber ? "checkmark-circle" : "checkmark-circle-outline"} 
+                    size={18} 
+                    color={hasNumber ? "#FF5722" : "#AAAAAA"} 
+                    style={{marginRight: 8}} 
+                  />
+                  <Text style={styles.requirementText}>Contains a number</Text>
+                </View>
+                
+                {/* Password strength bar */}
+                <View style={styles.strengthBarContainer}>
+                  <View style={styles.strengthBarBackground}>
+                    <View 
+                      style={[
+                        styles.strengthBar, 
+                        { 
+                          width: `${passwordStrength}%`,
+                          backgroundColor: getStrengthColor(passwordStrength)
+                        }
+                      ]} 
+                    />
+                  </View>
+                </View>
+              </View>
+            )}
 
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
+            <View style={styles.passwordInputContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Password"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  
+                  // Update validation states
+                  setLengthValid(text.length >= 8);
+                  setHasUppercase(/[A-Z]/.test(text));
+                  setHasLowercase(/[a-z]/.test(text));
+                  setHasNumber(/[0-9]/.test(text));
+                  setPasswordsMatch(text === confirmPassword && text.length > 0);
+                  
+                  // Calculate strength
+                  let strength = 0;
+                  if (text.length >= 8) strength += 25;
+                  if (/[A-Z]/.test(text)) strength += 25;
+                  if (/[a-z]/.test(text)) strength += 25;
+                  if (/[0-9]/.test(text)) strength += 25;
+                  setPasswordStrength(strength);
+                }}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity 
+                style={styles.passwordToggle}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Ionicons 
+                  name={showPassword ? "eye-off-outline" : "eye-outline"} 
+                  size={22} 
+                  color="#666"
+                />
+              </TouchableOpacity>
+            </View>
 
             {!isLogin && (
               <>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry
-                />
+                <View style={styles.passwordInputContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    placeholder="Confirm Password"
+                    value={confirmPassword}
+                    onChangeText={(text) => {
+                      setConfirmPassword(text);
+                      setPasswordsMatch(password === text && text.length > 0);
+                    }}
+                    secureTextEntry={!showConfirmPassword}
+                  />
+                  <TouchableOpacity 
+                    style={styles.passwordToggle}
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    <Ionicons 
+                      name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} 
+                      size={22} 
+                      color="#666"
+                    />
+                  </TouchableOpacity>
+                </View>
+                
+                {!isLogin && password.length > 0 && confirmPassword.length > 0 && (
+                  <View style={styles.passwordMatchContainer}>
+                    <Ionicons 
+                      name={passwordsMatch ? "checkmark-circle" : "close-circle"} 
+                      size={16} 
+                      color={passwordsMatch ? "#FF5722" : "#F44336"} 
+                      style={{marginRight: 8}} 
+                    />
+                    <Text style={[styles.passwordMatchText, { color: passwordsMatch ? "#4CAF50" : "#F44336" }]}>
+                      {passwordsMatch ? "Passwords match" : "Passwords don't match"}
+                    </Text>
+                  </View>
+                )}
                 <View style={styles.privacyPolicyContainer}>
                   <Switch
                     value={privacyPolicyAgreed}
@@ -373,6 +511,67 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     textDecorationLine: 'underline',
+  },
+  passwordRequirementsContainer: {
+    backgroundColor: 'rgba(255, 87, 34, 0.05)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+  },
+  passwordRequirementsTitle: {
+    color: '#555',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  passwordRequirementItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
+  },
+  requirementText: {
+    color: '#666',
+    fontSize: 13,
+  },
+  strengthBarContainer: {
+    marginTop: 15,
+  },
+  strengthBarBackground: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#E0E0E0',
+    overflow: 'hidden',
+  },
+  strengthBar: {
+    height: 6,
+    borderRadius: 3,
+  },
+  passwordInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  passwordInput: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    padding: 15,
+    fontSize: 16,
+  },
+  passwordToggle: {
+    padding: 10,
+    marginRight: 5,
+  },
+  passwordMatchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingHorizontal: 5,
+  },
+  passwordMatchText: {
+    fontSize: 14,
   },
   guestButton: {
     backgroundColor: '#FFF3E0',

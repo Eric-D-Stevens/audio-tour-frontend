@@ -28,8 +28,8 @@ jobs:
         eas-version: latest
         token: ${{ secrets.EXPO_TOKEN }}
     
-    - name: Build Preview
+    - name: Build Preview (iOS only)
       run: |
-        npx eas-cli build --platform all --profile preview --non-interactive
+        npx eas-cli build --platform ios --profile preview --non-interactive
       env:
         EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}

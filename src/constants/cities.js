@@ -65,8 +65,8 @@ export const PRESET_CITIES = [
     name: 'Tokyo',
     country: 'Japan',
     coordinate: {
-      latitude: 35.6762,
-      longitude: 139.6503
+      latitude: 35.6859,
+      longitude: 139.7534
     },
     description: 'Explore Shibuya Crossing, Tokyo Tower, and traditional temples',
     image: cityImages['tokyo']

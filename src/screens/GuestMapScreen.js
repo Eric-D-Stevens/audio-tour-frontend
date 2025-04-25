@@ -271,8 +271,6 @@ const GuestMapScreen = ({ navigation }) => {
             provider={PROVIDER_GOOGLE}
             initialRegion={region}
             onRegionChangeComplete={setRegion}
-            showsUserLocation
-            showsMyLocationButton={false}
           >
             {tourPoints.map((point) => (
               <Marker

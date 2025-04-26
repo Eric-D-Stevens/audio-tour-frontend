@@ -131,7 +131,7 @@ const GuestAudioPlayer = ({ placeId, tourType = 'history' }) => {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#FF5722" />
-        <Text style={styles.loadingText}>Generating AI-powered tour from scratch, this may take a few seconds...</Text>
+        <Text style={styles.loadingText}>Loading tour audio...</Text>
       </View>
     );
   }
@@ -152,21 +152,9 @@ const GuestAudioPlayer = ({ placeId, tourType = 'history' }) => {
     <View style={styles.container}>
       {audioData && (
         <>
-          <View style={styles.headerContainer}>
-            <View style={styles.titleContainer}>
-              <Text 
-                style={styles.title} 
-                numberOfLines={1} 
-                ellipsizeMode="tail"
-              >
-                {typeof audioData.place_details?.name === 'object' 
-                  ? audioData.place_details?.name?.text || 'Audio Tour'
-                  : audioData.place_details?.name || 'Audio Tour'
-                }
-              </Text>
-              <Text style={styles.previewBadge}>Preview</Text>
-            </View>
-          </View>
+          <Text style={styles.tourTypeTitle}>
+            {tourType.charAt(0).toUpperCase() + tourType.slice(1)} Tour
+          </Text>
           
           <View style={styles.sliderContainer}>
             <Text style={styles.timeText}>{formatTime(position)}</Text>

@@ -4,7 +4,7 @@ import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import audioManager from '../services/audioManager';
 
-const AudioPlayer = ({ placeId, audioUrl, placeName }) => {
+const AudioPlayer = ({ placeId, audioUrl, placeName, tourType = 'history' }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -162,7 +162,10 @@ const AudioPlayer = ({ placeId, audioUrl, placeName }) => {
     <View style={styles.container}>
       {audioData && (
         <>
-          {/* Removed header text as requested */}
+          {/* Tour type title */}
+          <Text style={styles.tourTypeTitle}>
+            {tourType.charAt(0).toUpperCase() + tourType.slice(1)} Tour
+          </Text>
           
           <View style={styles.sliderContainer}>
             <Text style={styles.timeText}>{formatTime(position)}</Text>

@@ -91,8 +91,8 @@ const GuestAudioScreen = ({ route, navigation }) => {
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#333" />
+            <Text style={styles.backButtonText}>Map</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{tourData?.place_info?.place_name || place?.name || "TensorTours"}</Text>
         </View>
         
         <View style={styles.errorContainer}>
@@ -160,8 +160,8 @@ const GuestAudioScreen = ({ route, navigation }) => {
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#333" />
+            <Text style={styles.backButtonText}>Map</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{tourData?.place_info?.place_name || place.name}</Text>
         </View>
         
         {photos && photos.length > 0 ? (
@@ -449,7 +449,15 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   backButton: {
-    marginRight: 15,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButtonText: {
+    marginLeft: 5,
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
   },
   headerTitle: {
     fontSize: 18,

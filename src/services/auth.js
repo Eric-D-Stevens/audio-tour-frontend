@@ -584,22 +584,80 @@ export const forgotPassword = (username) => {
  * @param {string} newPassword - New password
  * @returns {Promise<string>} - Success message
  */
-export const confirmNewPassword = (username, code, newPassword) => {
+export const confirmNewPassword = async (username, code, newPassword) => {
   return new Promise((resolve, reject) => {
-    const cognitoUser = new CognitoUser({
+    const userData = {
       Username: username,
       Pool: userPool
-    });
+    };
+
+    const cognitoUser = new CognitoUser(userData);
 
     cognitoUser.confirmPassword(code, newPassword, {
       onSuccess: () => {
-        logger.info('Password reset confirmed successfully');
+        logger.info('Password reset successful');
         resolve('Password reset successful');
       },
       onFailure: (err) => {
-        logger.error('Error confirming password reset:', err);
+        logger.error('Password reset failed:', err);
         reject(err);
       }
     });
+  });
+};
+
+/**
+ * Delete the current user's account
+ * @returns {Promise<string>} - Success message or error
+ */
+export const deleteAccount = async () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Get the current authenticated Cognito user
+      const cognitoUser = userPool.getCurrentUser();
+      
+      if (!cognitoUser) {
+        logger.error('No authenticated user found for account deletion');
+        return reject('Not authenticated');
+      }
+      
+      // Get session to authenticate the delete request
+      cognitoUser.getSession((err, session) => {
+        if (err) {
+          logger.error('Error getting session for account deletion:', err);
+          return reject(err);
+        }
+        
+        // Delete the user account
+        cognitoUser.deleteUser((err, result) => {
+          if (err) {
+            logger.error('Failed to delete user account:', err);
+            return reject(err);
+          }
+          
+          logger.info('User account successfully deleted');
+          
+          // Clean up local storage
+          Promise.all([
+            SecureStore.deleteItemAsync(AUTH_TOKENS_KEY),
+            SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
+            AsyncStorage.removeItem(USER_DATA_KEY),
+            AsyncStorage.removeItem(AUTH_STATE_KEY)
+          ])
+          .then(() => {
+            logger.info('Local user data cleared after account deletion');
+            resolve('Account successfully deleted');
+          })
+          .catch((e) => {
+            logger.error('Error clearing local data after account deletion:', e);
+            // Still resolve since the account was deleted on Cognito
+            resolve('Account deleted, but there was an error clearing local data');
+          });
+        });
+      });
+    } catch (e) {
+      logger.error('Unexpected error during account deletion:', e);
+      reject(e);
+    }
   });
 };

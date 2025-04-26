@@ -7,13 +7,15 @@ import {
   Modal,
   SafeAreaView,
   ScrollView,
-  Image
+  Image,
+  Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../contexts';
 
 const AppHeader = ({ navigation, title }) => {
-  const { user, handleLogout } = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
+  const { user, handleLogout } = authContext;
   const [menuVisible, setMenuVisible] = useState(false);
   
   const toggleMenu = () => {
@@ -100,16 +102,61 @@ const AppHeader = ({ navigation, title }) => {
               <View style={styles.divider} />
               
               {user ? (
-                <TouchableOpacity 
-                  style={styles.menuItem}
-                  onPress={() => {
-                    closeMenu();
-                    handleLogout(navigation);
-                  }}
-                >
-                  <Ionicons name="log-out-outline" size={20} color="#FF5722" />
-                  <Text style={[styles.menuItemText, { color: '#FF5722' }]}>Logout</Text>
-                </TouchableOpacity>
+                <>
+                  <TouchableOpacity 
+                    style={styles.menuItem}
+                    onPress={() => {
+                      closeMenu();
+                      handleLogout(navigation);
+                    }}
+                  >
+                    <Ionicons name="log-out-outline" size={20} color="#FF5722" />
+                    <Text style={[styles.menuItemText, { color: '#FF5722' }]}>Logout</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={styles.menuItem}
+                    onPress={() => {
+                      closeMenu();
+                      Alert.alert(
+                        'Delete Account',
+                        'Are you sure you want to delete your account? This action cannot be undone.',
+                        [
+                          {
+                            text: 'Cancel',
+                            style: 'cancel'
+                          },
+                          {
+                            text: 'Delete Account',
+                            style: 'destructive',
+                            onPress: async () => {
+                              try {
+                                // Show a loading indicator
+                                Alert.alert('Deleting Account', 'Please wait...');
+                                await authContext.deleteAccount();
+                                Alert.alert(
+                                  'Account Deleted',
+                                  'Your account has been successfully deleted.',
+                                  [{ text: 'OK' }]
+                                );
+                                // Will automatically navigate to Auth screen due to isAuthenticated state change
+                              } catch (error) {
+                                Alert.alert(
+                                  'Error',
+                                  error.message || 'Failed to delete account. Please try again later.',
+                                  [{ text: 'OK' }]
+                                );
+                              }
+                            }
+                          }
+                        ]
+                      );
+                    }}
+                  >
+                    <Ionicons name="trash-outline" size={20} color="#FF5722" />
+                    <Text style={[styles.menuItemText, { color: '#FF5722' }]}>Delete Account</Text>
+                  </TouchableOpacity>
+                </>
               ) : (
                 <TouchableOpacity 
                   style={styles.menuItem}

@@ -235,7 +235,19 @@ export default function App() {
     },
     isAuthenticated,
     user,
-    handleLogout
+    handleLogout,
+    deleteAccount: async () => {
+      try {
+        await AuthService.deleteAccount();
+        // After successful deletion, clear local state
+        setUser(null);
+        setIsAuthenticated(false);
+        return true;
+      } catch (error) {
+        logger.error('Error deleting account:', error);
+        throw error;
+      }
+    }
   };
 
   // Loading screen is now handled in the AppContent component

@@ -288,6 +288,24 @@ const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTo
                 border: '#FFFFFF',
                 primary: '#FF5722',
                 text: '#000000'
+              },
+              fonts: {
+                regular: {
+                  fontFamily: 'System',
+                  fontWeight: '400',
+                },
+                medium: {
+                  fontFamily: 'System',
+                  fontWeight: '500',
+                },
+                light: {
+                  fontFamily: 'System',
+                  fontWeight: '300',
+                },
+                thin: {
+                  fontFamily: 'System',
+                  fontWeight: '100',
+                },
               }
             }}>
             <Stack.Navigator

@@ -10,6 +10,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Import custom logger utility
 import logger from './src/utils/logger';
 
+// Import network context and offline screen
+import { NetworkProvider, useNetwork } from './src/context/NetworkContext';
+import OfflineScreen from './src/components/OfflineScreen';
+
 // Import screens
 import UserMapScreen from './src/screens/UserMapScreen';
 import GuestMapScreen from './src/screens/GuestMapScreen';
@@ -227,6 +231,35 @@ export default function App() {
     handleLogout
   };
 
+  // Loading screen is now handled in the AppContent component
+
+  return (
+    <SafeAreaProvider style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      <StatusBar style="dark" backgroundColor="#FFFFFF" />
+      <NetworkProvider>
+        <AppContent 
+          isLoading={isLoading} 
+          isAuthenticated={isAuthenticated} 
+          authContext={authContext} 
+          tourParams={tourParams} 
+          setTourParams={setTourParams} 
+          guestTourParams={guestTourParams} 
+          setGuestTourParams={setGuestTourParams} 
+        />
+      </NetworkProvider>
+    </SafeAreaProvider>
+  );
+}
+
+// Separate component to use the network context inside
+const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTourParams, guestTourParams, setGuestTourParams }) => {
+  const { isConnected } = useNetwork();
+  
+  // If we're not connected to the internet, show the offline screen
+  if (!isConnected) {
+    return <OfflineScreen />;
+  }
+  
   // Show loading screen if still checking auth status
   if (isLoading) {
     return (
@@ -235,10 +268,8 @@ export default function App() {
       </View>
     );
   }
-
+  
   return (
-    <SafeAreaProvider style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <StatusBar style="dark" backgroundColor="#FFFFFF" />
       <AuthContext.Provider value={authContext}>
         <TourContext.Provider value={{ tourParams, setTourParams, guestTourParams, setGuestTourParams }}>
           <NavigationContainer 
@@ -337,6 +368,5 @@ export default function App() {
           </NavigationContainer>
         </TourContext.Provider>
       </AuthContext.Provider>
-    </SafeAreaProvider>
   );
 }

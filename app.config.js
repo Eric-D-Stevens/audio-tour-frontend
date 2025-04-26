@@ -6,7 +6,7 @@ export default {
     slug: "audio-tour-app", // Using original slug to match existing EAS project ID
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/icon.png",
+    icon: "./assets/icon.png", // Default icon for all platforms
     userInterfaceStyle: "light",
     newArchEnabled: true,
     splash: {
@@ -18,8 +18,11 @@ export default {
       supportsTablet: true,
       bundleIdentifier: "com.tensortours.app",
       buildNumber: "1",
+      icon: "./assets/adaptive-icon.png", // Using existing adaptive icon for iOS
       infoPlist: {
-        NSLocationWhenInUseUsageDescription: "TensorTours needs access to your location.",
+        NSLocationWhenInUseUsageDescription: "TensorTours needs access to your location to find nearby points of interest for audio tours.",
+        NSLocationAlwaysAndWhenInUseUsageDescription: "TensorTours uses your location to find nearby points of interest and provide location-based audio tours.",
+        NSLocationAlwaysUsageDescription: "TensorTours uses your location in the background to notify you of nearby points of interest.",
         ITSAppUsesNonExemptEncryption: false,
         UIBackgroundModes: ["audio"],
       },

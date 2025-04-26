@@ -6,7 +6,9 @@ This checklist is designed to help ensure the TensorTours app meets Apple's requ
 - ✅ App has a unique name ("TensorTours")
 - ✅ App has proper iOS bundle identifier (com.tensortours.app)
 - ✅ Location permissions are properly configured
-- ⚠️ Need to verify app icon files are complete for all required sizes
+- ✅ App icon files are complete for all required sizes
+  - ✅ Updated app.config.js with iOS-specific icon configuration
+  - ✅ Using existing 1024x1024 adaptive-icon.png for App Store submission
 - ⚠️ Need to verify splash screen assets are properly configured
 - ⚠️ Need privacy policy URL (required for all apps)
 
@@ -46,8 +48,8 @@ This checklist is designed to help ensure the TensorTours app meets Apple's requ
 
 1. **Complete app.config.js**:
    - Add privacy policy URL
-   - Add App Store icon (1024x1024)
-   - Complete set of iOS icons
+   - ✅ Updated iOS icon configuration in app.config.js
+   - ✅ Using existing adaptive-icon.png (1024x1024) for the App Store
 
 2. **App Store Assets**:
    - Create high-quality screenshots

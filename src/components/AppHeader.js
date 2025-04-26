@@ -98,6 +98,22 @@ const AppHeader = ({ navigation, title }) => {
                 <Ionicons name="mail-outline" size={20} color="#333" />
                 <Text style={styles.menuItemText}>Contact Us</Text>
               </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.menuItem}
+                onPress={() => handleNavigate('Support')}
+              >
+                <Ionicons name="help-circle-outline" size={20} color="#333" />
+                <Text style={styles.menuItemText}>Support</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.menuItem}
+                onPress={() => handleNavigate('Privacy')}
+              >
+                <Ionicons name="shield-outline" size={20} color="#333" />
+                <Text style={styles.menuItemText}>Privacy</Text>
+              </TouchableOpacity>
               
               <View style={styles.divider} />
               

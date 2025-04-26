@@ -27,6 +27,7 @@ import GuestTourParametersScreen from './src/screens/GuestTourParametersScreen';
 import AboutScreen from './src/screens/AboutScreen';
 import ContactScreen from './src/screens/ContactScreen';
 import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
+import SupportScreen from './src/screens/SupportScreen';
 
 // Import auth services
 import * as AuthService from './src/services/auth';
@@ -355,6 +356,16 @@ const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTo
                     component={ContactScreen} 
                     options={{ headerShown: false }}
                   />
+                  <Stack.Screen 
+                    name="Support" 
+                    component={SupportScreen} 
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen 
+                    name="Privacy" 
+                    component={PrivacyPolicyScreen} 
+                    options={{ headerShown: false }}
+                  />
                 </>
               ) : (
                 // Unauthenticated user flow
@@ -406,6 +417,16 @@ const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTo
                   <Stack.Screen 
                     name="Contact" 
                     component={ContactScreen} 
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen 
+                    name="Support" 
+                    component={SupportScreen} 
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen 
+                    name="Privacy" 
+                    component={PrivacyPolicyScreen} 
                     options={{ headerShown: false }}
                   />
                 </>

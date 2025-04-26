@@ -144,11 +144,11 @@ export default function App() {
   };
 
   // Handle logout using the auth service
-  const handleLogout = async (clearRememberMe = false) => {
+  const handleLogout = async () => {
     try {
       console.log('Logging out user...');
-      // Sign out and update state, passing the clearRememberMe flag
-      await AuthService.signOut(clearRememberMe);
+      // Sign out and update state
+      await AuthService.signOut();
       
       // Update authentication state which will trigger navigator change
       setIsAuthenticated(false);
@@ -173,9 +173,9 @@ export default function App() {
         throw error;
       }
     },
-    signOut: async (clearRememberMe = false) => {
-      // Pass the clearRememberMe flag to handleLogout
-      await handleLogout(clearRememberMe);
+    signOut: async () => {
+      // Handle logout
+      await handleLogout();
     },
     signUp: (username, password, email, policyVersion, consentTimestamp) => {
       return AuthService.signUp(username, password, email, policyVersion, consentTimestamp);

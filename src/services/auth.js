@@ -8,7 +8,6 @@ const AUTH_TOKENS_KEY = 'tensortours_auth_tokens'; // Secure storage
 const REFRESH_TOKEN_KEY = 'tensortours_refresh_token'; // Secure storage
 const USER_DATA_KEY = 'tensortours_user_data'; // Regular storage for non-sensitive user data
 const AUTH_STATE_KEY = 'tensortours_auth_state'; // For tracking auth state across app refreshes
-const REMEMBER_ME_KEY = 'tensortours_remember_me'; // Stores the user's remember me preference
 
 // Initialize Cognito User Pool
 const userPool = new CognitoUserPool({
@@ -367,10 +366,9 @@ export const isAuthenticated = async () => {
  * Sign in a user and store their tokens and data securely
  * @param {string} username - User's username or email
  * @param {string} password - User's password
- * @param {boolean} rememberMe - Whether to remember the user's credentials
  * @returns {Promise<Object>} - Authentication result
  */
-export const signIn = async (username, password, rememberMe = false) => {
+export const signIn = async (username, password) => {
   return new Promise((resolve, reject) => {
     const authDetails = new AuthenticationDetails({
       Username: username,
@@ -400,8 +398,7 @@ export const signIn = async (username, password, rememberMe = false) => {
         };
         storeUserData(userData);
         
-        // Store remember me preference
-        AsyncStorage.setItem(REMEMBER_ME_KEY, JSON.stringify(rememberMe));
+
         
         resolve(result);
       },
@@ -430,22 +427,9 @@ export const signIn = async (username, password, rememberMe = false) => {
 
 /**
  * Sign out the current user and clear stored tokens and data
- * @param {boolean} clearRememberMe - Whether to clear the remember me preference
  */
-export const signOut = async (clearRememberMe = false) => {
+export const signOut = async () => {
   try {
-    // Get the current remember me preference before signing out
-    let rememberMe = false;
-    if (!clearRememberMe) {
-      try {
-        const savedPreference = await AsyncStorage.getItem(REMEMBER_ME_KEY);
-        if (savedPreference !== null) {
-          rememberMe = JSON.parse(savedPreference);
-        }
-      } catch (e) {
-        console.log('Could not retrieve remember me preference');
-      }
-    }
 
     // Sign out of Cognito
     const cognitoUser = userPool.getCurrentUser();
@@ -461,14 +445,8 @@ export const signOut = async (clearRememberMe = false) => {
       AsyncStorage.removeItem(AUTH_STATE_KEY)
     ];
     
-    // If remember me is false or explicitly cleared, also remove the preference
-    if (clearRememberMe || !rememberMe) {
-      itemsToRemove.push(AsyncStorage.removeItem(REMEMBER_ME_KEY));
-      console.log('Removing remember me preference as part of sign out');
-    }
-    
     await Promise.all(itemsToRemove);
-    console.log('User signed out, auth data cleared, rememberMe preserved:', rememberMe);
+    console.log('User signed out, auth data cleared');
   } catch (error) {
     console.error('Error signing out:', error);
     // Still try to clear tokens even if there was an error

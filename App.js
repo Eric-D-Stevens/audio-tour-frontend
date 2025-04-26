@@ -7,6 +7,9 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Import custom logger utility
+import logger from './src/utils/logger';
+
 // Import screens
 import UserMapScreen from './src/screens/UserMapScreen';
 import GuestMapScreen from './src/screens/GuestMapScreen';
@@ -73,7 +76,7 @@ export default function App() {
       const { isAuthenticated: userAuthenticated, error: authError } = await AuthService.isAuthenticated();
       
       if (userAuthenticated) {
-        console.log('User is authenticated');
+        logger.info('User is authenticated');
         // Get user data from storage
         const userData = await AuthService.getCurrentUserData();
         const cognitoUser = AuthService.getCurrentUser();
@@ -82,18 +85,18 @@ export default function App() {
         setUser(userData || cognitoUser || { username: 'User' });
       } else {
         // Not authenticated with potential error reason
-        console.log('User is not authenticated:', authError || 'No reason provided');
+        logger.info('User is not authenticated:', authError || 'No reason provided');
         setIsAuthenticated(false);
         setUser(null);
         
         // If there was a specific auth error, we could show it to the user
         if (authError) {
-          console.warn('Authentication error:', authError);
+          logger.warn('Authentication error:', authError);
           // Could set an auth error state here to display in UI if needed
         }
       }
     } catch (error) {
-      console.error('Error checking auth status:', error);
+      logger.error('Error checking auth status:', error);
       setIsAuthenticated(false);
       setUser(null);
     } finally {
@@ -106,7 +109,7 @@ export default function App() {
     try {
       await AsyncStorage.setItem(TOUR_PARAMS_KEY, JSON.stringify(tourParams));
     } catch (error) {
-      console.error('Error saving tour parameters:', error);
+      logger.error('Error saving tour parameters:', error);
     }
   };
 
@@ -118,7 +121,7 @@ export default function App() {
         setTourParams(JSON.parse(storedTourParams));
       }
     } catch (error) {
-      console.error('Error loading tour parameters:', error);
+      logger.error('Error loading tour parameters:', error);
     }
   };
   
@@ -127,7 +130,7 @@ export default function App() {
     try {
       await AsyncStorage.setItem(GUEST_TOUR_PARAMS_KEY, JSON.stringify(guestTourParams));
     } catch (error) {
-      console.error('Error saving guest tour parameters:', error);
+      logger.error('Error saving guest tour parameters:', error);
     }
   };
 
@@ -139,14 +142,14 @@ export default function App() {
         setGuestTourParams(JSON.parse(storedGuestTourParams));
       }
     } catch (error) {
-      console.error('Error loading guest tour parameters:', error);
+      logger.error('Error loading guest tour parameters:', error);
     }
   };
 
   // Handle logout using the auth service
   const handleLogout = async () => {
     try {
-      console.log('Logging out user...');
+      logger.info('Logging out user...');
       // Sign out and update state
       await AuthService.signOut();
       
@@ -155,9 +158,9 @@ export default function App() {
       setUser(null);
       // Note: initialRoute is now determined dynamically based on isAuthenticated
       
-      console.log('User logged out successfully');
+      logger.info('User logged out successfully');
     } catch (error) {
-      console.error('Error during logout:', error);
+      logger.error('Error during logout:', error);
     }
   };
   
@@ -191,7 +194,7 @@ export default function App() {
       const { isAuthenticated: stillAuthenticated, error } = await AuthService.isAuthenticated();
       
       if (!stillAuthenticated) {
-        console.warn('Session expired or invalid, redirecting to login');
+        logger.warn('Session expired or invalid, redirecting to login');
         
         // First update the authentication state
         setIsAuthenticated(false);
@@ -210,7 +213,7 @@ export default function App() {
               // We don't need to explicitly navigate since the state change will
               // trigger a re-render with the unauthenticated navigation stack
               // The next render cycle will show the Auth screen automatically
-              console.log('Authentication state updated, App will render Auth screen');
+              logger.info('Authentication state updated, App will render Auth screen');
             }}
           ]);
         }

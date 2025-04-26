@@ -10,6 +10,7 @@ import {
   GetPreviewRequest,
   TourType 
 } from '../types/api-types';
+import logger from '../utils/logger';
 
 // Track in-flight requests to prevent duplicates
 const pendingRequests: Record<string, Promise<any>> = {};
@@ -96,7 +97,7 @@ const apiRequest = async (
     // This helps suppress expected 404s when a tour doesn't exist yet
     if (!error.message.includes('Authentication') && 
         !(error.message.includes('Tour not found') || error.message.includes('status 404'))) {
-      console.error(`API Error:`, error.message);
+      logger.error(`API Error:`, error.message);
     }
     throw error;
   }
@@ -265,25 +266,25 @@ export const getPreviewPlaces = async (
       // This is a public endpoint that doesn't require authentication
       const jsonUrl = `https://d2g5o5njd6p5e.cloudfront.net/preview/${normalizedCity}/${normalizedTourType}/places.json`;
       
-      console.log(`Fetching preview places from: ${jsonUrl}`);
+      logger.info(`Fetching preview places from: ${jsonUrl}`);
       
       try {
         // Fetch the JSON directly with more detailed logging
-        console.log(`Attempting to fetch from exact URL: ${jsonUrl}`);
+        logger.debug(`Attempting to fetch from exact URL: ${jsonUrl}`);
         
         const response = await fetch(jsonUrl);
         
         if (!response.ok) {
           // If we get a 403 or 404, log it with more details
-          console.warn(`Preview data not accessible (${response.status} ${response.statusText})`);
-          console.warn(`Full URL that failed: ${jsonUrl}`);
+          logger.warn(`Preview data not accessible (${response.status} ${response.statusText})`);
+          logger.warn(`Full URL that failed: ${jsonUrl}`);
           
           // Try to get more error details if possible
           try {
             const errorText = await response.text();
-            console.warn(`Error response body: ${errorText}`);
+            logger.warn(`Error response body: ${errorText}`);
           } catch (textError) {
-            console.warn('Could not read error response body');
+            logger.warn('Could not read error response body');
           }
           
           // Continue to fallback below
@@ -291,13 +292,13 @@ export const getPreviewPlaces = async (
         }
         
         const result = await response.json();
-        console.log(`Successfully loaded preview data for ${normalizedCity}/${normalizedTourType}`);
+        logger.info(`Successfully loaded preview data for ${normalizedCity}/${normalizedTourType}`);
         // Result should follow the same format as GetPlacesResponse with places array
         resolve(result);
         return;
       } catch (fetchError: any) {
         // Log the error but continue to fallback
-        console.warn(`Error fetching preview places: ${fetchError.message || 'Unknown error'}. Using fallback data.`);
+        logger.warn(`Error fetching preview places: ${fetchError.message || 'Unknown error'}. Using fallback data.`);
         // Continue to fallback below
       }
       
@@ -309,10 +310,10 @@ export const getPreviewPlaces = async (
         is_authenticated: false
       };
       
-      console.log(`Using fallback data for ${normalizedCity}/${normalizedTourType} (empty places array)`);
+      logger.info(`Using fallback data for ${normalizedCity}/${normalizedTourType} (empty places array)`);
       resolve(fallbackResponse);
     } catch (error) {
-      console.error('Error in getPreviewPlaces:', error);
+      logger.error('Error in getPreviewPlaces:', error);
       // Instead of rejecting with an error, return an empty response
       // This prevents the app from crashing when preview data isn't available
       resolve({
@@ -418,17 +419,17 @@ export const fetchPreviewTour = async (
         timestamp: new Date().toISOString()
       };
       
-      console.log(`Fetching preview tour for place: ${placeId}, type: ${tourType}`);
+      logger.info(`Fetching preview tour for place: ${placeId}, type: ${tourType}`);
       
       const result = await apiRequest(endpoint, {
         method: 'POST',
         body: JSON.stringify(requestBody)
       }, false); // Preview tours don't require auth
       
-      console.log(`Successfully fetched preview tour for place: ${placeId}`);
+      logger.info(`Successfully fetched preview tour for place: ${placeId}`);
       resolve(result);
     } catch (error) {
-      console.error(`Error fetching preview tour for place: ${placeId}:`, error);
+      logger.error(`Error fetching preview tour for place: ${placeId}:`, error);
       reject(error);
     } finally {
       // Clean up the pending request

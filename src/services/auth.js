@@ -2,6 +2,7 @@ import { CognitoUserPool, CognitoUser, AuthenticationDetails, CognitoRefreshToke
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID } from '../constants/config';
+import logger from '../utils/logger';
 
 // Constants for storage keys
 const AUTH_TOKENS_KEY = 'tensortours_auth_tokens'; // Secure storage
@@ -111,14 +112,14 @@ const storeTokens = async (idToken, expiration, refreshToken, scheduleRefresh = 
       tokenExpiration: new Date(expiration).toISOString()
     }));
     
-    console.log('Tokens stored securely');
+    logger.debug('Tokens stored securely');
     
     // Schedule a background refresh if requested
     if (scheduleRefresh && refreshToken) {
       scheduleTokenRefresh(expiration, refreshToken);
     }
   } catch (error) {
-    console.error('Error storing tokens:', error);
+    logger.error('Error storing tokens:', error);
   }
 };
 
@@ -136,25 +137,25 @@ const scheduleTokenRefresh = (expiration, refreshToken) => {
   
   // Only schedule if the refresh time is positive (token not already expired)
   if (refreshTime <= 0) {
-    console.log('Token already expired or expiring soon, refreshing immediately');
+    logger.debug('Token already expired or expiring soon, refreshing immediately');
     refreshTokenIfNeeded();
     return;
   }
   
-  console.log(`Scheduling token refresh in ${Math.floor(refreshTime/1000)} seconds`);
+  logger.debug(`Scheduling token refresh in ${Math.floor(refreshTime/1000)} seconds`);
   
   // Use setTimeout to schedule the refresh
   setTimeout(async () => {
     try {
-      console.log('Executing scheduled token refresh');
+      logger.debug('Executing scheduled token refresh');
       const result = await refreshTokenIfNeeded();
       if (result && result.token) {
-        console.log('Token refreshed successfully in background');
+        logger.debug('Token refreshed successfully in background');
       } else {
-        console.log('Background token refresh failed, will retry on next app use');
+        logger.warn('Background token refresh failed, will retry on next app use');
       }
     } catch (error) {
-      console.error('Error in scheduled token refresh:', error);
+      logger.error('Error in scheduled token refresh:', error);
     }
   }, refreshTime);
 };
@@ -215,12 +216,12 @@ const refreshTokenIfNeeded = async () => {
         if (!refreshToken) {
           if (storedRefreshToken) {
             // Try with stored refresh token as fallback
-            console.log('No session refresh token, trying stored token');
+            logger.debug('No session refresh token, trying stored token');
             try {
               const storedToken = new CognitoRefreshToken({ RefreshToken: storedRefreshToken });
               cognitoUser.refreshSession(storedToken, (refreshErr, refreshedSession) => {
                 if (refreshErr) {
-                  console.error('Error refreshing with stored token:', refreshErr);
+                  logger.error('Error refreshing with stored token:', refreshErr);
                   resolve({ token: null, error: 'All refresh tokens expired' });
                   return;
                 }
@@ -309,7 +310,7 @@ export const getCurrentUserData = async () => {
     
     return userData ? JSON.parse(userData) : null;
   } catch (error) {
-    console.error('Error getting user data:', error);
+    logger.error('Error getting user data:', error);
     return null;
   }
 };
@@ -322,7 +323,7 @@ export const storeUserData = async (userData) => {
   try {
     await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
   } catch (error) {
-    console.error('Error storing user data:', error);
+    logger.error('Error storing user data:', error);
   }
 };
 
@@ -357,7 +358,7 @@ export const isAuthenticated = async () => {
       return { isAuthenticated: false, error: tokenResult.error };
     }
   } catch (error) {
-    console.error('Error checking auth status:', error);
+    logger.error('Error checking auth status:', error);
     return { isAuthenticated: false, error: error.message };
   }
 };
@@ -446,9 +447,9 @@ export const signOut = async () => {
     ];
     
     await Promise.all(itemsToRemove);
-    console.log('User signed out, auth data cleared');
+    logger.info('User signed out, auth data cleared');
   } catch (error) {
-    console.error('Error signing out:', error);
+    logger.error('Error signing out:', error);
     // Still try to clear tokens even if there was an error
     try {
       await Promise.all([
@@ -458,7 +459,7 @@ export const signOut = async () => {
         AsyncStorage.removeItem(AUTH_STATE_KEY)
       ]);
     } catch (e) {
-      console.error('Error clearing auth data during sign out:', e);
+      logger.error('Error clearing auth data during sign out:', e);
     }
   }
 };
@@ -482,7 +483,7 @@ export const signUp = (username, password, email, policyVersion = '1.0', consent
     
     userPool.signUp(username, password, attributeList, null, (err, result) => {
       if (err) {
-        console.error('Error during sign up:', err);
+        logger.error('Error during sign up:', err);
         reject(err);
         return;
       }
@@ -495,7 +496,7 @@ export const signUp = (username, password, email, policyVersion = '1.0', consent
           username: username
         }));
       } catch (storageError) {
-        console.warn('Failed to store privacy consent locally:', storageError);
+        logger.warn('Failed to store privacy consent locally:', storageError);
         // Continue anyway as we've stored it in Cognito
       }
       
@@ -519,7 +520,7 @@ export const confirmSignUp = (username, code) => {
 
     cognitoUser.confirmRegistration(code, true, (err, result) => {
       if (err) {
-        console.error('Error during confirmation:', err);
+        logger.error('Error during confirmation:', err);
         reject(err);
         return;
       }
@@ -542,7 +543,7 @@ export const resendConfirmationCode = (username) => {
 
     cognitoUser.resendConfirmationCode((err, result) => {
       if (err) {
-        console.error('Error resending code:', err);
+        logger.error('Error resending code:', err);
         reject(err);
         return;
       }

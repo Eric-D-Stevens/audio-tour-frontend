@@ -57,7 +57,8 @@ export default {
     extra: {
       eas: {
         projectId: "b0e54264-5030-464c-8f06-5102817b2d44"
-      }
+      },
+      isProduction: process.env.NODE_ENV === 'production'
     },
     owner: "vetqog-gampu0-xuvpav",
     runtimeVersion: {

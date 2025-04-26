@@ -7,7 +7,7 @@ export default {
     version: "1.0.0",
     orientation: "portrait",
     privacyPolicyUrl: "https://www.tensortrix.com/demos/audio-tour/privacy-policy",
-    icon: "./assets/icon.png", // Default icon for all platforms
+    icon: "./assets/app-store-icon.png", // Using non-transparent icon for better App Store display
     userInterfaceStyle: "light",
     newArchEnabled: true,
     splash: {
@@ -19,7 +19,7 @@ export default {
       supportsTablet: true,
       bundleIdentifier: "com.tensortours.app",
       buildNumber: "1",
-      icon: "./assets/adaptive-icon.png", // Using existing adaptive icon for iOS
+      icon: "./assets/app-store-icon.png", // Using non-transparent icon for iOS
       infoPlist: {
         NSLocationWhenInUseUsageDescription: "TensorTours needs access to your location to find nearby points of interest for audio tours.",
         NSLocationAlwaysAndWhenInUseUsageDescription: "TensorTours uses your location to find nearby points of interest and provide location-based audio tours.",

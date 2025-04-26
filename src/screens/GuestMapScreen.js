@@ -383,20 +383,44 @@ const GuestMapScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
             
+            <Text style={styles.modalTitle2}>What is Guest Mode?</Text>
             <Text style={styles.modalText}>
-              You are currently in Preview Mode. In this mode, TensorTours provides a limited selection of pre-recorded audio tours to demonstrate the app's functionality.
+              You're exploring TensorTours in Guest Mode, which gives you access to our demo content from pre-selected cities around the world. These tours showcase what TensorTours can do, but don't use your actual location.
             </Text>
             
+            <Text style={styles.modalTitle2}>Benefits of Logging In</Text>
             <Text style={styles.modalText}>
-              In the full version, our AI will generate personalized tours based on your preferences, location, and interests in real-time.
+              When you create an account and log in, TensorTours will:
             </Text>
+            <View style={styles.benefitsList}>
+              <View style={styles.benefitItem}>
+                <Ionicons name="location" size={16} color="#FF5722" style={styles.benefitIcon} />
+                <Text style={styles.benefitText}>Generate tours based on your current location</Text>
+              </View>
+              <View style={styles.benefitItem}>
+                <Ionicons name="options" size={16} color="#FF5722" style={styles.benefitIcon} />
+                <Text style={styles.benefitText}>Personalize content based on your preferences</Text>
+              </View>
+            </View>
             
-            <TouchableOpacity 
-              style={styles.modalButton}
-              onPress={() => setPreviewModalVisible(false)}
-            >
-              <Text style={styles.modalButtonText}>Got it</Text>
-            </TouchableOpacity>
+            <View style={styles.modalButtonsContainer}>
+              <TouchableOpacity 
+                style={styles.loginButton}
+                onPress={() => {
+                  setPreviewModalVisible(false);
+                  navigation.navigate('Auth');
+                }}
+              >
+                <Text style={styles.loginButtonText}>Log In</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.continueButton}
+                onPress={() => setPreviewModalVisible(false)}
+              >
+                <Text style={styles.continueButtonText}>Continue in Guest Mode</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -620,10 +644,65 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   modalText: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 16,
+    color: '#333',
     marginBottom: 15,
-    lineHeight: 20,
+    lineHeight: 22,
+  },
+  modalTitle2: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  benefitsList: {
+    marginBottom: 15,
+  },
+  benefitItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  benefitIcon: {
+    marginRight: 8,
+  },
+  benefitText: {
+    fontSize: 15,
+    color: '#333',
+    flex: 1,
+  },
+  modalButtonsContainer: {
+    flexDirection: 'column',
+    marginTop: 10,
+    width: '100%',
+  },
+  loginButton: {
+    backgroundColor: '#FF5722',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  loginButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  continueButton: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#FF5722',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  continueButtonText: {
+    color: '#FF5722',
+    fontSize: 16,
+    fontWeight: '600',
   },
   modalButton: {
     backgroundColor: '#FF5722',

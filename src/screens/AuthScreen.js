@@ -24,7 +24,7 @@ const AuthScreen = ({ route, navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+
   const [privacyPolicyAgreed, setPrivacyPolicyAgreed] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -44,21 +44,7 @@ const AuthScreen = ({ route, navigation }) => {
     }
   }, [verifiedEmail]);
   
-  // Load previous remember me preference on component mount
-  useEffect(() => {
-    const loadRememberMePreference = async () => {
-      try {
-        const savedPreference = await AsyncStorage.getItem('tensortours_remember_me');
-        if (savedPreference !== null) {
-          setRememberMe(JSON.parse(savedPreference));
-        }
-      } catch (error) {
-        console.error('Error loading remember me preference:', error);
-      }
-    };
-    
-    loadRememberMePreference();
-  }, []);
+
 
   const auth = useContext(AuthContext);
 
@@ -83,8 +69,8 @@ const AuthScreen = ({ route, navigation }) => {
 
     try {
       if (isLogin) {
-        // Sign in with the remember me preference
-        await auth.signIn(email, password, rememberMe);
+        // Sign in user
+        await auth.signIn(email, password);
       } else {
         // Sign up with privacy policy consent data
         const policyVersion = '1.0'; // Version of the privacy policy
@@ -308,18 +294,6 @@ const AuthScreen = ({ route, navigation }) => {
               </>
             )}
 
-            {isLogin && (
-              <View style={styles.rememberMeContainer}>
-                <Switch
-                  value={rememberMe}
-                  onValueChange={setRememberMe}
-                  trackColor={{ false: '#d1d1d1', true: '#FF8a65' }}
-                  thumbColor={rememberMe ? '#FF5722' : '#f4f3f4'}
-                />
-                <Text style={styles.rememberMeText}>Remember me</Text>
-              </View>
-            )}
-
             <TouchableOpacity
               style={[styles.button, isLoading && styles.buttonDisabled]}
               onPress={handleAuth}
@@ -409,15 +383,6 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 5,
     textAlign: 'center',
-  },
-  rememberMeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  rememberMeText: {
-    marginLeft: 10,
-    color: '#666',
   },
   formTitle: {
     fontSize: 24,

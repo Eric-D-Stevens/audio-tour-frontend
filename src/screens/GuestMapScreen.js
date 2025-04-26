@@ -24,40 +24,37 @@ const GuestMapScreen = ({ navigation }) => {
 
   // Initialize with selected city or default city on component mount
   useEffect(() => {
-    (async () => {
-      try {
-        // Get the selected city from guest tour params or use default
-        const cityId = guestTourParams?.cityId || getDefaultCity().id;
-        const city = getCityById(cityId);
-        setSelectedCity(city);
-        
-        // Set initial map region based on the city coordinates
-        const newRegion = {
-          latitude: city.coordinate.latitude,
-          longitude: city.coordinate.longitude,
-          latitudeDelta: 0.19,
-          longitudeDelta: 0.09,
-        };
-        setRegion(newRegion);
-
-        // Fetch city preview data
-        await fetchCityPreviewData(city.name);
-      } catch (err) {
-        console.error('Error initializing map:', err);
-        setError('Error loading city data: ' + err.message);
-        
-        // Fallback to default city
-        const defaultCity = getDefaultCity();
-        setSelectedCity(defaultCity);
-        setRegion({
-          latitude: defaultCity.coordinate.latitude,
-          longitude: defaultCity.coordinate.longitude,
-          latitudeDelta: 0.19,
-          longitudeDelta: 0.09,
-        });
-        await fetchCityPreviewData(defaultCity.name);
-      }
-    })();
+    // Initialize the map with a default city
+    try {
+      // Get the selected city from guest tour params or use default
+      const cityId = guestTourParams?.cityId || getDefaultCity().id;
+      const city = getCityById(cityId);
+      setSelectedCity(city);
+      
+      // Set initial map region based on the city coordinates
+      const newRegion = {
+        latitude: city.coordinate.latitude,
+        longitude: city.coordinate.longitude,
+        latitudeDelta: 0.19,
+        longitudeDelta: 0.09,
+      };
+      setRegion(newRegion);
+      
+      // Data fetching will be handled by the useEffect that watches guestTourParams
+    } catch (err) {
+      console.error('Error initializing map:', err);
+      setError('Error loading city data: ' + err.message);
+      
+      // Fallback to default city
+      const defaultCity = getDefaultCity();
+      setSelectedCity(defaultCity);
+      setRegion({
+        latitude: defaultCity.coordinate.latitude,
+        longitude: defaultCity.coordinate.longitude,
+        latitudeDelta: 0.19,
+        longitudeDelta: 0.09,
+      });
+    }
   }, []);
 
   // Effect to update tour points when guest tour parameters change

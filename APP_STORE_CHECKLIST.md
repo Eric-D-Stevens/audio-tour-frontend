@@ -9,8 +9,10 @@ This checklist is designed to help ensure the TensorTours app meets Apple's requ
 - ✅ App icon files are complete for all required sizes
   - ✅ Updated app.config.js with iOS-specific icon configuration
   - ✅ Using existing 1024x1024 adaptive-icon.png for App Store submission
-- ⚠️ Need to verify splash screen assets are properly configured
-- ⚠️ Need privacy policy URL (required for all apps)
+- ✅ Splash screen assets properly configured
+  - ✅ splash-icon.png is high-resolution (1242x2436 pixels)
+  - ✅ Using proper resizeMode ("cover") and TensorTours orange (#FF5722) background
+- ✅ Privacy policy URL added (https://tensortours.com/privacy-policy)
 
 ## 2. Technical Requirements
 - ✅ Using compatible Expo SDK version (48.0.0)
@@ -47,7 +49,7 @@ This checklist is designed to help ensure the TensorTours app meets Apple's requ
 ## Next Steps
 
 1. **Complete app.config.js**:
-   - Add privacy policy URL
+   - ✅ Added privacy policy URL
    - ✅ Updated iOS icon configuration in app.config.js
    - ✅ Using existing adaptive-icon.png (1024x1024) for the App Store
 

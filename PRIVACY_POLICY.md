@@ -1,16 +1,16 @@
-# TensorTrix Privacy Policy
+# TensorTours Privacy Policy
 
 _Last Updated: April 24, 2025_
 
 ## Introduction
 
-Welcome to TensorTrix. We respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our TensorTrix mobile application.
+Welcome to TensorTours. We respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our TensorTours mobile application.
 
 Please read this Privacy Policy carefully. If you do not agree with the terms of this Privacy Policy, please do not access or use the Application.
 
 ## Who We Are
 
-TensorTrix is an AI-powered audio tour application that provides personalized, location-based audio guides for travelers. Our application is available on iOS and Android devices.
+TensorTours is an AI-powered audio tour application that provides personalized, location-based audio guides for travelers. Our application is available on iOS and Android devices.
 
 ## Information We Collect
 
@@ -31,7 +31,7 @@ TensorTrix is an AI-powered audio tour application that provides personalized, l
 
 We use the information we collect to:
 
-- Provide, maintain, and improve the TensorTrix application
+- Provide, maintain, and improve the TensorTours application
 - Generate personalized audio tour content based on your location and preferences
 - Authenticate users and manage user accounts
 - Process and respond to user inquiries and requests
@@ -41,7 +41,7 @@ We use the information we collect to:
 
 ## Third-Party Services
 
-TensorTrix uses the following third-party services:
+TensorTours uses the following third-party services:
 
 - **Google Places API**: We use Google Places API to retrieve photos and information about points of interest. When you use our app, we may send anonymous location coordinates to Google's services to retrieve relevant place information. No personally identifiable information about you is shared with Google through this process.
 - **Amazon Web Services (AWS)**: We use AWS services, including Amazon Cognito for authentication and other AWS services for hosting our backend infrastructure.
@@ -93,7 +93,7 @@ If you are a California resident, you have specific rights under the California 
 
 ## Location Information
 
-TensorTrix collects precise location data to provide you with audio tours relevant to your surroundings. This is a core feature of our application.
+TensorTours collects precise location data to provide you with audio tours relevant to your surroundings. This is a core feature of our application.
 
 - **Why we need location access**: To identify nearby points of interest and provide relevant audio content.
 - **When we access location**: Only when the app is in use, and with your explicit permission.

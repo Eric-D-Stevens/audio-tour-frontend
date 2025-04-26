@@ -6,6 +6,7 @@ export default {
     slug: "audio-tour-app", // Using original slug to match existing EAS project ID
     version: "1.0.0",
     orientation: "portrait",
+    privacyPolicyUrl: "https://www.tensortrix.com/demos/audio-tour/privacy-policy",
     icon: "./assets/icon.png", // Default icon for all platforms
     userInterfaceStyle: "light",
     newArchEnabled: true,

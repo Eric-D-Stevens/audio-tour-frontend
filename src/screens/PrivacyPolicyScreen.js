@@ -27,9 +27,9 @@ const PrivacyPolicyScreen = ({ navigation }) => {
         
         <Text style={styles.sectionTitle}>Introduction</Text>
         <Text style={styles.paragraph}>
-          Welcome to TensorTrix. We respect your privacy and are committed to protecting your personal data. 
+          Welcome to TensorTours. We respect your privacy and are committed to protecting your personal data. 
           This Privacy Policy explains how we collect, use, disclose, and safeguard your information when 
-          you use our TensorTrix mobile application.
+          you use our TensorTours mobile application.
         </Text>
         
         <Text style={styles.paragraph}>
@@ -39,7 +39,7 @@ const PrivacyPolicyScreen = ({ navigation }) => {
         
         <Text style={styles.sectionTitle}>Who We Are</Text>
         <Text style={styles.paragraph}>
-          TensorTrix is an AI-powered audio tour application that provides personalized, location-based 
+          TensorTours is an AI-powered audio tour application that provides personalized, location-based 
           audio guides for travelers. Our application is available on iOS and Android devices.
         </Text>
         
@@ -58,7 +58,7 @@ const PrivacyPolicyScreen = ({ navigation }) => {
         
         <Text style={styles.sectionTitle}>How We Use Your Information</Text>
         <Text style={styles.paragraph}>We use the information we collect to:</Text>
-        <Text style={styles.bulletItem}>• Provide, maintain, and improve the TensorTrix application</Text>
+        <Text style={styles.bulletItem}>• Provide, maintain, and improve the TensorTours application</Text>
         <Text style={styles.bulletItem}>• Generate personalized audio tour content based on your location and preferences</Text>
         <Text style={styles.bulletItem}>• Authenticate users and manage user accounts</Text>
         <Text style={styles.bulletItem}>• Process and respond to user inquiries and requests</Text>
@@ -68,7 +68,7 @@ const PrivacyPolicyScreen = ({ navigation }) => {
         
         <Text style={styles.sectionTitle}>Third-Party Services</Text>
         <Text style={styles.paragraph}>
-          TensorTrix uses the following third-party services:
+          TensorTours uses the following third-party services:
         </Text>
         <Text style={styles.bulletItem}>• Google Places API: We use Google Places API to retrieve photos and information about points of interest. Information about your location may be shared with Google to provide this service.</Text>
         <Text style={styles.bulletItem}>• Amazon Web Services (AWS): We use AWS services, including Amazon Cognito for authentication and other AWS services for hosting our backend infrastructure.</Text>

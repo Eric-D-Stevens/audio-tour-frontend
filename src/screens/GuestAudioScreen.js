@@ -118,6 +118,12 @@ const GuestAudioScreen = ({ route, navigation }) => {
           <View style={styles.loadingIndicatorContainer}>
             <ActivityIndicator size="large" color="#FF5722" style={{transform: [{scale: 1.5}]}} />
             <Text style={styles.loadingText}>Loading Tour</Text>
+            <TouchableOpacity 
+              style={styles.cancelButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
           
           {/* Semi-transparent content placeholders */}
@@ -646,6 +652,20 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: '#333',
   },
+  cancelButton: {
+    marginTop: 20,
+    backgroundColor: 'rgba(255, 87, 34, 0.1)',
+    borderWidth: 1,
+    borderColor: '#FF5722',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  cancelButtonText: {
+    color: '#FF5722',
+    fontWeight: '600',
+    fontSize: 16
+  }
 });
 
 export default GuestAudioScreen;

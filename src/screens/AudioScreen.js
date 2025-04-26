@@ -154,6 +154,12 @@ const AudioScreen = ({ route, navigation }) => {
                 ? "No Tour Found\nGenerating New AI Tour" 
                 : "Loading Tour"}
             </Text>
+            <TouchableOpacity 
+              style={styles.cancelButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
           
           {/* Semi-transparent content placeholders */}
@@ -706,6 +712,20 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  cancelButton: {
+    marginTop: 20,
+    backgroundColor: 'rgba(255, 87, 34, 0.1)',
+    borderWidth: 1,
+    borderColor: '#FF5722',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  cancelButtonText: {
+    color: '#FF5722',
+    fontWeight: '600',
+    fontSize: 16
   }
 });
 

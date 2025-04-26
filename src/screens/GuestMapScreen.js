@@ -9,6 +9,7 @@ import { TourContext } from '../contexts';
 import { getPreviewPlaces } from '../services/api.ts';
 import { PRESET_CITIES, getCityById, getDefaultCity } from '../constants/cities';
 import audioManager from '../services/audioManager';
+import logger from '../utils/logger';
 
 const GuestMapScreen = ({ navigation }) => {
   const { guestTourParams } = useContext(TourContext);
@@ -42,7 +43,7 @@ const GuestMapScreen = ({ navigation }) => {
       
       // Data fetching will be handled by the useEffect that watches guestTourParams
     } catch (err) {
-      console.error('Error initializing map:', err);
+      logger.error('Error initializing map:', err);
       setError('Error loading city data: ' + err.message);
       
       // Fallback to default city
@@ -61,11 +62,11 @@ const GuestMapScreen = ({ navigation }) => {
   useEffect(() => {
     const handleTourParamsChange = async () => {
       if (guestTourParams && guestTourParams.cityId) {
-        console.log('Guest tour parameters updated:', JSON.stringify(guestTourParams));
+        logger.debug('Guest tour parameters updated:', JSON.stringify(guestTourParams));
         const city = getCityById(guestTourParams.cityId);
         
         if (city) {
-          console.log(`Processing city: ${city.name} (ID: ${city.id})`);
+          logger.debug(`Processing city: ${city.name} (ID: ${city.id})`);
           
           // Clear existing points first
           setTourPoints([]);
@@ -82,7 +83,7 @@ const GuestMapScreen = ({ navigation }) => {
               latitudeDelta: 0.19,
               longitudeDelta: 0.09,
             };
-            console.log(`Animating map to: ${newRegion.latitude}, ${newRegion.longitude}`);
+            logger.debug(`Animating map to: ${newRegion.latitude}, ${newRegion.longitude}`);
             mapRef.current.animateToRegion(newRegion, 500);
             setRegion(newRegion);
           }
@@ -92,14 +93,14 @@ const GuestMapScreen = ({ navigation }) => {
           
           // Then fetch city preview data using the CITY ID directly from parameters
           // This is critical - we need to use the ID from the parameters, not the name
-          console.log(`Fetching preview data for city ID: ${guestTourParams.cityId}`);
+          logger.debug(`Fetching preview data for city ID: ${guestTourParams.cityId}`);
           
           try {
             // Pass the city ID from parameters directly to prevent any mismatch
             await fetchCityPreviewData(guestTourParams.cityId);
-            console.log(`Preview data fetched for ${city.name} (ID: ${guestTourParams.cityId})`);
+            logger.debug(`Preview data fetched for ${city.name} (ID: ${guestTourParams.cityId})`);
           } catch (err) {
-            console.error('Error fetching city preview data:', err);
+            logger.error('Error fetching city preview data:', err);
             setError('Failed to load city data. Please try again.');
             setLoading(false);
           }
@@ -170,16 +171,16 @@ const GuestMapScreen = ({ navigation }) => {
     try {
       // IMPORTANT: Use the cityId parameter directly and DO NOT override it
       // This ensures we're using the ID from the tour parameters, not from the selectedCity state
-      console.log(`Fetching data for exact city ID: ${cityId}`);
+      logger.debug(`Fetching data for exact city ID: ${cityId}`);
       
       // Get tour type from parameters
       const tourType = (guestTourParams?.category || 'history').toLowerCase();
       
-      console.log(`Making CloudFront request for ${cityId}/${tourType}...`);
+      logger.debug(`Making CloudFront request for ${cityId}/${tourType}...`);
       
       // Make the request using the EXACT cityId that was passed in
       const data = await getPreviewPlaces(cityId, tourType);
-      console.log(`CloudFront request completed with ${data?.places?.length || 0} places`);
+      logger.debug(`CloudFront request completed with ${data?.places?.length || 0} places`);
       
       // Process the places data
       if (data && data.places && data.places.length > 0) {
@@ -220,20 +221,20 @@ const GuestMapScreen = ({ navigation }) => {
         await new Promise(resolve => setTimeout(resolve, 50));
         
         // Set the new points
-        console.log(`Setting ${transformedPlaces.length} valid tour points for ${cityId}`);
+        logger.debug(`Setting ${transformedPlaces.length} valid tour points for ${cityId}`);
         setTourPoints(transformedPlaces);
         
         // Trigger map refresh with delay to ensure React has updated state
         setTimeout(() => {
           setNeedsJiggle(true);
-          console.log('Map jiggle triggered to refresh markers');
+          logger.debug('Map jiggle triggered to refresh markers');
         }, 300);
       } else {
-        console.log(`No places found in response for city ID: ${cityId}`);
+        logger.debug(`No places found in response for city ID: ${cityId}`);
         setTourPoints([]);
       }
     } catch (err) {
-      console.error(`Error fetching preview places for city ID ${cityId}:`, err);
+      logger.error(`Error fetching preview places for city ID ${cityId}:`, err);
       setError('Error fetching places: ' + err.message);
     } finally {
       // Ensure loading state is cleared
@@ -282,7 +283,7 @@ const GuestMapScreen = ({ navigation }) => {
                       ...point.originalData,
                       tourType: guestTourParams?.category || 'history' // Add the current tour type from context
                     };
-                    console.log(`Navigating to AudioScreen with tour type: ${guestTourParams?.category || 'history'}`);
+                    logger.debug(`Navigating to AudioScreen with tour type: ${guestTourParams?.category || 'history'}`);
                     navigation.navigate('GuestAudio', { place: placeWithTourType });
                     
                     // Also load the audio in the mini player if available

@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { TourContext } from '../contexts';
 import { PRESET_CITIES } from '../constants/cities';
+import logger from '../utils/logger';
 
 const GuestTourParametersScreen = ({ navigation }) => {
   const { guestTourParams, setGuestTourParams } = useContext(TourContext);
@@ -33,7 +34,7 @@ const GuestTourParametersScreen = ({ navigation }) => {
   
   const handleSave = async () => {
     // Update the global guest tour parameters with new values
-    console.log(`Setting tour params: city=${selectedCity}, category=${category}`);
+    logger.debug(`Setting tour params: city=${selectedCity}, category=${category}`);
     
     // In React context, setGuestTourParams won't accept a callback
     // So we need to set the parameters and then wait for them to propagate
@@ -46,7 +47,7 @@ const GuestTourParametersScreen = ({ navigation }) => {
     // This ensures the context value is updated before we navigate back
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    console.log('Tour parameters set, navigating back to map screen');
+    logger.debug('Tour parameters set, navigating back to map screen');
     
     // Navigate back to map screen
     navigation.goBack();

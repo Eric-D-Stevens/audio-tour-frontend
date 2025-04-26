@@ -8,7 +8,7 @@
 import Constants from 'expo-constants';
 
 // Set this to true to simulate production mode for testing
-let simulateProduction = false;
+let simulateProduction = true;
 
 // Determine if we're in development or production
 const isDevelopment = 

@@ -10,6 +10,7 @@ import MiniAudioPlayer from '../components/MiniAudioPlayer';
 import { TourContext, AuthContext } from '../contexts';
 import { getPlaces } from '../services/api.ts';
 import audioManager from '../services/audioManager';
+import logger from '../utils/logger';
 
 const UserMapScreen = ({ navigation }) => {
   const { tourParams } = useContext(TourContext);
@@ -59,7 +60,7 @@ const UserMapScreen = ({ navigation }) => {
       // Fetch nearby places based on location and tour parameters
       await fetchNearbyPlacesData(latitude, longitude);
     } catch (err) {
-      console.error('Error getting location:', err);
+      logger.error('Error getting location:', err);
       setError('Error getting location: ' + err.message);
       setLoading(false);
     }
@@ -78,21 +79,21 @@ const UserMapScreen = ({ navigation }) => {
       // First verify authentication is still valid
       const isAuthValid = await checkAuthAndRedirect(navigation);
       if (!isAuthValid) {
-        console.log('Authentication validation failed on initial load');
+        logger.debug('Authentication validation failed on initial load');
         setLoading(false);
         return;
       }
       
       // Check if we already have location permission
       const { status } = await Location.getForegroundPermissionsAsync();
-      console.log('Current location permission status:', status);
+      logger.debug('Current location permission status:', status);
       
       if (status !== 'granted') {
         // Only show the modal if we don't have permission yet
-        console.log('No location permission, showing modal');
+        logger.debug('No location permission, showing modal');
         setShowPermissionModal(true);
       } else {
-        console.log('Location permission already granted, proceeding');
+        logger.debug('Location permission already granted, proceeding');
         // Since we have permission, get the user's location
         handleAcceptLocationPermission();
       }
@@ -136,7 +137,7 @@ const UserMapScreen = ({ navigation }) => {
   // Effect to update tour points when tour parameters change
   useEffect(() => {
     if (tourParams) {
-      console.log('Tour parameters updated:', tourParams);
+      logger.debug('Tour parameters updated:', tourParams);
       
       // Clear existing points and show loading animation
       setTourPoints([]);
@@ -155,17 +156,17 @@ const UserMapScreen = ({ navigation }) => {
           // Verify authentication is still valid before proceeding
           const isAuthValid = await checkAuthAndRedirect(navigation);
           if (!isAuthValid) {
-            console.log('Authentication validation failed, aborting operation');
+            logger.debug('Authentication validation failed, aborting operation');
             setLoadingPoints(false);
             return;
           }
           
           // Check if we have location permission
           const { status } = await Location.getForegroundPermissionsAsync();
-          console.log('Current location permission status for tour params update:', status);
+          logger.debug('Current location permission status for tour params update:', status);
           
           if (status !== 'granted') {
-            console.log('No location permission, showing modal');
+            logger.debug('No location permission, showing modal');
             setShowPermissionModal(true);
             setLoadingPoints(false);
             return;
@@ -199,12 +200,12 @@ const UserMapScreen = ({ navigation }) => {
             // Fetch new places at current location
             await fetchNearbyPlacesData(latitude, longitude);
           } catch (locationError) {
-            console.error('Error getting current position:', locationError);
+            logger.error('Error getting current position:', locationError);
             setError('Error getting current location. Please try again.');
             setLoadingPoints(false);
           }
         } catch (err) {
-          console.error('Error updating location for tour parameters:', err);
+          logger.error('Error updating location for tour parameters:', err);
           setError('Error updating location: ' + err.message);
           setLoadingPoints(false);
         }
@@ -218,7 +219,7 @@ const UserMapScreen = ({ navigation }) => {
       // Verify authentication is still valid before proceeding with API request
       const isAuthValid = await checkAuthAndRedirect(navigation);
       if (!isAuthValid) {
-        console.log('Authentication validation failed, aborting fetch');
+        logger.debug('Authentication validation failed, aborting fetch');
         setLoadingPoints(false);
         setLoading(false);
         return;
@@ -233,7 +234,7 @@ const UserMapScreen = ({ navigation }) => {
       const distance = tourParams?.distance || 2000;
       const maxResults = tourParams?.numAttractions || 15;
       
-      console.log(`Fetching places with params: ${tourType}, ${distance}m, max results: ${maxResults}`);
+      logger.debug(`Fetching places with params: ${tourType}, ${distance}m, max results: ${maxResults}`);
       const data = await getPlaces(latitude, longitude, distance, tourType, maxResults);
       
       if (data && data.places) {
@@ -265,14 +266,14 @@ const UserMapScreen = ({ navigation }) => {
         
         // Set the tour points with the new data
         setTourPoints(transformedPlaces);
-        console.log(`Loaded ${transformedPlaces.length} places`);
+        logger.debug(`Loaded ${transformedPlaces.length} places`);
       } else {
         // If no places are found, set empty array
         setTourPoints([]);
-        console.log('No places found');
+        logger.debug('No places found');
       }
     } catch (err) {
-      console.error('Error fetching places:', err);
+      logger.error('Error fetching places:', err);
       setError('Error fetching places: ' + err.message);
     } finally {
       setLoading(false);
@@ -297,7 +298,7 @@ const UserMapScreen = ({ navigation }) => {
       // Verify authentication is still valid before proceeding
       const isAuthValid = await checkAuthAndRedirect(navigation);
       if (!isAuthValid) {
-        console.log('Authentication validation failed, aborting location refresh');
+        logger.debug('Authentication validation failed, aborting location refresh');
         return;
       }
       
@@ -321,10 +322,10 @@ const UserMapScreen = ({ navigation }) => {
         // Also update the region state to keep it in sync
         setRegion(newRegion);
       } else {
-        console.warn('Map reference is null, cannot center map');
+        logger.warn('Map reference is null, cannot center map');
       }
     } catch (err) {
-      console.error('Error updating location:', err);
+      logger.error('Error updating location:', err);
       setError('Error updating location: ' + err.message);
     }
   };
@@ -394,7 +395,7 @@ const UserMapScreen = ({ navigation }) => {
                     // Verify authentication is still valid before navigating
                     const isAuthValid = await checkAuthAndRedirect(navigation);
                     if (!isAuthValid) {
-                      console.log('Authentication validation failed, aborting navigation to AudioScreen');
+                      logger.debug('Authentication validation failed, aborting navigation to AudioScreen');
                       return;
                     }
                     
@@ -404,7 +405,7 @@ const UserMapScreen = ({ navigation }) => {
                       ...point.originalData,
                       tourType: tourParams.category // Add the current tour type from context
                     };
-                    console.log(`Navigating to AudioScreen with tour type: ${tourParams.category}`);
+                    logger.debug(`Navigating to AudioScreen with tour type: ${tourParams.category}`);
                     navigation.navigate('Audio', { place: placeWithTourType });
                     
                     // Also load the audio in the mini player if available

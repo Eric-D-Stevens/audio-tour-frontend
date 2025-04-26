@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingVi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../contexts';
+import logger from '../utils/logger';
 
 const EmailVerificationScreen = ({ route, navigation }) => {
   const [verificationCode, setVerificationCode] = useState('');
@@ -35,7 +36,7 @@ const EmailVerificationScreen = ({ route, navigation }) => {
         }
       }, 1500); // Show success message briefly before redirecting
     } catch (error) {
-      console.log('Verification error:', error);
+      logger.error('Verification error:', error);
       setErrorMessage(error.message || 'Verification failed');
     } finally {
       setIsLoading(false);
@@ -49,7 +50,7 @@ const EmailVerificationScreen = ({ route, navigation }) => {
       await auth.resendConfirmationCode(email.toLowerCase());
       setErrorMessage('A new verification code has been sent to your email');
     } catch (error) {
-      console.log('Resend code error:', error);
+      logger.error('Resend code error:', error);
       setErrorMessage(error.message || 'Failed to resend code');
     } finally {
       setIsLoading(false);

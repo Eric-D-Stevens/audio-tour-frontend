@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import GuestAudioPlayer from '../components/GuestAudioPlayer';
 import { fetchPreviewTour } from '../services/api';
 import { TourContext } from '../contexts';
+import logger from '../utils/logger';
 
 const GuestAudioScreen = ({ route, navigation }) => {
   const { place } = route.params || {};
@@ -38,7 +39,7 @@ const GuestAudioScreen = ({ route, navigation }) => {
         setScriptText("Script not available for this tour.");
       }
     } catch (error) {
-      console.error("Error loading script:", error);
+      logger.error("Error loading script:", error);
       setScriptText(`Error loading script: ${error.message}`);
     }
   };
@@ -56,11 +57,11 @@ const GuestAudioScreen = ({ route, navigation }) => {
         // If not available, fall back to the tour type from guestTourParams
         const tourType = place.tourType || guestTourParams?.category || 'history';
         
-        console.log(`Using tour type: ${tourType} for place: ${place.place_id}`);
+        logger.debug(`Using tour type: ${tourType} for place: ${place.place_id}`);
         
         // For guest mode, we use the preview tour endpoint
         const response = await fetchPreviewTour(place.place_id, tourType);
-        console.log('Preview tour response:', JSON.stringify(response, null, 2));
+        logger.debug('Preview tour response:', JSON.stringify(response, null, 2));
         
         // Store the full tour data
         setTourData(response.tour || null);
@@ -74,7 +75,7 @@ const GuestAudioScreen = ({ route, navigation }) => {
           setPhotos(photoUrls);
         }
       } catch (error) {
-        console.error('Error fetching audio tour:', error);
+        logger.error('Error fetching audio tour:', error);
         setError('Failed to load audio tour data');
       } finally {
         setLoading(false);

@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'rea
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import audioManager from '../services/audioManager';
+import logger from '../utils/logger';
 
 const AudioPlayer = ({ placeId, audioUrl, placeName, tourType = 'history' }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -66,7 +67,7 @@ const AudioPlayer = ({ placeId, audioUrl, placeName, tourType = 'history' }) => 
       if (status.didJustFinish) {
         setIsPlaying(false);
         // Reset position to beginning when playback finishes
-        audioManager.seekTo(0).catch(err => console.error('Error resetting position:', err));
+        audioManager.seekTo(0).catch(err => logger.error('Error resetting position:', err));
       }
     }
   };

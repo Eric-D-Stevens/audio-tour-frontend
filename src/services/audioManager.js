@@ -1,5 +1,6 @@
 import { Audio } from 'expo-av';
 import { Platform } from 'react-native';
+import logger from '../utils/logger';
 
 class AudioManager {
   static instance = null;
@@ -55,7 +56,7 @@ class AudioManager {
       this.sound = newSound;
       this.currentPlaceId = placeId;
     } catch (error) {
-      console.error('Error loading audio:', error);
+      logger.error('Error loading audio:', error);
       throw error;
     }
   }

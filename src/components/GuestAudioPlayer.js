@@ -4,6 +4,7 @@ import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchPreviewTour } from '../services/api.ts';
 import audioManager from '../services/audioManager';
+import logger from '../utils/logger';
 
 const GuestAudioPlayer = ({ placeId, tourType = 'history' }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -32,30 +33,30 @@ const GuestAudioPlayer = ({ placeId, tourType = 'history' }) => {
       setIsLoading(true);
       setError(null);
       
-      console.log(`Loading preview audio tour for place: ${placeId}, type: ${tourType}`);
+      logger.debug(`Loading preview audio tour for place: ${placeId}, type: ${tourType}`);
       
       // Fetch preview audio data from the API using the new function
       const data = await fetchPreviewTour(placeId, tourType);
-      console.log(`Preview tour data received for ${placeId}:`, JSON.stringify(data, null, 2));
+      logger.debug(`Preview tour data received for ${placeId}`); // Remove JSON.stringify to avoid large data dumps
       
       // Save the full audio data to state
       setAudioData(data);
       
       // The API response structure has changed - audio URL is now at tour.audio.cloudfront_url
       if (!data || !data.tour || !data.tour.audio || !data.tour.audio.cloudfront_url) {
-        console.error('No audio URL in response, unexpected structure:', JSON.stringify(data));
+        logger.error('No audio URL in response, unexpected structure');
         throw new Error('No audio available for this location');
       }
       
       // Get audio URL from the correct path
       const audioUrl = data.tour.audio.cloudfront_url;
-      console.log(`Found audio URL: ${audioUrl}`);
+      logger.debug(`Found audio URL: ${audioUrl}`);
 
       // Extract the place name from the tour data
       const placeName = data.tour?.place_info?.place_name || 'Audio Tour';
       
       // Load the audio file into the audio manager
-      console.log(`Loading audio file: ${audioUrl}`);
+      logger.debug(`Loading audio file: ${audioUrl}`);
       await audioManager.loadAudio(audioUrl, placeId, placeName);
       
       // Get initial audio playback status
@@ -65,7 +66,7 @@ const GuestAudioPlayer = ({ placeId, tourType = 'history' }) => {
       }
       
     } catch (err) {
-      console.error('Error loading audio:', err);
+      logger.error('Error loading audio data:', err);
       setError('Failed to load audio tour: ' + (err.message || 'Unknown error'));
     } finally {
       setIsLoading(false);

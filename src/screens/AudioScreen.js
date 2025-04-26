@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AudioPlayer from '../components/AudioPlayer';
 import { getTour, getOnDemandTour } from '../services/api';
 import { AuthContext, TourContext } from '../contexts';
+import logger from '../utils/logger';
 
 const AudioScreen = ({ route, navigation }) => {
   const { place } = route.params || {};
@@ -38,7 +39,7 @@ const AudioScreen = ({ route, navigation }) => {
         setScriptText("Script not available for this tour.");
       }
     } catch (error) {
-      console.error("Error loading script:", error);
+      logger.error("Error loading script:", error);
       setScriptText(`Error loading script: ${error.message}`);
     }
   };
@@ -67,7 +68,7 @@ const AudioScreen = ({ route, navigation }) => {
           return;
         }
         
-        console.log(`Using tour type: ${tourType} for place: ${place.place_id}`);
+        logger.debug(`Using tour type: ${tourType} for place: ${place.place_id}`);
         try {
           
           // First, try to get a pre-generated tour
@@ -78,7 +79,7 @@ const AudioScreen = ({ route, navigation }) => {
           const photoUrls = response.tour?.photos?.map(photo => photo.cloudfront_url) || [];
           setPhotos(photoUrls);
         } catch (tourError) {
-          console.log('Pre-generated tour not found, generating on-demand:', tourError.message);
+          logger.debug('Pre-generated tour not found, generating on-demand:', tourError.message);
           
           // We don't want to show an error, but rather a loading state
           setError(null);
@@ -86,7 +87,7 @@ const AudioScreen = ({ route, navigation }) => {
           try {
             // Set the proper React state for on-demand generation
             setIsGeneratingOnDemand(true);
-            console.log('Switching to on-demand generation mode');
+            logger.debug('Switching to on-demand generation mode');
             
             // Fallback to generating a tour on demand
             const onDemandResponse = await getOnDemandTour(place.place_id, tourType);
@@ -99,12 +100,12 @@ const AudioScreen = ({ route, navigation }) => {
             // Clear any error messages
             setError(null);
           } catch (onDemandError) {
-            console.error('Failed to generate on-demand tour:', onDemandError);
+            logger.error('Failed to generate on-demand tour:', onDemandError);
             throw new Error(`Unable to generate tour: ${onDemandError.message}`);
           }
         }
       } catch (error) {
-        console.error('Error fetching audio tour:', error);
+        logger.error('Error fetching audio tour:', error);
         setError('Failed to load audio tour data');
       } finally {
         setLoading(false);

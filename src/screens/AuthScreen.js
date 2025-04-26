@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../contexts';
+import logger from '../utils/logger';
 
 // Get color based on strength percentage
 const getStrengthColor = (percentage) => {
@@ -82,7 +83,7 @@ const AuthScreen = ({ route, navigation }) => {
         return;
       }
     } catch (error) {
-      console.log('Auth error:', error);
+      logger.error('Auth error:', error);
       
       // Special handling for unverified accounts
       if (error.unverifiedAccount) {

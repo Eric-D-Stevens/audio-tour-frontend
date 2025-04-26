@@ -11,6 +11,10 @@
         "simulator": true
       }
     },
+    "device-dev": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
     "standalone": {
       "distribution": "internal",
       "developmentClient": false,

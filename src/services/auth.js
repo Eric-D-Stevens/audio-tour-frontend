@@ -1,4 +1,4 @@
-import { CognitoUserPool, CognitoUser, AuthenticationDetails, CognitoRefreshToken } from 'amazon-cognito-identity-js';
+import { CognitoUserPool, CognitoUser, AuthenticationDetails, CognitoRefreshToken, CognitoUserAttribute } from 'amazon-cognito-identity-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID } from '../constants/config';
@@ -548,6 +548,58 @@ export const resendConfirmationCode = (username) => {
         return;
       }
       resolve(result);
+    });
+  });
+};
+
+/**
+ * Initiate forgot password flow
+ * @param {string} username - User's username or email
+ * @returns {Promise<string>} - Success message
+ */
+export const forgotPassword = (username) => {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = new CognitoUser({
+      Username: username,
+      Pool: userPool
+    });
+
+    cognitoUser.forgotPassword({
+      onSuccess: (result) => {
+        logger.info('Password reset code sent successfully');
+        resolve(result);
+      },
+      onFailure: (err) => {
+        logger.error('Error sending password reset code:', err);
+        reject(err);
+      }
+    });
+  });
+};
+
+/**
+ * Confirm new password with verification code
+ * @param {string} username - User's username or email
+ * @param {string} code - Verification code sent to user's email
+ * @param {string} newPassword - New password
+ * @returns {Promise<string>} - Success message
+ */
+export const confirmNewPassword = (username, code, newPassword) => {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = new CognitoUser({
+      Username: username,
+      Pool: userPool
+    });
+
+    cognitoUser.confirmPassword(code, newPassword, {
+      onSuccess: () => {
+        logger.info('Password reset confirmed successfully');
+        resolve('Password reset successful');
+      },
+      onFailure: (err) => {
+        logger.error('Error confirming password reset:', err);
+        reject(err);
+      }
     });
   });
 };

@@ -300,10 +300,17 @@ const AuthScreen = ({ route, navigation }) => {
               onPress={handleAuth}
               disabled={isLoading}
             >
-              <Text style={styles.buttonText}>
-                {isLoading ? 'Please wait...' : isLogin ? 'Sign In' : 'Sign Up'}
-              </Text>
+              <Text style={styles.buttonText}>{isLoading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}</Text>
             </TouchableOpacity>
+
+            {isLogin && (
+              <TouchableOpacity 
+                style={styles.forgotPasswordContainer}
+                onPress={() => navigation.navigate('ForgotPassword')}
+              >
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={styles.switchModeButton}
@@ -477,6 +484,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     textDecorationLine: 'underline',
+  },
+  forgotPasswordContainer: {
+    marginTop: 15,
+    alignSelf: 'center',
+  },
+  forgotPasswordText: {
+    color: '#FF5722',
+    fontSize: 14,
   },
   passwordRequirementsContainer: {
     backgroundColor: 'rgba(255, 87, 34, 0.05)',

@@ -21,6 +21,7 @@ import AudioScreen from './src/screens/AudioScreen';
 import GuestAudioScreen from './src/screens/GuestAudioScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import EmailVerificationScreen from './src/screens/EmailVerificationScreen';
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 import TourParametersScreen from './src/screens/TourParametersScreen';
 import GuestTourParametersScreen from './src/screens/GuestTourParametersScreen';
 import AboutScreen from './src/screens/AboutScreen';
@@ -193,6 +194,12 @@ export default function App() {
     resendConfirmationCode: (username) => {
       return AuthService.resendConfirmationCode(username);
     },
+    forgotPassword: (username) => {
+      return AuthService.forgotPassword(username);
+    },
+    confirmNewPassword: (username, code, newPassword) => {
+      return AuthService.confirmNewPassword(username, code, newPassword);
+    },
     checkAuthAndRedirect: async (navigation) => {
       // Function to check auth status and redirect to login if needed
       const { isAuthenticated: stillAuthenticated, error } = await AuthService.isAuthenticated();
@@ -330,11 +337,20 @@ const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTo
                   <Stack.Screen 
                     name="EmailVerification" 
                     component={EmailVerificationScreen} 
-                    options={{ headerShown: false }}
+                    options={{
+                      title: 'Verify Your Email',
+                      headerStyle: {
+                        backgroundColor: '#FF5722',
+                      },
+                      headerTintColor: '#FFFFFF',
+                      headerTitleStyle: {
+                        fontWeight: 'bold',
+                      },
+                    }}
                   />
                   <Stack.Screen 
-                    name="PrivacyPolicy" 
-                    component={PrivacyPolicyScreen} 
+                    name="ForgotPassword" 
+                    component={ForgotPasswordScreen} 
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen 

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../contexts';
+import { CommonActions } from '@react-navigation/native';
 
 const AppHeader = ({ navigation, title }) => {
   const authContext = useContext(AuthContext);
@@ -124,6 +125,13 @@ const AppHeader = ({ navigation, title }) => {
                     onPress={async () => {
                       closeMenu();
                       await handleLogout();
+                      // Force reset navigation to Map screen
+                      navigation.dispatch(
+                        CommonActions.reset({
+                          index: 0,
+                          routes: [{ name: 'Map' }]
+                        })
+                      );
                     }}
                   >
                     <Ionicons name="log-out-outline" size={20} color="#FF5722" />

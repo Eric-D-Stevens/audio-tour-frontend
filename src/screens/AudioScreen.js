@@ -220,22 +220,23 @@ const AudioScreen = ({ route, navigation }) => {
         
         {photos && photos.length > 0 ? (
           <View>
-            <ScrollView
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              style={styles.imageSlider}
-              onScroll={(event) => {
-                const slideSize = event.nativeEvent.layoutMeasurement.width;
-                const offset = event.nativeEvent.contentOffset.x;
-                const index = Math.floor(offset / slideSize);
-                setCurrentImageIndex(index);
-              }}
-              scrollEventThrottle={200}
-            >
-              {photos.map((photoUrl, index) => (
-                <View key={index} style={styles.imageSlide}>
-                  <View style={styles.imageContainer}>
+            {/* Image carousel with pagination dots */}
+            <View style={styles.carouselContainer}>
+              <ScrollView
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                style={styles.imageSlider}
+                onScroll={(event) => {
+                  const slideSize = event.nativeEvent.layoutMeasurement.width;
+                  const offset = event.nativeEvent.contentOffset.x;
+                  const index = Math.floor(offset / slideSize);
+                  setCurrentImageIndex(index);
+                }}
+                scrollEventThrottle={200}
+              >
+                {photos.map((photoUrl, index) => (
+                  <View key={index} style={styles.imageSlide}>
                     <Image
                       source={{ uri: photoUrl }}
                       style={styles.placeImage}
@@ -243,17 +244,18 @@ const AudioScreen = ({ route, navigation }) => {
                       onLoadEnd={() => setImageLoading(false)}
                     />
                   </View>
-                </View>
-              ))}
-            </ScrollView>
-            <View style={styles.paginationDots}>
-              {photos.map((_, index) => (
-                <View
-                  key={index}
-                  style={[styles.paginationDot, index === currentImageIndex && styles.paginationDotActive]}
-                />
-              ))}
+                ))}
+              </ScrollView>
+              <View style={styles.paginationDots}>
+                {photos.map((_, index) => (
+                  <View
+                    key={index}
+                    style={[styles.paginationDot, index === currentImageIndex && styles.paginationDotActive]}
+                  />
+                ))}
+              </View>
             </View>
+            
             {/* Photo attribution below the carousel */}
             <PhotoAttribution 
               attributionName={photoAttributions[currentImageIndex]} 
@@ -620,9 +622,11 @@ const styles = StyleSheet.create({
     height: 235, // Increased to accommodate the attribution
     width: '100%',
   },
-  imageContainer: {
-    height: 200, // Original image height
+  carouselContainer: {
+    position: 'relative',  // This allows absolutel positioning of pagination dots
+    height: 200,
     width: '100%',
+    marginBottom: 0,       // No margin to keep attribution right below
   },
   imageSlide: {
     width: Dimensions.get('window').width,

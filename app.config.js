@@ -4,7 +4,7 @@ export default {
   expo: {
     name: "TensorTours",
     slug: "audio-tour-app", // Using original slug to match existing EAS project ID
-    version: "1.0.0",
+    version: "1.0.1",
     orientation: "portrait",
     privacyPolicyUrl: "https://www.tensortrix.com/demos/audio-tour/privacy-policy",
     icon: "./assets/app-store-icon.png", // Using non-transparent icon for better App Store display

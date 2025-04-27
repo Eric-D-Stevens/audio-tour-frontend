@@ -31,12 +31,32 @@ const UserMapScreen = ({ navigation }) => {
   // Function to handle accepting location permission
   const handleAcceptLocationPermission = async () => {
     setShowPermissionModal(false);
+    
+    // Explicitly set loading states to true and animate the loading overlay
+    setLoading(true);
+    setLoadingPoints(true);
+    
+    // Fade in the loading overlay
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+    
     try {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         // If permission still denied, show error
         setError('Permission to access location was denied');
         setLoading(false);
+        setLoadingPoints(false);
+        
+        // Fade out the loading overlay
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
         return;
       }
 
@@ -63,6 +83,14 @@ const UserMapScreen = ({ navigation }) => {
       logger.error('Error getting location:', err);
       setError('Error getting location: ' + err.message);
       setLoading(false);
+      setLoadingPoints(false);
+      
+      // Fade out the loading overlay on error
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
     }
   };
   

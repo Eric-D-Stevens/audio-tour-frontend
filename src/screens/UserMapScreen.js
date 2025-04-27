@@ -67,20 +67,32 @@ const UserMapScreen = ({ navigation }) => {
   };
   
   // Function to handle declining location permission
-  const handleDeclineLocationPermission = () => {
+  const handleDeclineLocationPermission = async () => {
     // Logout the user through the auth context
     // This will automatically navigate to the Auth screen
-    signOut();
+    await signOut();
   };
   
   // Initialize with authentication check and permission check
   useEffect(() => {
+    // Immediately show loading state and animate the loading overlay when component mounts
+    setLoading(true);
+    setLoadingPoints(true);
+    
+    // Fade in the loading overlay immediately
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+    
     (async () => {
       // First verify authentication is still valid
       const isAuthValid = await checkAuthAndRedirect(navigation);
       if (!isAuthValid) {
         logger.debug('Authentication validation failed on initial load');
         setLoading(false);
+        setLoadingPoints(false);
         return;
       }
       
@@ -92,9 +104,19 @@ const UserMapScreen = ({ navigation }) => {
         // Only show the modal if we don't have permission yet
         logger.debug('No location permission, showing modal');
         setShowPermissionModal(true);
+        setLoading(false);
+        setLoadingPoints(false);
+        
+        // Fade out the loading overlay
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
       } else {
         logger.debug('Location permission already granted, proceeding');
         // Since we have permission, get the user's location
+        // handleAcceptLocationPermission will handle the loading states
         handleAcceptLocationPermission();
       }
     })();
@@ -439,7 +461,7 @@ const UserMapScreen = ({ navigation }) => {
         )}
         
         {/* Loading overlay for tour points */}
-        {loadingPoints && (
+        {(loadingPoints || loading) && (
           <Animated.View 
             style={[styles.loadingOverlay, { opacity: fadeAnim }]}
           >

@@ -121,9 +121,9 @@ const AppHeader = ({ navigation, title }) => {
                 <>
                   <TouchableOpacity 
                     style={styles.menuItem}
-                    onPress={() => {
+                    onPress={async () => {
                       closeMenu();
-                      handleLogout(navigation);
+                      await handleLogout();
                     }}
                   >
                     <Ionicons name="log-out-outline" size={20} color="#FF5722" />

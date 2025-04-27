@@ -16,7 +16,7 @@ export default {
       backgroundColor: "#FF5722"
     },
     ios: {
-      supportsTablet: true,
+      supportsTablet: false,
       bundleIdentifier: "com.tensortours.app",
       buildNumber: "1",
       icon: "./assets/app-store-icon.png", // Using non-transparent icon for iOS

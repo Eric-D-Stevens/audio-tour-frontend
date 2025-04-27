@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIn
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AudioPlayer from '../components/AudioPlayer';
+import PhotoAttribution from '../components/PhotoAttribution';
 import { getTour, getOnDemandTour } from '../services/api';
 import { AuthContext, TourContext } from '../contexts';
 import logger from '../utils/logger';
@@ -12,6 +13,8 @@ const AudioScreen = ({ route, navigation }) => {
   const { tourParams } = useContext(TourContext);
   const [tourData, setTourData] = useState(null);
   const [photos, setPhotos] = useState([]);
+  const [photoAttributions, setPhotoAttributions] = useState([]);
+  const [photoAttributionUris, setPhotoAttributionUris] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isGeneratingOnDemand, setIsGeneratingOnDemand] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
@@ -75,9 +78,13 @@ const AudioScreen = ({ route, navigation }) => {
           const response = await getTour(place.place_id, tourType);
           setTourData(response.tour || null);
           
-          // Extract photo URLs from tour data
+          // Extract photo URLs and attributions from tour data
           const photoUrls = response.tour?.photos?.map(photo => photo.cloudfront_url) || [];
+          const attributions = response.tour?.photos?.map(photo => photo.attribution?.displayName || '') || [];
+          const attributionUris = response.tour?.photos?.map(photo => photo.attribution?.uri || '') || [];
           setPhotos(photoUrls);
+          setPhotoAttributions(attributions);
+          setPhotoAttributionUris(attributionUris);
         } catch (tourError) {
           logger.debug('Pre-generated tour not found, generating on-demand:', tourError.message);
           
@@ -93,9 +100,13 @@ const AudioScreen = ({ route, navigation }) => {
             const onDemandResponse = await getOnDemandTour(place.place_id, tourType);
             setTourData(onDemandResponse.tour || null);
             
-            // Extract photo URLs from the on-demand tour data
+            // Extract photo URLs and attributions from the on-demand tour data
             const photoUrls = onDemandResponse.tour?.photos?.map(photo => photo.cloudfront_url) || [];
+            const attributions = onDemandResponse.tour?.photos?.map(photo => photo.attribution?.displayName || '') || [];
+            const attributionUris = onDemandResponse.tour?.photos?.map(photo => photo.attribution?.uri || '') || [];
             setPhotos(photoUrls);
+            setPhotoAttributions(attributions);
+            setPhotoAttributionUris(attributionUris);
             
             // Clear any error messages
             setError(null);
@@ -224,13 +235,14 @@ const AudioScreen = ({ route, navigation }) => {
             >
               {photos.map((photoUrl, index) => (
                 <View key={index} style={styles.imageSlide}>
-                  <Image
-                    source={{ uri: photoUrl }}
-                    style={styles.placeImage}
-                    onLoadStart={() => setImageLoading(true)}
-                    onLoadEnd={() => setImageLoading(false)}
-                  />
-
+                  <View style={styles.imageContainer}>
+                    <Image
+                      source={{ uri: photoUrl }}
+                      style={styles.placeImage}
+                      onLoadStart={() => setImageLoading(true)}
+                      onLoadEnd={() => setImageLoading(false)}
+                    />
+                  </View>
                 </View>
               ))}
             </ScrollView>
@@ -242,6 +254,11 @@ const AudioScreen = ({ route, navigation }) => {
                 />
               ))}
             </View>
+            {/* Photo attribution below the carousel */}
+            <PhotoAttribution 
+              attributionName={photoAttributions[currentImageIndex]} 
+              attributionUri={photoAttributionUris[currentImageIndex]}
+            />
           </View>
         ) : (
           <View style={styles.imagePlaceholder}>
@@ -600,12 +617,22 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   imageSlider: {
-    height: 250,
+    height: 235, // Increased to accommodate the attribution
+    width: '100%',
+  },
+  imageContainer: {
+    height: 200, // Original image height
     width: '100%',
   },
   imageSlide: {
     width: Dimensions.get('window').width,
-    height: 250,
+    height: 235, // Increased to accommodate the attribution
+    flexDirection: 'column',
+  },
+  placeImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   paginationDots: {
     flexDirection: 'row',

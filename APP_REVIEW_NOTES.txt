@@ -1,0 +1,58 @@
+# TensorTours App Review Notes
+
+## Test Account Information
+- Email: tensortours-tester@tensortrix.com
+- Password: TensorToursTester25
+
+## App Store Review Compliance 
+
+### Location Permission Compliance
+We have implemented complete location services compliance following Apple's requirements:
+- All required iOS permission strings are included in the app.config.js:
+  - NSLocationWhenInUseUsageDescription
+  - NSLocationAlwaysAndWhenInUseUsageDescription
+  - NSLocationAlwaysUsageDescription
+- Clear explanations of why location is needed (for finding nearby points of interest)
+- Graceful handling when permissions are denied with appropriate user guidance
+
+### Offline Mode Implementation
+We've addressed Apple's requirement for apps to handle offline situations:
+- Implemented a comprehensive offline handling solution using @react-native-community/netinfo
+- Created a dedicated branded offline screen with clear messaging
+- Added an interactive "Reconnect" button with visual feedback
+- The app does not crash when in airplane mode
+- Smooth transition back to active state when connectivity is restored
+
+### Privacy Compliance
+Our privacy implementation meets all App Store requirements:
+- Comprehensive privacy policy covering all data usage (location data, user preferences, account information)
+- Clear explanations for all data collection with user rights detailed
+- Properly implemented "nutrition labels" for App Store privacy declarations
+- Special sections addressing California privacy requirements
+- Complete transparency about third-party services (Google Places API, AWS/Cognito)
+
+### Third-Party API Compliance
+We follow all third-party API usage requirements:
+- Proper Google Places photo attribution as required by Google's terms of service
+- Secure implementation of AWS Cognito authentication
+- No hardcoded API keys in the application code
+
+### Production Logging Controls
+We've implemented proper production controls for logging:
+- Centralized logger utility that controls all logging output based on environment
+- No debug information is exposed to end users in production builds
+- Only critical and error logs are preserved in production for troubleshooting
+
+### UI/UX Compliance
+Our user interface meets Apple's quality standards:
+- Consistent branded experience with orange (#FF5722) color scheme
+- Interactive password validation with real-time requirements feedback
+- Proper error message styling consistent with Apple's design guidelines
+- Smooth navigation transitions with proper React Navigation implementation
+
+### TestFlight Validation
+- The app has been successfully built (build number 5) and submitted to App Store Connect
+- Bundle identifier com.tensortours.app is properly configured
+- Signed with appropriate Apple Developer account credentials
+
+The app has been carefully designed to address all common App Store rejection reasons, with particular attention to handling edge cases like offline mode and permission denials that are frequently cited in rejections.

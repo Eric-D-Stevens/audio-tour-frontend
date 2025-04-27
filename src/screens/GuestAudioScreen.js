@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIn
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import GuestAudioPlayer from '../components/GuestAudioPlayer';
+import PhotoAttribution from '../components/PhotoAttribution';
 import { fetchPreviewTour } from '../services/api';
 import { TourContext } from '../contexts';
 import logger from '../utils/logger';
@@ -12,6 +13,8 @@ const GuestAudioScreen = ({ route, navigation }) => {
   const { guestTourParams } = useContext(TourContext);
   const [tourData, setTourData] = useState(null);
   const [photos, setPhotos] = useState([]);
+  const [photoAttributions, setPhotoAttributions] = useState([]);
+  const [photoAttributionUris, setPhotoAttributionUris] = useState([]);
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -66,13 +69,24 @@ const GuestAudioScreen = ({ route, navigation }) => {
         // Store the full tour data
         setTourData(response.tour || null);
         
-        // Extract photos from the new response structure
+        // Extract photos and attributions from the new response structure
         // Photos are now in response.tour.photos[].cloudfront_url
         if (response?.tour?.photos && Array.isArray(response.tour.photos)) {
           const photoUrls = response.tour.photos
             .filter(photo => photo?.cloudfront_url)
             .map(photo => photo.cloudfront_url);
+          
+          const attributions = response.tour.photos
+            .filter(photo => photo?.cloudfront_url)
+            .map(photo => photo.attribution?.displayName || '');
+            
+          const attributionUris = response.tour.photos
+            .filter(photo => photo?.cloudfront_url)
+            .map(photo => photo.attribution?.uri || '');
+            
           setPhotos(photoUrls);
+          setPhotoAttributions(attributions);
+          setPhotoAttributionUris(attributionUris);
         }
       } catch (error) {
         logger.error('Error fetching audio tour:', error);
@@ -205,6 +219,11 @@ const GuestAudioScreen = ({ route, navigation }) => {
                 />
               ))}
             </View>
+            {/* Photo attribution below the carousel */}
+            <PhotoAttribution 
+              attributionName={photoAttributions[currentImageIndex]} 
+              attributionUri={photoAttributionUris[currentImageIndex]}
+            />
           </View>
         ) : (
           <View style={styles.imagePlaceholder}>

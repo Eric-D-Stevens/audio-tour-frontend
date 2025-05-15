@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../constants/config';
-import { getAuthToken } from './auth';
+import { getAuthToken, refreshTokenIfNeeded } from './auth';
 import { 
   GetPlacesRequest, 
   GetPlacesResponse, 
@@ -36,20 +36,26 @@ const apiRequest = async (
     // Add authentication token if required
     if (requiresAuth) {
       try {
-        // First try to get token from our storage
-        // The getAuthToken now returns an object with {token, error} structure
+        // Try to get a valid token, with automatic refresh if needed
         const authResult = await getAuthToken();
         
         if (authResult && authResult.token) {
           // For API Gateway with Cognito User Pools Authorizer
-          // Use indexer syntax with type assertion to avoid TypeScript errors
           (headers as Record<string, string>)['Authorization'] = authResult.token;
         } else {
+          // If refresh failed but we have a specific error, provide it
           const errorMsg = authResult?.error || 'No authentication token available';
+          
+          // Only log token issues if they're unexpected
+          if (!errorMsg.includes('No refresh token') && !errorMsg.includes('Token expired')) {
+            logger.warn('Auth token issue:', errorMsg);
+          }
+          
           throw new Error(errorMsg);
         }
       } catch (authError: any) {
-        // For authenticated endpoints, propagate the error
+        // For authenticated endpoints, propagate the error but don't retry here
+        // We'll let the calling code decide if it should retry or redirect to login
         throw new Error(`Authentication required: ${authError.message}`);
       }
     }
@@ -63,19 +69,44 @@ const apiRequest = async (
     // Handle response errors
     if (!response.ok) {
       const errorText = await response.text();
-      // For 401 errors, try to provide more helpful information
-      if (response.status === 401) {
-        // Only attempt to refresh the token on auth errors for endpoints that require auth
-        // This avoids unnecessary sign-out operations in guest mode
-        if (requiresAuth) {
-          try {
-            // Clear stored tokens to force a fresh login on next attempt
-            const { signOut } = await import('./auth');
-            await signOut();
-            // Silent signout, no console logs
-          } catch (authError) {
-            // Silently catch auth cleanup errors to prevent app crashes
+      
+      // For 401/403 errors, try to refresh the token once and retry
+      if ((response.status === 401 || response.status === 403) && requiresAuth) {
+        try {
+          // Try a token refresh
+          logger.debug('Received auth error, attempting token refresh and retry');
+          const refreshResult = await refreshTokenIfNeeded(true); // Force refresh
+          
+          if (refreshResult.token) {
+            // Retry the request with the new token
+            logger.debug('Token refreshed, retrying request');
+            
+            // Update the Authorization header with the new token
+            (headers as Record<string, string>)['Authorization'] = refreshResult.token;
+            
+            // Retry the request
+            const retryResponse = await fetch(`${API_BASE_URL}${endpoint}`, {
+              ...options,
+              headers,
+            });
+            
+            // If retry succeeded, process the response
+            if (retryResponse.ok) {
+              return await retryResponse.json();
+            }
+            
+            // If retry failed, continue with normal error handling
+            const retryErrorText = await retryResponse.text();
+            try {
+              const errorJson = JSON.parse(retryErrorText);
+              throw new Error(errorJson.message || errorJson.error || `Request failed after token refresh: ${retryResponse.status}`);
+            } catch (e) {
+              throw new Error(`Request failed after token refresh: ${retryResponse.status}: ${retryErrorText}`);
+            }
           }
+        } catch (refreshError: any) {
+          // If refresh failed, continue with original error
+          logger.debug('Token refresh failed:', refreshError.message || 'Unknown refresh error');
         }
       }
       

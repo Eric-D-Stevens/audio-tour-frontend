@@ -162,9 +162,10 @@ const scheduleTokenRefresh = (expiration, refreshToken) => {
 
 /**
  * Try to refresh the token if it's expired but the refresh token is still valid
+ * @param {boolean} [forceRefresh=false] - Force a refresh regardless of token expiration
  * @returns {Promise<{token: string|null, error: string|null}>} - New ID token or null with error if refresh failed
  */
-const refreshTokenIfNeeded = async () => {
+export const refreshTokenIfNeeded = async (forceRefresh = false) => {
   try {
     // First try using stored refresh token from SecureStore
     const storedRefreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);

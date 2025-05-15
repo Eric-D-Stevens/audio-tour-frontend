@@ -161,6 +161,25 @@ const scheduleTokenRefresh = (expiration, refreshToken) => {
 };
 
 /**
+ * Clean up invalid authentication data
+ * This is called when a refresh token is invalid to ensure we don't keep trying with bad data
+ */
+export const cleanupInvalidAuth = async () => {
+  try {
+    await SecureStore.deleteItemAsync(AUTH_TOKENS_KEY);
+    await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+    await AsyncStorage.setItem(AUTH_STATE_KEY, JSON.stringify({
+      isAuthenticated: false,
+      lastAuthenticated: null,
+      tokenExpiration: null
+    }));
+    logger.debug('Cleaned up invalid authentication data');
+  } catch (error) {
+    logger.error('Error cleaning up invalid auth data:', error);
+  }
+};
+
+/**
  * Try to refresh the token if it's expired but the refresh token is still valid
  * @param {boolean} [forceRefresh=false] - Force a refresh regardless of token expiration
  * @returns {Promise<{token: string|null, error: string|null}>} - New ID token or null with error if refresh failed
@@ -186,6 +205,8 @@ export const refreshTokenIfNeeded = async (forceRefresh = false) => {
               
               cognitoUser.refreshSession(refreshToken, (refreshErr, refreshedSession) => {
                 if (refreshErr) {
+                  // Clean up invalid tokens when refresh fails
+                  cleanupInvalidAuth();
                   resolve({ token: null, error: 'Refresh token expired' });
                   return;
                 }
@@ -199,6 +220,8 @@ export const refreshTokenIfNeeded = async (forceRefresh = false) => {
                 resolve({ token: newIdToken, error: null });
               });
             } catch (e) {
+              // Clean up invalid tokens on exception
+              cleanupInvalidAuth();
               resolve({ token: null, error: 'Stored refresh token invalid' });
             }
           } else {
@@ -233,6 +256,7 @@ export const refreshTokenIfNeeded = async (forceRefresh = false) => {
               resolve({ token: null, error: 'Invalid refresh token format' });
             }
           } else {
+            cleanupInvalidAuth();
             resolve({ token: null, error: 'No refresh token available' });
           }
           return;
@@ -241,6 +265,7 @@ export const refreshTokenIfNeeded = async (forceRefresh = false) => {
         // Try to refresh the session with the session refresh token
         cognitoUser.refreshSession(refreshToken, (refreshErr, refreshedSession) => {
           if (refreshErr) {
+            cleanupInvalidAuth();
             resolve({ token: null, error: refreshErr.message || 'Refresh failed' });
             return;
           }
@@ -250,6 +275,7 @@ export const refreshTokenIfNeeded = async (forceRefresh = false) => {
       });
     });
   } catch (error) {
+    cleanupInvalidAuth();
     return { token: null, error: error.message || 'Unexpected refresh error' };
   }
 };

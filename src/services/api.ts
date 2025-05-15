@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../constants/config';
-import { getAuthToken, refreshTokenIfNeeded } from './auth';
+import { getAuthToken, refreshTokenIfNeeded, cleanupInvalidAuth } from './auth';
 import { 
   GetPlacesRequest, 
   GetPlacesResponse, 
@@ -105,8 +105,9 @@ const apiRequest = async (
             }
           }
         } catch (refreshError: any) {
-          // If refresh failed, continue with original error
+          // If refresh failed, clean up invalid tokens and continue with original error
           logger.debug('Token refresh failed:', refreshError.message || 'Unknown refresh error');
+          await cleanupInvalidAuth(); // Clean up invalid auth data to prevent repeated failures
         }
       }
       

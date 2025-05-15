@@ -15,6 +15,78 @@ import logger from '../utils/logger';
 // Track in-flight requests to prevent duplicates
 const pendingRequests: Record<string, Promise<any>> = {};
 
+// Cache for getPlaces API responses
+interface CacheEntry {
+  timestamp: number;
+  response: GetPlacesResponse;
+  lat: number;
+  lng: number;
+}
+
+// Cache structure: { tourType_radius: { cacheKey: CacheEntry } }
+const placesCache: Record<string, Record<string, CacheEntry>> = {};
+
+// Cache TTL in milliseconds (5 minutes)
+const CACHE_TTL = 5 * 60 * 1000;
+
+// Maximum distance to consider for using cached results (in meters)
+const MAX_CACHE_DISTANCE = 300;
+
+/**
+ * Clear the places cache for all or specific tour types
+ * @param tourType - Optional tour type to clear cache for, or undefined to clear all
+ * @param radius - Optional radius to clear cache for, or undefined to clear for all radii
+ */
+export const clearPlacesCache = (tourType?: TourType, radius?: number): void => {
+  if (!tourType) {
+    // Clear entire cache
+    Object.keys(placesCache).forEach(key => {
+      delete placesCache[key];
+    });
+    logger.debug('Cleared entire places cache');
+    return;
+  }
+  
+  if (radius) {
+    // Clear specific tour type and radius
+    const cacheCategory = `${tourType}_${radius}`;
+    delete placesCache[cacheCategory];
+    logger.debug(`Cleared places cache for ${tourType} tours with ${radius}m radius`);
+  } else {
+    // Clear all radii for specific tour type
+    Object.keys(placesCache).forEach(key => {
+      if (key.startsWith(`${tourType}_`)) {
+        delete placesCache[key];
+      }
+    });
+    logger.debug(`Cleared places cache for all ${tourType} tours`);
+  }
+};
+
+/**
+ * Calculate distance between two points using Haversine formula
+ * @param lat1 - Latitude of point 1
+ * @param lng1 - Longitude of point 1
+ * @param lat2 - Latitude of point 2
+ * @param lng2 - Longitude of point 2
+ * @returns Distance in meters
+ */
+const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 6371000; // Earth radius in meters
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+
+  const a = 
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * 
+    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in meters
+};
+
 /**
  * Base API request function with authentication
  * @param endpoint - API endpoint
@@ -136,12 +208,13 @@ const apiRequest = async (
 };
 
 /**
- * Get places near a location
+ * Get places near a location with caching
  * @param lat - Latitude
  * @param lng - Longitude
  * @param radius - Search radius in meters
  * @param tourType - Type of tour
  * @param maxResults - Maximum number of results to return
+ * @param skipCache - Whether to skip cache and force a new request
  * @returns Places data with places array
  */
 export const getPlaces = async (
@@ -149,15 +222,55 @@ export const getPlaces = async (
   lng: number, 
   radius: number = 500, 
   tourType: TourType = 'history', 
-  maxResults: number = 5
+  maxResults: number = 5,
+  skipCache: boolean = false
 ): Promise<GetPlacesResponse> => {
-  // Create a unique key for this request to prevent duplicates
-  const requestKey = `places_${lat}_${lng}_${radius}_${tourType}`;
+  // Format latitude and longitude to 5 decimal places for cache key
+  // This gives ~1.1m precision at the equator which is sufficient for our caching needs
+  const formattedLat = parseFloat(lat.toFixed(5));
+  const formattedLng = parseFloat(lng.toFixed(5));
+  
+  // Create unique keys for the request and cache category
+  const requestKey = `places_${formattedLat}_${formattedLng}_${radius}_${tourType}_${maxResults}`;
+  const cacheCategory = `${tourType}_${radius}`;
   
   // If this exact request is already in progress, return the existing promise
   const existingRequest = pendingRequests[requestKey];
   if (existingRequest) {
+    logger.debug('Using in-flight request for getPlaces');
     return existingRequest;
+  }
+  
+  // Check cache if not explicitly skipped
+  if (!skipCache) {
+    const categoryCache = placesCache[cacheCategory];
+    
+    // If we have cached entries for this tour type and radius
+    if (categoryCache) {
+      // Find any cache entry that's close enough to our current location
+      for (const key in categoryCache) {
+        const entry = categoryCache[key];
+        
+        // Check if cache is still fresh
+        const now = Date.now();
+        if (now - entry.timestamp < CACHE_TTL) {
+          // Calculate distance between current location and cached location
+          const distance = calculateDistance(lat, lng, entry.lat, entry.lng);
+          
+          // If within acceptable distance, return cached response
+          if (distance <= MAX_CACHE_DISTANCE) {
+            logger.debug(`Using cached getPlaces response (${distance.toFixed(0)}m away, ${((now - entry.timestamp)/1000).toFixed(0)}s old)`);
+            return entry.response;
+          }
+        } else {
+          // Clean up expired cache entry
+          delete categoryCache[key];
+        }
+      }
+    } else {
+      // Initialize cache category
+      placesCache[cacheCategory] = {};
+    }
   }
   
   // Create a new promise for this request
@@ -178,6 +291,14 @@ export const getPlaces = async (
         method: 'POST',
         body: JSON.stringify(requestBody)
       }, true);
+      
+      // Cache the successful response
+      placesCache[cacheCategory][requestKey] = {
+        timestamp: Date.now(),
+        response: result,
+        lat: lat,
+        lng: lng
+      };
       
       // Result should follow GetPlacesResponse with places array
       resolve(result);

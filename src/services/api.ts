@@ -26,8 +26,8 @@ interface CacheEntry {
 // Cache structure: { tourType_radius: { cacheKey: CacheEntry } }
 const placesCache: Record<string, Record<string, CacheEntry>> = {};
 
-// Cache TTL in milliseconds (5 minutes)
-const CACHE_TTL = 5 * 60 * 1000;
+// Cache TTL in milliseconds (5 hours)
+const CACHE_TTL = 5 * 60 * 60 * 1000;
 
 // Maximum distance to consider for using cached results (in meters)
 const MAX_CACHE_DISTANCE = 300;

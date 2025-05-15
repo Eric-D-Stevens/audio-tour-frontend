@@ -116,12 +116,16 @@ const UserMapScreen = ({ navigation }) => {
     
     (async () => {
       // First verify authentication is still valid
-      const isAuthValid = await checkAuthAndRedirect(navigation);
-      if (!isAuthValid) {
-        logger.debug('Authentication validation failed on initial load');
-        setLoading(false);
-        setLoadingPoints(false);
-        return;
+      try {
+        const isAuthValid = await checkAuthAndRedirect(navigation);
+        if (!isAuthValid) {
+          logger.debug('Authentication validation failed, continuing as guest user');
+          // We'll continue operation to allow basic functionality even if auth fails
+          // This prevents unnecessary disruption during token refresh issues
+        }
+      } catch (error) {
+        logger.debug('Authentication check error, continuing as guest user:', error.message);
+        // Continue operation rather than blocking app functionality
       }
       
       // Check if we already have location permission
@@ -203,12 +207,16 @@ const UserMapScreen = ({ navigation }) => {
       // Get fresh location when tour parameters change
       (async () => {
         try {
-          // Verify authentication is still valid before proceeding
-          const isAuthValid = await checkAuthAndRedirect(navigation);
-          if (!isAuthValid) {
-            logger.debug('Authentication validation failed, aborting operation');
-            setLoadingPoints(false);
-            return;
+          // Try to refresh token if needed, but continue operation even if it fails
+          try {
+            const isAuthValid = await checkAuthAndRedirect(navigation);
+            if (!isAuthValid) {
+              logger.debug('Authentication validation failed, continuing as guest user');
+              // Continue operation to maintain user experience
+            }
+          } catch (error) {
+            logger.debug('Authentication check error, continuing as guest user:', error.message);
+            // Continue rather than disrupting the experience
           }
           
           // Check if we have location permission
@@ -345,11 +353,16 @@ const UserMapScreen = ({ navigation }) => {
   // Center the map on the user's location and refresh data
   const centerOnUser = async () => {
     try {
-      // Verify authentication is still valid before proceeding
-      const isAuthValid = await checkAuthAndRedirect(navigation);
-      if (!isAuthValid) {
-        logger.debug('Authentication validation failed, aborting location refresh');
-        return;
+      // Try to refresh token if needed, but continue operation even if it fails
+      try {
+        const isAuthValid = await checkAuthAndRedirect(navigation);
+        if (!isAuthValid) {
+          logger.debug('Authentication validation failed, continuing as guest user');
+          // Continue operation to maintain user experience
+        }
+      } catch (error) {
+        logger.debug('Authentication check error, continuing as guest user:', error.message);
+        // Continue rather than disrupting the experience
       }
       
       // Get fresh location

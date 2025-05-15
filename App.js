@@ -202,10 +202,25 @@ export default function App() {
       return AuthService.confirmNewPassword(username, code, newPassword);
     },
     checkAuthAndRedirect: async (navigation) => {
-      // Function to check auth status and redirect to login if needed
-      const { isAuthenticated: stillAuthenticated, error } = await AuthService.isAuthenticated();
-      
-      if (!stillAuthenticated) {
+      try {
+        // Only check if the token is valid first without forcing a refresh
+        const authResult = await AuthService.isAuthenticated();
+        
+        if (authResult.isAuthenticated) {
+          // Token is still valid, no need to refresh
+          return true;
+        }
+        
+        // Only try to refresh if the current token is invalid
+        const refreshResult = await AuthService.refreshTokenIfNeeded(false); // Don't force refresh
+        
+        if (refreshResult.token) {
+          // If we successfully refreshed the token, auth is valid
+          logger.debug('Token refreshed after expiration');
+          return true;
+        }
+        
+        // Final authentication check is already done above, token is invalid
         logger.warn('Session expired or invalid, redirecting to login');
         
         // First update the authentication state
@@ -215,8 +230,8 @@ export default function App() {
         // If navigation is available, show error and handle redirection
         if (navigation) {
           // Provide a reason via alert if possible
-          const errorMessage = error 
-            ? `Your session has expired: ${error}` 
+          const errorMessage = authResult.error 
+            ? `Your session has expired: ${authResult.error}` 
             : 'Your session has expired. Please log in again.';
             
           // Show alert and let the user know they need to log in again
@@ -231,8 +246,10 @@ export default function App() {
         }
         
         return false;
+      } catch (error) {
+        logger.error('Error in checkAuthAndRedirect:', error);
+        return false; // Auth check failed, assume not authenticated
       }
-      return true; // Auth is still valid
     },
     isAuthenticated,
     user,

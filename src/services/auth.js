@@ -7,6 +7,7 @@ import logger from '../utils/logger';
 // Constants for storage keys
 const AUTH_TOKENS_KEY = 'tensortours_auth_tokens'; // Secure storage
 const REFRESH_TOKEN_KEY = 'tensortours_refresh_token'; // Secure storage
+const REFRESH_USERNAME_KEY = 'tensortours_refresh_username'; // Secure storage
 const USER_DATA_KEY = 'tensortours_user_data'; // Regular storage for non-sensitive user data
 const AUTH_STATE_KEY = 'tensortours_auth_state'; // For tracking auth state across app refreshes
 
@@ -91,6 +92,12 @@ export const getAuthToken = async () => {
  */
 const storeTokens = async (idToken, expiration, refreshToken, scheduleRefresh = true) => {
   try {
+    logger.debug('Storing tokens', { 
+      hasIdToken: !!idToken, 
+      expiresIn: Math.round((expiration - Date.now()) / 1000) + 's',
+      hasRefreshToken: !!refreshToken
+    });
+    
     // Store ID token and expiration in SecureStore
     await SecureStore.setItemAsync(
       AUTH_TOKENS_KEY, 
@@ -103,6 +110,13 @@ const storeTokens = async (idToken, expiration, refreshToken, scheduleRefresh = 
     // Store refresh token separately for even better security
     if (refreshToken) {
       await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
+      
+      // Also store username in SecureStore to help with refresh token usage
+      const cognitoUser = userPool.getCurrentUser();
+      if (cognitoUser) {
+        await SecureStore.setItemAsync(REFRESH_USERNAME_KEY, cognitoUser.getUsername());
+        logger.debug('Stored username for refresh token recovery');
+      }
     }
     
     // Also update the auth state in AsyncStorage for quick checks
@@ -166,8 +180,10 @@ const scheduleTokenRefresh = (expiration, refreshToken) => {
  */
 export const cleanupInvalidAuth = async () => {
   try {
+    logger.debug('Cleaning up invalid auth data');
     await SecureStore.deleteItemAsync(AUTH_TOKENS_KEY);
     await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+    await SecureStore.deleteItemAsync(REFRESH_USERNAME_KEY);
     await AsyncStorage.setItem(AUTH_STATE_KEY, JSON.stringify({
       isAuthenticated: false,
       lastAuthenticated: null,
@@ -186,14 +202,35 @@ export const cleanupInvalidAuth = async () => {
  */
 export const refreshTokenIfNeeded = async (forceRefresh = false) => {
   try {
+    logger.debug('Token refresh attempt initiated');
+    
     // First try using stored refresh token from SecureStore
     const storedRefreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+    const storedUsername = await SecureStore.getItemAsync(REFRESH_USERNAME_KEY);
     
-    const cognitoUser = userPool.getCurrentUser();
+    logger.debug('Refresh token available:', { 
+      hasRefreshToken: !!storedRefreshToken,
+      hasUsername: !!storedUsername 
+    });
+    
+    let cognitoUser = userPool.getCurrentUser();
+    
+    // If we have a stored refresh token but no current user, try to recreate the user
+    if (!cognitoUser && storedRefreshToken && storedUsername) {
+      logger.debug('No current user but we have refresh token and username - recreating user');
+      cognitoUser = new CognitoUser({
+        Username: storedUsername,
+        Pool: userPool
+      });
+    }
+    
     if (!cognitoUser) {
       // This is normal for first login or after logout
+      logger.debug('No Cognito user available for refresh');
       return { token: null, error: null };
     }
+    
+    logger.debug(`Attempting token refresh for user: ${cognitoUser.getUsername()}`);
     
     return new Promise((resolve) => {
       cognitoUser.getSession(async (err, session) => {
@@ -206,6 +243,11 @@ export const refreshTokenIfNeeded = async (forceRefresh = false) => {
               cognitoUser.refreshSession(refreshToken, (refreshErr, refreshedSession) => {
                 if (refreshErr) {
                   // Clean up invalid tokens when refresh fails
+                  logger.error('Refresh token error:', { 
+                    code: refreshErr.code,
+                    name: refreshErr.name,
+                    message: refreshErr.message 
+                  });
                   cleanupInvalidAuth();
                   resolve({ token: null, error: 'Refresh token expired' });
                   return;
@@ -286,6 +328,10 @@ const handleRefreshedSession = (refreshedSession, resolve, scheduleRefresh = fal
   const newIdToken = refreshedSession.getIdToken().getJwtToken();
   const newExpiration = refreshedSession.getIdToken().getExpiration() * 1000;
   const newRefreshToken = refreshedSession.getRefreshToken().getToken();
+  
+  logger.debug('Successfully refreshed session', {
+    expiresIn: Math.round((newExpiration - Date.now()) / 1000) + 's'
+  });
   
   storeTokens(newIdToken, newExpiration, newRefreshToken, scheduleRefresh);
   

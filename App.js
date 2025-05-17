@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, ActivityIndicator, Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -152,6 +152,9 @@ export default function App() {
     }
   };
 
+  // Navigation reference to use for navigation actions
+  const navigationRef = useRef();
+
   // Handle logout using the auth service
   const handleLogout = async () => {
     try {
@@ -159,10 +162,14 @@ export default function App() {
       // Sign out and update state
       await AuthService.signOut();
       
-      // Update authentication state which will trigger navigator change
+      // First navigate to the Auth screen
+      if (navigationRef.current) {
+        navigationRef.current.navigate('Auth');
+      }
+      
+      // Then update authentication state
       setIsAuthenticated(false);
       setUser(null);
-      // Note: initialRoute is now determined dynamically based on isAuthenticated
       
       logger.info('User logged out successfully');
     } catch (error) {
@@ -177,6 +184,12 @@ export default function App() {
         const result = await AuthService.signIn(username, password, rememberMe);
         setUser(await AuthService.getCurrentUserData());
         setIsAuthenticated(true);
+        
+        // Navigate to Map screen after successful authentication
+        if (navigationRef.current) {
+          navigationRef.current.navigate('Map');
+        }
+        
         return result;
       } catch (error) {
         throw error;
@@ -227,6 +240,12 @@ export default function App() {
         setIsAuthenticated(false);
         setUser(null);
         
+        // Use the navigationRef for direct navigation
+        if (navigationRef.current) {
+          // Navigate to Auth screen directly
+          navigationRef.current.navigate('Auth');
+        }
+        
         // If navigation is available, show error and handle redirection
         if (navigation) {
           // Provide a reason via alert if possible
@@ -237,10 +256,7 @@ export default function App() {
           // Show alert and let the user know they need to log in again
           Alert.alert('Session Expired', errorMessage, [
             { text: 'OK', onPress: () => {
-              // We don't need to explicitly navigate since the state change will
-              // trigger a re-render with the unauthenticated navigation stack
-              // The next render cycle will show the Auth screen automatically
-              logger.info('Authentication state updated, App will render Auth screen');
+              logger.info('User acknowledged session expiration');
             }}
           ]);
         }
@@ -257,9 +273,16 @@ export default function App() {
     deleteAccount: async () => {
       try {
         await AuthService.deleteAccount();
+        
+        // First navigate to Auth screen
+        if (navigationRef.current) {
+          navigationRef.current.navigate('Auth');
+        }
+        
         // After successful deletion, clear local state
         setUser(null);
         setIsAuthenticated(false);
+        
         return true;
       } catch (error) {
         logger.error('Error deleting account:', error);
@@ -271,17 +294,18 @@ export default function App() {
   // Loading screen is now handled in the AppContent component
 
   return (
-    <SafeAreaProvider style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <StatusBar style="dark" backgroundColor="#FFFFFF" />
+    <SafeAreaProvider>
+      <StatusBar style="auto" />
       <NetworkProvider>
         <AppContent 
-          isLoading={isLoading} 
-          isAuthenticated={isAuthenticated} 
-          authContext={authContext} 
-          tourParams={tourParams} 
-          setTourParams={setTourParams} 
-          guestTourParams={guestTourParams} 
-          setGuestTourParams={setGuestTourParams} 
+          isLoading={isLoading}
+          isAuthenticated={isAuthenticated}
+          authContext={authContext}
+          tourParams={tourParams}
+          setTourParams={setTourParams}
+          guestTourParams={guestTourParams}
+          setGuestTourParams={setGuestTourParams}
+          navigationRef={navigationRef}
         />
       </NetworkProvider>
     </SafeAreaProvider>
@@ -289,7 +313,7 @@ export default function App() {
 }
 
 // Separate component to use the network context inside
-const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTourParams, guestTourParams, setGuestTourParams }) => {
+const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTourParams, guestTourParams, setGuestTourParams, navigationRef }) => {
   const { isConnected } = useNetwork();
   
   // If we're not connected to the internet, show the offline screen
@@ -310,6 +334,7 @@ const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTo
       <AuthContext.Provider value={authContext}>
         <TourContext.Provider value={{ tourParams, setTourParams, guestTourParams, setGuestTourParams }}>
           <NavigationContainer 
+            ref={navigationRef}
             style={{ flex: 1, backgroundColor: '#FFFFFF' }}
             theme={{
               colors: {
@@ -345,109 +370,81 @@ const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTo
                 headerStyle: { backgroundColor: '#FFFFFF' },
                 contentStyle: { backgroundColor: '#FFFFFF' }
               }}>
-              {isAuthenticated ? (
-                // Authenticated user flow
-                <>
-                  <Stack.Screen 
-                    name="Map" 
-                    component={UserMapScreen} 
-                    options={{ headerShown: false, unmountOnBlur: true }}
-                  />
-                  <Stack.Screen 
-                    name="TourParameters" 
-                    component={TourParametersScreen} 
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen 
-                    name="Audio" 
-                    component={AudioScreen} 
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen 
-                    name="About" 
-                    component={AboutScreen} 
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen 
-                    name="Contact" 
-                    component={ContactScreen} 
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen 
-                    name="Support" 
-                    component={SupportScreen} 
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen 
-                    name="Privacy" 
-                    component={PrivacyPolicyScreen} 
-                    options={{ headerShown: false }}
-                  />
-                </>
-              ) : (
-                // Unauthenticated user flow
-                <>
-                  <Stack.Screen 
-                    name="Auth" 
-                    component={AuthScreen} 
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen 
-                    name="EmailVerification" 
-                    component={EmailVerificationScreen} 
-                    options={{
-                      title: 'Verify Your Email',
-                      headerStyle: {
-                        backgroundColor: '#FF5722',
-                      },
-                      headerTintColor: '#FFFFFF',
-                      headerTitleStyle: {
-                        fontWeight: 'bold',
-                      },
-                    }}
-                  />
-                  <Stack.Screen 
-                    name="ForgotPassword" 
-                    component={ForgotPasswordScreen} 
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen 
-                    name="GuestMap" 
-                    component={GuestMapScreen} 
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen 
-                    name="GuestTourParameters" 
-                    component={GuestTourParametersScreen} 
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen 
-                    name="GuestAudio" 
-                    component={GuestAudioScreen} 
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen 
-                    name="About" 
-                    component={AboutScreen} 
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen 
-                    name="Contact" 
-                    component={ContactScreen} 
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen 
-                    name="Support" 
-                    component={SupportScreen} 
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen 
-                    name="Privacy" 
-                    component={PrivacyPolicyScreen} 
-                    options={{ headerShown: false }}
-                  />
-                </>
-              )}
+              {/* All screens available regardless of auth state, but we'll control access in the components */}
+              <Stack.Screen 
+                name="Auth" 
+                component={AuthScreen} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="EmailVerification" 
+                component={EmailVerificationScreen} 
+                options={{
+                  title: 'Verify Your Email',
+                  headerStyle: {
+                    backgroundColor: '#FF5722',
+                  },
+                  headerTintColor: '#FFFFFF',
+                  headerTitleStyle: {
+                    fontWeight: 'bold',
+                  },
+                }}
+              />
+              <Stack.Screen 
+                name="ForgotPassword" 
+                component={ForgotPasswordScreen} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="Map" 
+                component={UserMapScreen} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="TourParameters" 
+                component={TourParametersScreen} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="Audio" 
+                component={AudioScreen} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="GuestMap" 
+                component={GuestMapScreen} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="GuestTourParameters" 
+                component={GuestTourParametersScreen} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="GuestAudio" 
+                component={GuestAudioScreen} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="About" 
+                component={AboutScreen} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="Contact" 
+                component={ContactScreen} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="Support" 
+                component={SupportScreen} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="Privacy" 
+                component={PrivacyPolicyScreen} 
+                options={{ headerShown: false }}
+              />
             </Stack.Navigator>
           </NavigationContainer>
         </TourContext.Provider>

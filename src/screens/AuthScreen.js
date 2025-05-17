@@ -286,7 +286,7 @@ const AuthScreen = ({ route, navigation }) => {
                   <View style={styles.privacyTextContainer}>
                     <Text style={styles.privacyText}>I agree to the </Text>
                     <TouchableOpacity 
-                      onPress={() => navigation.navigate('PrivacyPolicy')}
+                      onPress={() => navigation.navigate('Privacy')}
                     >
                       <Text style={styles.privacyLink}>Privacy Policy</Text>
                     </TouchableOpacity>

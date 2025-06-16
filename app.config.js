@@ -65,7 +65,9 @@ export default {
       policy: "appVersion"
     },
     updates: {
-      url: "https://u.expo.dev/b0e54264-5030-464c-8f06-5102817b2d44"
+      url: "https://u.expo.dev/b0e54264-5030-464c-8f06-5102817b2d44",
+      enabled: true,
+      checkAutomatically: "ON_LOAD"
     }
   }
 };

@@ -428,6 +428,20 @@ const UserMapScreen = ({ navigation }) => {
       shadowRadius: 3.84,
       elevation: 5,
     },
+    callout: { backgroundColor: 'transparent' },
+    calloutContent: { 
+      padding: 12, 
+      backgroundColor: colors.card, 
+      borderRadius: 8,
+      shadowColor: colors.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    calloutTitle: { fontSize: 16, fontWeight: 'bold', color: colors.text, marginBottom: 4 },
+    calloutDescription: { fontSize: 14, color: colors.textSecondary, marginBottom: 8 },
+    infoPanel: { backgroundColor: colors.card },
   };
 
   return (
@@ -490,6 +504,7 @@ const UserMapScreen = ({ navigation }) => {
                 coordinate={point.coordinate}
               >
                 <Callout
+                  tooltip={true}
                   onPress={async () => {
                     // Verify authentication is still valid before navigating
                     const isAuthValid = await checkAuthAndRedirect(navigation);
@@ -516,11 +531,11 @@ const UserMapScreen = ({ navigation }) => {
                       );
                     }
                   }}
-                  style={styles.callout}
+                  style={[styles.callout, dynamicStyles.callout]}
                 >
-                  <View style={styles.calloutContent}>
-                    <Text style={styles.calloutTitle}>{point.title}</Text>
-                    <Text style={styles.calloutDescription}>{point.description}</Text>
+                  <View style={dynamicStyles.calloutContent}>
+                    <Text style={dynamicStyles.calloutTitle}>{point.title}</Text>
+                    <Text style={dynamicStyles.calloutDescription}>{point.description}</Text>
                     <View style={styles.calloutButton}>
                       <Text style={styles.calloutButtonText}>Start Audio Tour</Text>
                       <Ionicons name="play" size={16} color="white" style={styles.calloutButtonIcon} />
@@ -568,7 +583,7 @@ const UserMapScreen = ({ navigation }) => {
       </View>
       
       {/* Bottom Info Panel with Tour Selection Button */}
-      <View style={styles.infoPanel}>
+      <View style={[styles.infoPanel, dynamicStyles.infoPanel]}>
         <View style={styles.leftControls}>
           <MiniAudioPlayer />
         </View>

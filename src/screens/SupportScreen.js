@@ -3,8 +3,26 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Markdown from 'react-native-markdown-display';
 import AppHeader from '../components/AppHeader';
+import { useTheme } from '../contexts';
 
 const SupportScreen = ({ navigation }) => {
+  const { colors, isDark } = useTheme();
+
+  const dynamicStyles = {
+    container: { flex: 1, backgroundColor: colors.background },
+  };
+
+  const dynamicMarkdownStyles = {
+    heading1: { fontSize: 28, fontWeight: 'bold', color: colors.primary, marginBottom: 16, marginTop: 24 },
+    heading2: { fontSize: 24, fontWeight: 'bold', color: colors.text, marginBottom: 12, marginTop: 20 },
+    heading3: { fontSize: 20, fontWeight: 'bold', color: colors.text, marginBottom: 10, marginTop: 16 },
+    heading4: { fontSize: 18, fontWeight: 'bold', color: colors.textSecondary, marginBottom: 8, marginTop: 12 },
+    paragraph: { fontSize: 16, lineHeight: 24, color: colors.text, marginBottom: 16 },
+    list_item: { marginBottom: 8 },
+    strong: { fontWeight: 'bold' },
+    link: { color: colors.primary, textDecorationLine: 'underline' },
+    body: { color: colors.text },
+  };
   // Embed the support content directly in the component
   const supportContent = `# TensorTours Support Guide
 
@@ -160,11 +178,11 @@ Email: support@tensortrix.com
 Tensortrix`;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={dynamicStyles.container}>
       <AppHeader navigation={navigation} title="Support" />
       <ScrollView style={styles.contentContainer}>
         <View style={styles.markdownContainer}>
-          <Markdown style={markdownStyles}>
+          <Markdown style={dynamicMarkdownStyles}>
             {supportContent}
           </Markdown>
         </View>

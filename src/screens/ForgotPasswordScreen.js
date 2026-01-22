@@ -12,9 +12,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../contexts';
+import { useTheme } from '../contexts';
 import logger from '../utils/logger';
 
 const ForgotPasswordScreen = ({ navigation }) => {
+  const { colors, isDark } = useTheme();
   const [email, setEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -37,6 +39,53 @@ const ForgotPasswordScreen = ({ navigation }) => {
   const [passwordStrength, setPasswordStrength] = useState(0);
 
   const auth = useContext(AuthContext);
+
+  const dynamicStyles = {
+    container: { flex: 1, backgroundColor: colors.background },
+    formContainer: {
+      backgroundColor: colors.card,
+      borderRadius: 15,
+      padding: 20,
+      shadowColor: colors.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDark ? 0.3 : 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    backButton: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+    backButtonText: { fontSize: 16, color: colors.text, marginLeft: 5 },
+    formTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: colors.text },
+    subtitle: { fontSize: 16, color: colors.textSecondary, textAlign: 'center', marginBottom: 20 },
+    errorContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.primaryFaded,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.primary,
+      paddingVertical: 12,
+      paddingHorizontal: 15,
+      borderRadius: 10,
+      marginBottom: 15,
+    },
+    successContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: isDark ? 'rgba(102, 187, 106, 0.15)' : 'rgba(76, 175, 80, 0.08)',
+      borderLeftWidth: 3,
+      borderLeftColor: colors.success,
+      paddingVertical: 12,
+      paddingHorizontal: 15,
+      borderRadius: 10,
+      marginBottom: 15,
+    },
+    input: { backgroundColor: colors.inputBackground, borderRadius: 8, padding: 15, marginBottom: 15, fontSize: 16, color: colors.text },
+    passwordInputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.inputBackground, borderRadius: 8, marginBottom: 15 },
+    passwordInput: { flex: 1, padding: 15, fontSize: 16, color: colors.text },
+    passwordRequirementsContainer: { backgroundColor: colors.primaryFadedMore, borderRadius: 8, padding: 12, marginBottom: 15 },
+    passwordRequirementsTitle: { color: colors.textSecondary, fontSize: 14, fontWeight: '600', marginBottom: 10 },
+    requirementText: { color: colors.textSecondary, fontSize: 13 },
+    loginLink: { color: colors.primary, textAlign: 'center', marginTop: 15 },
+  };
 
   // Similar to registration, validate password as user types
   const validatePassword = (password) => {
@@ -140,7 +189,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={dynamicStyles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
@@ -150,29 +199,29 @@ const ForgotPasswordScreen = ({ navigation }) => {
             style={styles.backButton} 
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color="#FF5722" />
-            <Text style={styles.backButtonText}>Back to Login</Text>
+            <Ionicons name="arrow-back" size={24} color={colors.primary} />
+            <Text style={dynamicStyles.backButtonText}>Back to Login</Text>
           </TouchableOpacity>
 
-          <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>Reset Password</Text>
-            <Text style={styles.formSubtitle}>
+          <View style={dynamicStyles.formContainer}>
+            <Text style={dynamicStyles.formTitle}>Reset Password</Text>
+            <Text style={dynamicStyles.subtitle}>
               {step === 1 
                 ? 'Enter your email to receive a verification code' 
                 : 'Enter the verification code and your new password'}
             </Text>
 
             {errorMessage ? (
-              <View style={styles.errorContainer}>
-                <Ionicons name="alert-circle-outline" size={20} style={styles.errorIcon} />
-                <Text style={styles.errorText}>{errorMessage}</Text>
+              <View style={dynamicStyles.errorContainer}>
+                <Ionicons name="alert-circle-outline" size={20} color={colors.primary} style={styles.errorIcon} />
+                <Text style={[styles.errorText, { color: colors.primary }]}>{errorMessage}</Text>
               </View>
             ) : null}
 
             {successMessage ? (
-              <View style={styles.successContainer}>
-                <Ionicons name="checkmark-circle-outline" size={20} style={styles.successIcon} />
-                <Text style={styles.successText}>{successMessage}</Text>
+              <View style={dynamicStyles.successContainer}>
+                <Ionicons name="checkmark-circle-outline" size={20} color={colors.success} style={styles.successIcon} />
+                <Text style={[styles.successText, { color: colors.success }]}>{successMessage}</Text>
               </View>
             ) : null}
 
@@ -180,8 +229,9 @@ const ForgotPasswordScreen = ({ navigation }) => {
               // Step 1: Email entry
               <>
                 <TextInput
-                  style={styles.input}
+                  style={dynamicStyles.input}
                   placeholder="Email"
+                  placeholderTextColor={colors.textPlaceholder}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -203,18 +253,20 @@ const ForgotPasswordScreen = ({ navigation }) => {
               // Step 2: Verification code and new password
               <>
                 <TextInput
-                  style={styles.input}
+                  style={dynamicStyles.input}
                   placeholder="Verification Code"
+                  placeholderTextColor={colors.textPlaceholder}
                   value={verificationCode}
                   onChangeText={setVerificationCode}
                   keyboardType="number-pad"
                   editable={!isLoading}
                 />
 
-                <View style={styles.passwordInputContainer}>
+                <View style={dynamicStyles.passwordInputContainer}>
                   <TextInput
-                    style={styles.passwordInput}
+                    style={dynamicStyles.passwordInput}
                     placeholder="New Password"
+                    placeholderTextColor={colors.textPlaceholder}
                     value={newPassword}
                     onChangeText={(text) => {
                       setNewPassword(text);
@@ -230,15 +282,16 @@ const ForgotPasswordScreen = ({ navigation }) => {
                     <Ionicons 
                       name={showNewPassword ? "eye-off-outline" : "eye-outline"} 
                       size={22} 
-                      color="#666" 
+                      color={colors.textSecondary} 
                     />
                   </TouchableOpacity>
                 </View>
 
-                <View style={styles.passwordInputContainer}>
+                <View style={dynamicStyles.passwordInputContainer}>
                   <TextInput
-                    style={styles.passwordInput}
+                    style={dynamicStyles.passwordInput}
                     placeholder="Confirm New Password"
+                    placeholderTextColor={colors.textPlaceholder}
                     value={confirmNewPassword}
                     onChangeText={(text) => {
                       setConfirmNewPassword(text);
@@ -254,62 +307,62 @@ const ForgotPasswordScreen = ({ navigation }) => {
                     <Ionicons 
                       name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} 
                       size={22} 
-                      color="#666" 
+                      color={colors.textSecondary} 
                     />
                   </TouchableOpacity>
                 </View>
 
-                <View style={styles.passwordRequirementsContainer}>
-                  <Text style={styles.passwordRequirementsTitle}>Password requirements:</Text>
+                <View style={dynamicStyles.passwordRequirementsContainer}>
+                  <Text style={dynamicStyles.passwordRequirementsTitle}>Password requirements:</Text>
                   
                   <View style={styles.passwordRequirementItem}>
                     <Ionicons 
                       name={lengthValid ? "checkmark-circle" : "checkmark-circle-outline"} 
                       size={18} 
-                      color={lengthValid ? "#FF5722" : "#AAAAAA"} 
+                      color={lengthValid ? colors.primary : colors.textPlaceholder} 
                       style={{marginRight: 8}} 
                     />
-                    <Text style={styles.requirementText}>At least 8 characters</Text>
+                    <Text style={dynamicStyles.requirementText}>At least 8 characters</Text>
                   </View>
                   
                   <View style={styles.passwordRequirementItem}>
                     <Ionicons 
                       name={hasUppercase ? "checkmark-circle" : "checkmark-circle-outline"} 
                       size={18} 
-                      color={hasUppercase ? "#FF5722" : "#AAAAAA"} 
+                      color={hasUppercase ? colors.primary : colors.textPlaceholder} 
                       style={{marginRight: 8}} 
                     />
-                    <Text style={styles.requirementText}>Contains uppercase letter</Text>
+                    <Text style={dynamicStyles.requirementText}>Contains uppercase letter</Text>
                   </View>
                   
                   <View style={styles.passwordRequirementItem}>
                     <Ionicons 
                       name={hasLowercase ? "checkmark-circle" : "checkmark-circle-outline"} 
                       size={18} 
-                      color={hasLowercase ? "#FF5722" : "#AAAAAA"} 
+                      color={hasLowercase ? colors.primary : colors.textPlaceholder} 
                       style={{marginRight: 8}} 
                     />
-                    <Text style={styles.requirementText}>Contains lowercase letter</Text>
+                    <Text style={dynamicStyles.requirementText}>Contains lowercase letter</Text>
                   </View>
                   
                   <View style={styles.passwordRequirementItem}>
                     <Ionicons 
                       name={hasNumber ? "checkmark-circle" : "checkmark-circle-outline"} 
                       size={18} 
-                      color={hasNumber ? "#FF5722" : "#AAAAAA"} 
+                      color={hasNumber ? colors.primary : colors.textPlaceholder} 
                       style={{marginRight: 8}} 
                     />
-                    <Text style={styles.requirementText}>Contains a number</Text>
+                    <Text style={dynamicStyles.requirementText}>Contains a number</Text>
                   </View>
                   
                   <View style={styles.passwordRequirementItem}>
                     <Ionicons 
                       name={passwordsMatch ? "checkmark-circle" : "checkmark-circle-outline"} 
                       size={18} 
-                      color={passwordsMatch ? "#FF5722" : "#AAAAAA"} 
+                      color={passwordsMatch ? colors.primary : colors.textPlaceholder} 
                       style={{marginRight: 8}} 
                     />
-                    <Text style={styles.requirementText}>Passwords match</Text>
+                    <Text style={dynamicStyles.requirementText}>Passwords match</Text>
                   </View>
                   
                   {/* Password strength bar */}

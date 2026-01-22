@@ -1,12 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchPreviewTour } from '../services/api.ts';
 import audioManager from '../services/audioManager';
+import { TourContext, useTheme } from '../contexts';
 import logger from '../utils/logger';
 
 const GuestAudioPlayer = ({ placeId, tourType = 'history' }) => {
+  const { colors, isDark } = useTheme();
+
+  const dynamicStyles = {
+    container: { backgroundColor: colors.card, borderRadius: 10, padding: 20, elevation: 4, shadowColor: colors.shadowColor, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, alignItems: 'center', justifyContent: 'center' },
+    tourTypeTitle: { fontSize: 16, fontWeight: '600', color: colors.text, marginBottom: 15 },
+    timeText: { fontSize: 12, color: colors.textSecondary, width: 45, textAlign: 'center' },
+    loadingText: { marginTop: 10, color: colors.textSecondary },
+    errorText: { marginTop: 10, color: colors.error, textAlign: 'center' },
+    controlIconColor: colors.textSecondary,
+  };
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -130,18 +142,18 @@ const GuestAudioPlayer = ({ placeId, tourType = 'history' }) => {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#FF5722" />
-        <Text style={styles.loadingText}>Loading tour audio...</Text>
+      <View style={dynamicStyles.container}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={dynamicStyles.loadingText}>Loading tour audio...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.container}>
-        <Ionicons name="alert-circle" size={50} color="#FF6B6B" />
-        <Text style={styles.errorText}>{error}</Text>
+      <View style={dynamicStyles.container}>
+        <Ionicons name="alert-circle" size={50} color={colors.error} />
+        <Text style={dynamicStyles.errorText}>{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={loadAudioData}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
@@ -150,39 +162,39 @@ const GuestAudioPlayer = ({ placeId, tourType = 'history' }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       {audioData && (
         <>
-          <Text style={styles.tourTypeTitle}>
+          <Text style={dynamicStyles.tourTypeTitle}>
             {tourType.charAt(0).toUpperCase() + tourType.slice(1)} Tour
           </Text>
           
           <View style={styles.sliderContainer}>
-            <Text style={styles.timeText}>{formatTime(position)}</Text>
+            <Text style={dynamicStyles.timeText}>{formatTime(position)}</Text>
             <Slider
               style={styles.slider}
               minimumValue={0}
               maximumValue={duration}
               value={position}
               onSlidingComplete={seekTo}
-              minimumTrackTintColor="#FF5722"
-              maximumTrackTintColor="#CCCCCC"
-              thumbTintColor="#FF5722"
+              minimumTrackTintColor={colors.primary}
+              maximumTrackTintColor={colors.border}
+              thumbTintColor={colors.primary}
             />
-            <Text style={styles.timeText}>{formatTime(duration)}</Text>
+            <Text style={dynamicStyles.timeText}>{formatTime(duration)}</Text>
           </View>
           
           <View style={styles.controlsContainer}>
             <TouchableOpacity style={styles.controlButton} onPress={restart}>
-              <Ionicons name="refresh" size={24} color="#555" />
+              <Ionicons name="refresh" size={24} color={dynamicStyles.controlIconColor} />
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.controlButton} onPress={rewind}>
-              <Ionicons name="play-back" size={24} color="#555" />
+              <Ionicons name="play-back" size={24} color={dynamicStyles.controlIconColor} />
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={[styles.playButton, { backgroundColor: '#FF5722' }]} 
+              style={[styles.playButton, { backgroundColor: colors.primary }]} 
               onPress={togglePlayPause}
             >
               <Ionicons 
@@ -193,11 +205,11 @@ const GuestAudioPlayer = ({ placeId, tourType = 'history' }) => {
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.controlButton} onPress={forward}>
-              <Ionicons name="play-forward" size={24} color="#555" />
+              <Ionicons name="play-forward" size={24} color={dynamicStyles.controlIconColor} />
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.controlButton} onPress={() => {/* Volume control */}}>
-              <Ionicons name="volume-medium" size={24} color="#555" />
+              <Ionicons name="volume-medium" size={24} color={dynamicStyles.controlIconColor} />
             </TouchableOpacity>
           </View>
         </>

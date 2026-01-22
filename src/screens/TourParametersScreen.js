@@ -9,9 +9,10 @@ import {
 import { Slider } from '@miblanchard/react-native-slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { TourContext } from '../contexts';
+import { TourContext, useTheme } from '../contexts';
 
 const TourParametersScreen = ({ navigation }) => {
+  const { colors, isDark } = useTheme();
   const { tourParams, setTourParams } = useContext(TourContext);
   
   // Local state to track changes before saving
@@ -32,6 +33,21 @@ const TourParametersScreen = ({ navigation }) => {
     { id: 'nature', name: 'Nature' },
     { id: 'architecture', name: 'Architecture' }
   ];
+
+  // Dynamic styles based on theme
+  const dynamicStyles = {
+    container: { flex: 1, backgroundColor: colors.surface },
+    header: { flexDirection: 'row', alignItems: 'center', padding: 15, borderBottomWidth: 1, borderBottomColor: colors.border },
+    headerTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text },
+    sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: colors.text },
+    paramValue: { fontSize: 16, color: colors.primary, fontWeight: 'bold', textAlign: 'center', marginBottom: 10 },
+    sliderLabel: { fontSize: 12, color: colors.textSecondary },
+    categoryButton: { width: '48%', backgroundColor: colors.inputBackground, padding: 15, borderRadius: 10, marginBottom: 10, alignItems: 'center' },
+    categoryButtonActive: { backgroundColor: colors.primary },
+    categoryButtonText: { fontSize: 14, color: colors.text },
+    categoryButtonTextActive: { color: colors.buttonText, fontWeight: 'bold' },
+    footer: { padding: 20, borderTopWidth: 1, borderTopColor: colors.border },
+  };
   
   const handleSave = () => {
     // Update the global tour parameters
@@ -46,21 +62,21 @@ const TourParametersScreen = ({ navigation }) => {
   };
   
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={dynamicStyles.container}>
+      <View style={dynamicStyles.header}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Tour Settings</Text>
+        <Text style={dynamicStyles.headerTitle}>Tour Settings</Text>
       </View>
       
       <ScrollView style={styles.content}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Search Distance</Text>
-          <Text style={styles.paramValue}>{metersToMiles(distance)} miles</Text>
+          <Text style={dynamicStyles.sectionTitle}>Search Distance</Text>
+          <Text style={dynamicStyles.paramValue}>{metersToMiles(distance)} miles</Text>
           <Slider
             value={distance}
             onValueChange={value => setDistance(value[0])}
@@ -68,27 +84,27 @@ const TourParametersScreen = ({ navigation }) => {
             maximumValue={8000}
             step={500}
             containerStyle={styles.slider}
-            trackStyle={{ backgroundColor: '#D3D3D3' }}
-            minimumTrackTintColor="#FF5722"
-            thumbTintColor="#FF5722"
+            trackStyle={{ backgroundColor: colors.border }}
+            minimumTrackTintColor={colors.primary}
+            thumbTintColor={colors.primary}
             renderThumbComponent={() => (
               <View style={{
                 width: 20,
                 height: 20,
                 borderRadius: 10,
-                backgroundColor: '#FF5722',
+                backgroundColor: colors.primary,
               }} />
             )}
           />
           <View style={styles.sliderLabels}>
-            <Text style={styles.sliderLabel}>0.3 miles</Text>
-            <Text style={styles.sliderLabel}>5 miles</Text>
+            <Text style={dynamicStyles.sliderLabel}>0.3 miles</Text>
+            <Text style={dynamicStyles.sliderLabel}>5 miles</Text>
           </View>
         </View>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Number of Attractions</Text>
-          <Text style={styles.paramValue}>{numAttractions} places</Text>
+          <Text style={dynamicStyles.sectionTitle}>Number of Attractions</Text>
+          <Text style={dynamicStyles.paramValue}>{numAttractions} places</Text>
           <Slider
             value={numAttractions}
             onValueChange={value => setNumAttractions(value[0])}
@@ -96,40 +112,40 @@ const TourParametersScreen = ({ navigation }) => {
             maximumValue={20}
             step={1}
             containerStyle={styles.slider}
-            trackStyle={{ backgroundColor: '#D3D3D3' }}
-            minimumTrackTintColor="#FF5722"
-            thumbTintColor="#FF5722"
+            trackStyle={{ backgroundColor: colors.border }}
+            minimumTrackTintColor={colors.primary}
+            thumbTintColor={colors.primary}
             renderThumbComponent={() => (
               <View style={{
                 width: 20,
                 height: 20,
                 borderRadius: 10,
-                backgroundColor: '#FF5722',
+                backgroundColor: colors.primary,
               }} />
             )}
           />
           <View style={styles.sliderLabels}>
-            <Text style={styles.sliderLabel}>3 places</Text>
-            <Text style={styles.sliderLabel}>20 places</Text>
+            <Text style={dynamicStyles.sliderLabel}>3 places</Text>
+            <Text style={dynamicStyles.sliderLabel}>20 places</Text>
           </View>
         </View>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tour Category</Text>
+          <Text style={dynamicStyles.sectionTitle}>Tour Category</Text>
           <View style={styles.categoryContainer}>
             {categories.map((item) => (
               <TouchableOpacity
                 key={item.id}
                 style={[
-                  styles.categoryButton,
-                  category === item.id && styles.categoryButtonActive
+                  dynamicStyles.categoryButton,
+                  category === item.id && dynamicStyles.categoryButtonActive
                 ]}
                 onPress={() => setCategory(item.id)}
               >
                 <Text 
                   style={[
-                    styles.categoryButtonText,
-                    category === item.id && styles.categoryButtonTextActive
+                    dynamicStyles.categoryButtonText,
+                    category === item.id && dynamicStyles.categoryButtonTextActive
                   ]}
                 >
                   {item.name}
@@ -140,7 +156,7 @@ const TourParametersScreen = ({ navigation }) => {
         </View>
       </ScrollView>
       
-      <View style={styles.footer}>
+      <View style={dynamicStyles.footer}>
         <TouchableOpacity 
           style={styles.saveButton}
           onPress={handleSave}

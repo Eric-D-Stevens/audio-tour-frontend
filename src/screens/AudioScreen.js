@@ -5,10 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AudioPlayer from '../components/AudioPlayer';
 import PhotoAttribution from '../components/PhotoAttribution';
 import { getTour, getOnDemandTour } from '../services/api';
-import { AuthContext, TourContext } from '../contexts';
+import { AuthContext, TourContext, useTheme } from '../contexts';
 import logger from '../utils/logger';
 
 const AudioScreen = ({ route, navigation }) => {
+  const { colors, isDark } = useTheme();
   const { place } = route.params || {};
   const { tourParams } = useContext(TourContext);
   const [tourData, setTourData] = useState(null);
@@ -22,6 +23,36 @@ const AudioScreen = ({ route, navigation }) => {
   const [error, setError] = useState(null);
   const [scriptModalVisible, setScriptModalVisible] = useState(false);
   const [scriptText, setScriptText] = useState("");
+
+  // Dynamic styles based on theme
+  const dynamicStyles = {
+    container: { flex: 1, backgroundColor: colors.background },
+    backButtonText: { marginLeft: 5, fontSize: 16, color: colors.text, fontWeight: '500' },
+    tourTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 12, color: colors.text },
+    addressText: { fontSize: 14, color: colors.textSecondary, flex: 1, lineHeight: 20 },
+    descriptionTitle: { fontSize: 16, fontWeight: '600', color: colors.text, marginBottom: 8 },
+    tourDescription: { fontSize: 16, color: colors.textSecondary, marginBottom: 20, lineHeight: 24 },
+    loadingOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isDark ? 'rgba(18, 18, 18, 0.92)' : 'rgba(255, 255, 255, 0.92)', zIndex: 1000 },
+    loadingIndicatorContainer: {
+      position: 'absolute', top: '50%', left: '50%', transform: [{ translateX: -125 }, { translateY: -70 }],
+      backgroundColor: colors.card, borderRadius: 16, paddingVertical: 24, paddingHorizontal: 30,
+      width: 270, alignItems: 'center', justifyContent: 'center',
+      shadowColor: colors.shadowColor, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 10,
+      elevation: 8, minHeight: 140, zIndex: 1001, borderWidth: 1, borderColor: colors.primaryFaded,
+    },
+    loadingText: { marginTop: 12, fontSize: 16, fontWeight: '500', color: colors.text, textAlign: 'center', width: '100%' },
+    errorText: { fontSize: 18, color: colors.textSecondary, marginTop: 10, marginBottom: 20, textAlign: 'center' },
+    imagePlaceholder: { height: 250, backgroundColor: colors.surface, justifyContent: 'center', alignItems: 'center' },
+    imagePlaceholderText: { color: colors.textMuted, fontSize: 16 },
+    modalOverlay: { flex: 1, backgroundColor: colors.modalBackground, justifyContent: 'center', alignItems: 'center', padding: 20 },
+    modalContent: { backgroundColor: colors.card, borderRadius: 16, width: '100%', height: '80%', shadowColor: colors.shadowColor, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 10, overflow: 'hidden' },
+    modalHeader: { padding: 20, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.primaryFadedMore },
+    modalTitle: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 4 },
+    modalSubtitle: { fontSize: 14, color: colors.textSecondary, marginBottom: 6 },
+    scriptText: { fontSize: 16, lineHeight: 24, color: colors.text, textAlign: 'left' },
+    skeletonImageContainer: { width: '100%', height: 200, backgroundColor: colors.primaryFadedMore, borderRadius: 8, marginBottom: 20, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+    skeletonTitleBar: { width: '70%', height: 24, backgroundColor: colors.border, borderRadius: 4, marginBottom: 16 },
+  };
   
   // Function to open the script modal and fetch script content
   const openModal = async () => {
@@ -131,17 +162,17 @@ const AudioScreen = ({ route, navigation }) => {
   // If there's an error, show error screen
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={dynamicStyles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#333" />
-            <Text style={styles.backButtonText}>Map</Text>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+            <Text style={dynamicStyles.backButtonText}>Map</Text>
           </TouchableOpacity>
         </View>
         
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={60} color="#FF5722" />
-          <Text style={styles.errorText}>{error}</Text>
+          <Ionicons name="alert-circle-outline" size={60} color={colors.primary} />
+          <Text style={dynamicStyles.errorText}>{error}</Text>
           <TouchableOpacity 
             style={styles.backToMapButton}
             onPress={() => navigation.goBack()}
@@ -154,13 +185,13 @@ const AudioScreen = ({ route, navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={dynamicStyles.container}>
       {loading && (
-        <View style={styles.loadingOverlay}>
+        <View style={dynamicStyles.loadingOverlay}>
           {/* Loading indicator with message */}
-          <View style={styles.loadingIndicatorContainer}>
-            <ActivityIndicator size="large" color="#FF5722" style={{transform: [{scale: 1.5}]}} />
-            <Text style={styles.loadingText}>
+          <View style={dynamicStyles.loadingIndicatorContainer}>
+            <ActivityIndicator size="large" color={colors.primary} style={{transform: [{scale: 1.5}]}} />
+            <Text style={dynamicStyles.loadingText}>
               {isGeneratingOnDemand 
                 ? "No Tour Found\nGenerating New AI Tour" 
                 : "Loading Tour"}
@@ -213,8 +244,8 @@ const AudioScreen = ({ route, navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#333" />
-            <Text style={styles.backButtonText}>Map</Text>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+            <Text style={dynamicStyles.backButtonText}>Map</Text>
           </TouchableOpacity>
         </View>
         
@@ -263,36 +294,36 @@ const AudioScreen = ({ route, navigation }) => {
             />
           </View>
         ) : (
-          <View style={styles.imagePlaceholder}>
+          <View style={dynamicStyles.imagePlaceholder}>
             <>
-              <Ionicons name="image-outline" size={50} color="#999" />
-              <Text style={styles.imagePlaceholderText}>No Image Available</Text>
+              <Ionicons name="image-outline" size={50} color={colors.textMuted} />
+              <Text style={dynamicStyles.imagePlaceholderText}>No Image Available</Text>
             </>
           </View>
         )}
         
         <View style={styles.contentContainer}>
           {/* Place Information Section */}
-          <Text style={styles.tourTitle}>{tourData?.place_info?.place_name || place.name}</Text>
+          <Text style={dynamicStyles.tourTitle}>{tourData?.place_info?.place_name || place.name}</Text>
           
           {/* Address */}
           {tourData?.place_info?.place_address && (
             <View style={styles.infoSection}>
-              <Ionicons name="location-outline" size={18} color="#555" style={styles.infoIcon} />
-              <Text style={styles.addressText}>{tourData.place_info.place_address}</Text>
+              <Ionicons name="location-outline" size={18} color={colors.textSecondary} style={styles.infoIcon} />
+              <Text style={dynamicStyles.addressText}>{tourData.place_info.place_address}</Text>
             </View>
           )}
           
           {/* Editorial Description with Title */}
           {tourData?.place_info?.place_editorial_summary && tourData.place_info.place_editorial_summary.length > 0 ? (
             <View style={styles.descriptionContainer}>
-              <Text style={styles.descriptionTitle}>About This Location</Text>
-              <Text style={styles.tourDescription}>{tourData.place_info.place_editorial_summary}</Text>
+              <Text style={dynamicStyles.descriptionTitle}>About This Location</Text>
+              <Text style={dynamicStyles.tourDescription}>{tourData.place_info.place_editorial_summary}</Text>
             </View>
           ) : place.vicinity || place.description ? (
             <View style={styles.descriptionContainer}>
-              <Text style={styles.descriptionTitle}>Location Details</Text>
-              <Text style={styles.tourDescription}>{place.vicinity || place.description}</Text>
+              <Text style={dynamicStyles.descriptionTitle}>Location Details</Text>
+              <Text style={dynamicStyles.tourDescription}>{place.vicinity || place.description}</Text>
             </View>
           ) : null}
           
@@ -331,21 +362,21 @@ const AudioScreen = ({ route, navigation }) => {
         visible={scriptModalVisible}
         onRequestClose={() => setScriptModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{tourData?.place_info?.place_name || place?.name || "Tour"}</Text>
-              <Text style={styles.modalSubtitle}>{tourData?.place_info?.place_address || place?.vicinity || ""}</Text>
+        <View style={dynamicStyles.modalOverlay}>
+          <View style={dynamicStyles.modalContent}>
+            <View style={dynamicStyles.modalHeader}>
+              <Text style={dynamicStyles.modalTitle}>{tourData?.place_info?.place_name || place?.name || "Tour"}</Text>
+              <Text style={dynamicStyles.modalSubtitle}>{tourData?.place_info?.place_address || place?.vicinity || ""}</Text>
               <TouchableOpacity 
                 style={styles.closeButton}
                 onPress={() => setScriptModalVisible(false)}
               >
-                <Ionicons name="close" size={24} color="#555" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
             
             <ScrollView style={styles.scriptScrollView}>
-              <Text style={styles.scriptText}>
+              <Text style={dynamicStyles.scriptText}>
                 {scriptText}
               </Text>
             </ScrollView>

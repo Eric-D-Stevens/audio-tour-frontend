@@ -2,11 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNetwork } from '../context/NetworkContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTheme } from '../contexts';
 
 const OfflineScreen = () => {
+  const { colors, isDark } = useTheme();
   const { checkConnection, isCheckingConnection } = useNetwork();
   const [reconnectFailed, setReconnectFailed] = useState(false);
   const [lastAttemptTime, setLastAttemptTime] = useState(null);
+
+  const dynamicStyles = {
+    container: { flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', padding: 20 },
+    title: { fontSize: 24, fontWeight: 'bold', color: colors.text, marginBottom: 20, textAlign: 'center' },
+    message: { fontSize: 18, color: colors.text, marginBottom: 20, textAlign: 'center' },
+    details: { fontSize: 16, color: colors.textSecondary, marginBottom: 20, textAlign: 'center', lineHeight: 24 },
+    errorMessage: { fontSize: 16, color: colors.error, marginBottom: 20, textAlign: 'center', fontWeight: '500' },
+    button: { backgroundColor: colors.primary, paddingVertical: 12, paddingHorizontal: 30, borderRadius: 25, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.22, shadowRadius: 2.22 },
+    buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  };
 
   // Reset the failure message after 5 seconds
   useEffect(() => {
@@ -29,28 +41,28 @@ const OfflineScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <MaterialCommunityIcons name="wifi-off" size={80} color="#FF5722" style={styles.icon} />
+    <View style={dynamicStyles.container}>
+      <MaterialCommunityIcons name="wifi-off" size={80} color={colors.primary} style={styles.icon} />
       
-      <Text style={styles.title}>No Internet Connection</Text>
+      <Text style={dynamicStyles.title}>No Internet Connection</Text>
       
-      <Text style={styles.message}>
+      <Text style={dynamicStyles.message}>
         TensorTours requires an internet connection to function properly.
       </Text>
       
-      <Text style={styles.details}>
+      <Text style={dynamicStyles.details}>
         Our app uses real-time data to provide you with audio tours, maps, and points of interest.
         All features of the app require connectivity to work.
       </Text>
       
       {reconnectFailed && (
-        <Text style={styles.errorMessage}>
+        <Text style={dynamicStyles.errorMessage}>
           Unable to connect. Please check your internet connection and try again.
         </Text>
       )}
       
       <TouchableOpacity 
-        style={styles.button} 
+        style={dynamicStyles.button} 
         onPress={handleReconnect}
         disabled={isCheckingConnection}
       >

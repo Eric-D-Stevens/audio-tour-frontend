@@ -2,8 +2,32 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../contexts';
 
 const CityPreviewScreen = ({ navigation }) => {
+  const { colors, isDark } = useTheme();
+
+  const dynamicStyles = {
+    container: { flex: 1, backgroundColor: colors.background },
+    headerTitle: { fontSize: 24, fontWeight: 'bold', color: colors.text, marginBottom: 5 },
+    headerSubtitle: { fontSize: 16, color: colors.textSecondary },
+    cityCard: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      overflow: 'hidden',
+      marginBottom: 15,
+      shadowColor: colors.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDark ? 0.3 : 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    cityImagePlaceholder: { height: 150, backgroundColor: colors.surface, justifyContent: 'center', alignItems: 'center' },
+    cityImageText: { fontSize: 24, fontWeight: 'bold', color: colors.textMuted },
+    cityName: { fontSize: 20, fontWeight: 'bold', color: colors.text, marginBottom: 5 },
+    cityDescription: { fontSize: 14, color: colors.textSecondary, marginBottom: 10, lineHeight: 20 },
+    cityMetaText: { fontSize: 14, color: colors.textSecondary, marginLeft: 5 },
+  };
   // Mock data for cities
   const cities = [
     {
@@ -45,28 +69,28 @@ const CityPreviewScreen = ({ navigation }) => {
 
   const renderCityItem = ({ item }) => (
     <TouchableOpacity 
-      style={styles.cityCard}
+      style={dynamicStyles.cityCard}
       onPress={() => navigation.navigate('Audio', { tourId: item.id })}
     >
-      <View style={styles.cityImagePlaceholder}>
-        <Text style={styles.cityImageText}>{item.name}</Text>
+      <View style={dynamicStyles.cityImagePlaceholder}>
+        <Text style={dynamicStyles.cityImageText}>{item.name}</Text>
       </View>
       <View style={styles.cityContent}>
-        <Text style={styles.cityName}>{item.name}</Text>
-        <Text style={styles.cityDescription}>{item.description}</Text>
+        <Text style={dynamicStyles.cityName}>{item.name}</Text>
+        <Text style={dynamicStyles.cityDescription}>{item.description}</Text>
         <View style={styles.cityMeta}>
-          <Ionicons name="headset-outline" size={16} color="#666" />
-          <Text style={styles.cityMetaText}>{item.tours} audio tours</Text>
+          <Ionicons name="headset-outline" size={16} color={colors.textSecondary} />
+          <Text style={dynamicStyles.cityMetaText}>{item.tours} audio tours</Text>
         </View>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={dynamicStyles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Explore Cities</Text>
-        <Text style={styles.headerSubtitle}>Discover audio tours in these popular destinations</Text>
+        <Text style={dynamicStyles.headerTitle}>Explore Cities</Text>
+        <Text style={dynamicStyles.headerSubtitle}>Discover audio tours in these popular destinations</Text>
       </View>
       
       <FlatList

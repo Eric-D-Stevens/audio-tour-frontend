@@ -11,11 +11,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { TourContext } from '../contexts';
+import { TourContext, useTheme } from '../contexts';
 import { PRESET_CITIES } from '../constants/cities';
 import logger from '../utils/logger';
 
 const GuestTourParametersScreen = ({ navigation }) => {
+  const { colors, isDark } = useTheme();
   const { guestTourParams, setGuestTourParams } = useContext(TourContext);
   
   // Local state to track changes before saving
@@ -31,6 +32,30 @@ const GuestTourParametersScreen = ({ navigation }) => {
     { id: 'nature', name: 'Nature' },
     { id: 'architecture', name: 'Architecture' }
   ];
+
+  // Dynamic styles based on theme
+  const dynamicStyles = {
+    container: { flex: 1, backgroundColor: colors.surface },
+    header: { flexDirection: 'row', alignItems: 'center', padding: 15, borderBottomWidth: 1, borderBottomColor: colors.border },
+    headerTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text },
+    previewBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.primaryFaded, padding: 12, borderRadius: 8, marginBottom: 20 },
+    previewBannerText: { flex: 1, fontSize: 14, color: colors.text, marginLeft: 10 },
+    sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 8, color: colors.text },
+    sectionDescription: { fontSize: 14, color: colors.textSecondary, marginBottom: 15 },
+    cityCardSelected: { borderColor: colors.primary, borderWidth: 3 },
+    categoryButton: { width: '48%', backgroundColor: colors.inputBackground, padding: 15, borderRadius: 10, marginBottom: 10, alignItems: 'center' },
+    categoryButtonActive: { backgroundColor: colors.primary },
+    categoryButtonText: { fontSize: 14, color: colors.text },
+    categoryButtonTextActive: { color: colors.buttonText, fontWeight: 'bold' },
+    footer: { padding: 20, borderTopWidth: 1, borderTopColor: colors.border },
+    modalOverlay: { flex: 1, backgroundColor: colors.modalBackground, justifyContent: 'center', alignItems: 'center' },
+    modalContent: { backgroundColor: colors.card, borderRadius: 15, padding: 25, width: '85%', maxWidth: 350, alignItems: 'center', shadowColor: colors.shadowColor, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84, elevation: 5 },
+    modalTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text, marginBottom: 10 },
+    modalText: { fontSize: 16, color: colors.textSecondary, textAlign: 'center', marginBottom: 20, lineHeight: 22 },
+    signInButton: { backgroundColor: colors.primary, paddingVertical: 12, paddingHorizontal: 30, borderRadius: 8, width: '100%', alignItems: 'center', marginBottom: 10 },
+    laterButton: { paddingVertical: 10 },
+    laterButtonText: { color: colors.textSecondary, fontSize: 14 },
+  };
   
   const handleSave = async () => {
     // Update the global guest tour parameters with new values
@@ -54,28 +79,28 @@ const GuestTourParametersScreen = ({ navigation }) => {
   };
   
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={dynamicStyles.container}>
+      <View style={dynamicStyles.header}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Preview Tour Settings</Text>
+        <Text style={dynamicStyles.headerTitle}>Preview Tour Settings</Text>
       </View>
       
       <ScrollView style={styles.content}>
-        <View style={styles.previewBanner}>
-          <Ionicons name="information-circle-outline" size={20} color="#FF5722" />
-          <Text style={styles.previewBannerText}>
+        <View style={dynamicStyles.previewBanner}>
+          <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+          <Text style={dynamicStyles.previewBannerText}>
             You are in preview mode. Sign in for full access to personalized tours.
           </Text>
         </View>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Select a City</Text>
-          <Text style={styles.sectionDescription}>Choose a city to explore in guest mode</Text>
+          <Text style={dynamicStyles.sectionTitle}>Select a City</Text>
+          <Text style={dynamicStyles.sectionDescription}>Choose a city to explore in guest mode</Text>
           
           <FlatList
             data={PRESET_CITIES}
@@ -86,7 +111,7 @@ const GuestTourParametersScreen = ({ navigation }) => {
             renderItem={({ item }) => (
               <TouchableOpacity
                 onPress={() => setSelectedCity(item.id)}
-                style={[styles.cityCard, selectedCity === item.id && styles.cityCardSelected]}
+                style={[styles.cityCard, selectedCity === item.id && dynamicStyles.cityCardSelected]}
               >
                 <Image 
                   source={item.image}
@@ -100,7 +125,7 @@ const GuestTourParametersScreen = ({ navigation }) => {
                 </View>
                 {selectedCity === item.id && (
                   <View style={styles.citySelectedIndicator}>
-                    <Ionicons name="checkmark-circle" size={24} color="#FF5722" />
+                    <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
                   </View>
                 )}
               </TouchableOpacity>
@@ -109,21 +134,22 @@ const GuestTourParametersScreen = ({ navigation }) => {
         </View>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tour Category</Text>
+          <Text style={dynamicStyles.sectionTitle}>Tour Category</Text>
+          <Text style={dynamicStyles.sectionDescription}>Select what type of tour you'd like</Text>
           <View style={styles.categoryContainer}>
             {categories.map((item) => (
               <TouchableOpacity
                 key={item.id}
                 style={[
-                  styles.categoryButton,
-                  category === item.id && styles.categoryButtonActive
+                  dynamicStyles.categoryButton,
+                  category === item.id && dynamicStyles.categoryButtonActive
                 ]}
                 onPress={() => setCategory(item.id)}
               >
                 <Text 
                   style={[
-                    styles.categoryButtonText,
-                    category === item.id && styles.categoryButtonTextActive
+                    dynamicStyles.categoryButtonText,
+                    category === item.id && dynamicStyles.categoryButtonTextActive
                   ]}
                 >
                   {item.name}
@@ -134,7 +160,7 @@ const GuestTourParametersScreen = ({ navigation }) => {
         </View>
       </ScrollView>
       
-      <View style={styles.footer}>
+      <View style={dynamicStyles.footer}>
         <TouchableOpacity 
           style={styles.saveButton}
           onPress={handleSave}
@@ -150,20 +176,20 @@ const GuestTourParametersScreen = ({ navigation }) => {
         visible={showSignInPrompt}
         onRequestClose={() => setShowSignInPrompt(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <View style={dynamicStyles.modalOverlay}>
+          <View style={dynamicStyles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Preview Limitations</Text>
+              <Text style={dynamicStyles.modalTitle}>Preview Limitations</Text>
               <TouchableOpacity onPress={() => setShowSignInPrompt(false)}>
-                <Ionicons name="close" size={24} color="#333" />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             
-            <Text style={styles.modalText}>
+            <Text style={dynamicStyles.modalText}>
               Your tour settings have been applied, but in preview mode, you'll only have access to a limited selection of pre-recorded tours.
             </Text>
             
-            <Text style={styles.modalText}>
+            <Text style={dynamicStyles.modalText}>
               Sign in to unlock AI-generated personalized tours based on your preferences.
             </Text>
             

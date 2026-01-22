@@ -3,8 +3,34 @@ import { StyleSheet, View, Text, TouchableOpacity, Animated, Modal } from 'react
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import audioManager from '../services/audioManager';
+import { useTheme } from '../contexts';
 
 const MiniAudioPlayer = ({ targetScreen = 'Audio' }) => {
+  const { colors, isDark } = useTheme();
+
+  const dynamicStyles = {
+    container: { 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      backgroundColor: colors.card, 
+      borderRadius: 25, 
+      paddingVertical: 8, 
+      paddingHorizontal: 12, 
+      shadowColor: colors.shadowColor, 
+      shadowOffset: { width: 0, height: 2 }, 
+      shadowOpacity: 0.2, 
+      shadowRadius: 3, 
+      elevation: 3 
+    },
+    placeName: { 
+      fontSize: 14, 
+      fontWeight: '500', 
+      color: colors.text, 
+      marginRight: 10, 
+      maxWidth: 120 
+    },
+  };
+
   const navigation = useNavigation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [placeName, setPlaceName] = useState('');
@@ -58,7 +84,7 @@ const MiniAudioPlayer = ({ targetScreen = 'Audio' }) => {
 
   return (
     <>
-      <View style={styles.container}>
+      <View style={dynamicStyles.container}>
         {isVisible ? (
           // Audio is loaded, show player controls
           <>
@@ -78,13 +104,13 @@ const MiniAudioPlayer = ({ targetScreen = 'Audio' }) => {
                   style={styles.expandButton}
                   onPress={navigateToAudioScreen}
                 >
-                  <Ionicons name="chevron-up" size={20} color="#666" />
+                  <Ionicons name="chevron-up" size={20} color={colors.textSecondary} />
                 </TouchableOpacity>
                 <TouchableOpacity 
                   onPress={navigateToAudioScreen}
                   style={styles.textButton}
                 >
-                  <Text style={styles.placeText} numberOfLines={1}>
+                  <Text style={dynamicStyles.placeName} numberOfLines={1}>
                     {placeName}
                   </Text>
                 </TouchableOpacity>
@@ -217,9 +243,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    marginLeft: 10,
   },
   textButton: {
     flex: 1,
+    marginLeft: 8,
   },
   placeText: {
     fontSize: 14,

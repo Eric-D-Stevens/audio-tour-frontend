@@ -5,13 +5,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../components/AppHeader';
 import MiniAudioPlayer from '../components/MiniAudioPlayer';
-import { TourContext } from '../contexts';
+import { TourContext, useTheme } from '../contexts';
 import { getPreviewPlaces } from '../services/api.ts';
 import { PRESET_CITIES, getCityById, getDefaultCity } from '../constants/cities';
 import audioManager from '../services/audioManager';
 import logger from '../utils/logger';
 
 const GuestMapScreen = ({ navigation }) => {
+  const { colors, isDark } = useTheme();
   const { guestTourParams } = useContext(TourContext);
   const [region, setRegion] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
@@ -22,6 +23,73 @@ const GuestMapScreen = ({ navigation }) => {
   const [needsJiggle, setNeedsJiggle] = useState(false);
   const mapRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Dynamic styles based on theme
+  const dynamicStyles = {
+    container: { flex: 1, backgroundColor: colors.background },
+    loadingContainer: { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surface },
+    loadingText: { marginTop: 10, fontSize: 16, color: colors.textSecondary },
+    loadingOverlayText: { marginTop: 10, fontSize: 16, color: colors.text, textAlign: 'center' },
+    loadingContent: {
+      backgroundColor: colors.card,
+      padding: 20,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: colors.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    userLocationButton: {
+      position: 'absolute',
+      bottom: 100,
+      right: 15,
+      backgroundColor: colors.card,
+      padding: 12,
+      borderRadius: 30,
+      shadowColor: colors.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    callout: { backgroundColor: 'transparent' },
+    calloutContent: { 
+      padding: 10, 
+      minWidth: 180, 
+      backgroundColor: colors.card, 
+      borderRadius: 8,
+      shadowColor: colors.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    calloutTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 5, color: colors.text },
+    calloutDescription: { fontSize: 14, color: colors.textSecondary, marginBottom: 10 },
+    modalOverlay: { flex: 1, backgroundColor: colors.modalBackground, justifyContent: 'center', alignItems: 'center' },
+    modalContent: {
+      backgroundColor: colors.card,
+      borderRadius: 10,
+      padding: 20,
+      width: '90%',
+      maxWidth: 400,
+      shadowColor: colors.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    modalTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text },
+    modalTitle2: { fontSize: 16, fontWeight: 'bold', color: colors.text, marginTop: 15, marginBottom: 5 },
+    modalText: { fontSize: 14, color: colors.textSecondary, marginBottom: 10, lineHeight: 20 },
+    benefitText: { flex: 1, fontSize: 14, color: colors.textSecondary },
+    infoPanel: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border },
+    errorContainer: { position: 'absolute', top: 80, left: 20, right: 20, backgroundColor: colors.error, padding: 10, borderRadius: 8 },
+    errorText: { color: colors.buttonText, fontSize: 14, textAlign: 'center' },
+  };
 
   // Initialize with selected city or default city on component mount
   useEffect(() => {
@@ -259,7 +327,7 @@ const GuestMapScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={dynamicStyles.container}>
       <AppHeader navigation={navigation} title="TensorTours Preview" />
       <View style={styles.mapContainer}>
         {region ? (
@@ -275,6 +343,7 @@ const GuestMapScreen = ({ navigation }) => {
                 coordinate={point.coordinate}
               >
                 <Callout
+                  tooltip={true}
                   onPress={() => {
                     // Navigate to Audio screen
                     // Include the tour type from guestTourParams when navigating to AudioScreen
@@ -294,11 +363,11 @@ const GuestMapScreen = ({ navigation }) => {
                       );
                     }
                   }}
-                  style={styles.callout}
+                  style={[styles.callout, dynamicStyles.callout]}
                 >
-                  <View style={styles.calloutContent}>
-                    <Text style={styles.calloutTitle}>{point.title}</Text>
-                    <Text style={styles.calloutDescription}>{point.description}</Text>
+                  <View style={dynamicStyles.calloutContent}>
+                    <Text style={dynamicStyles.calloutTitle}>{point.title}</Text>
+                    <Text style={dynamicStyles.calloutDescription}>{point.description}</Text>
                     <View style={styles.calloutButton}>
                       <Text style={styles.calloutButtonText}>Start Audio Tour</Text>
                       <Ionicons name="play" size={16} color="white" style={styles.calloutButtonIcon} />
@@ -309,17 +378,17 @@ const GuestMapScreen = ({ navigation }) => {
             ))}
           </MapView>
         ) : (
-          <View style={[styles.map, styles.loadingContainer]}>
-            <ActivityIndicator size="large" color="#FF5722" />
-            <Text style={styles.loadingText}>Loading map...</Text>
+          <View style={[styles.map, dynamicStyles.loadingContainer]}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={dynamicStyles.loadingText}>Loading map...</Text>
           </View>
         )}
         
         {loading && (
           <Animated.View style={[styles.loadingOverlay, { opacity: fadeAnim }]}>
-            <View style={styles.loadingContent}>
-              <ActivityIndicator size="large" color="#FF5722" />
-              <Text style={styles.loadingOverlayText}>Loading places...</Text>
+            <View style={dynamicStyles.loadingContent}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={dynamicStyles.loadingOverlayText}>Loading places...</Text>
             </View>
           </Animated.View>
         )}
@@ -327,10 +396,10 @@ const GuestMapScreen = ({ navigation }) => {
         {/* Center on city button */}
         {region && (
           <TouchableOpacity
-            style={styles.userLocationButton}
+            style={dynamicStyles.userLocationButton}
             onPress={centerOnCity}
           >
-            <Ionicons name="location" size={24} color="#FF5722" />
+            <Ionicons name="location" size={24} color={colors.primary} />
           </TouchableOpacity>
         )}
         
@@ -345,14 +414,14 @@ const GuestMapScreen = ({ navigation }) => {
         
         {/* Error message */}
         {error && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
+          <View style={dynamicStyles.errorContainer}>
+            <Text style={dynamicStyles.errorText}>{error}</Text>
           </View>
         )}
       </View>
       
       {/* Bottom Info Panel with Tour Selection Button */}
-      <View style={styles.infoPanel}>
+      <View style={dynamicStyles.infoPanel}>
         <View style={styles.leftControls}>
           <MiniAudioPlayer targetScreen="GuestAudio" />
         </View>
@@ -373,32 +442,32 @@ const GuestMapScreen = ({ navigation }) => {
         visible={previewModalVisible}
         onRequestClose={() => setPreviewModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <View style={dynamicStyles.modalOverlay}>
+          <View style={dynamicStyles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Preview Mode</Text>
+              <Text style={dynamicStyles.modalTitle}>Preview Mode</Text>
               <TouchableOpacity onPress={() => setPreviewModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#333" />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             
-            <Text style={styles.modalTitle2}>What is Guest Mode?</Text>
-            <Text style={styles.modalText}>
+            <Text style={dynamicStyles.modalTitle2}>What is Guest Mode?</Text>
+            <Text style={dynamicStyles.modalText}>
               You're exploring TensorTours in Guest Mode, which gives you access to our demo content from pre-selected cities around the world. These tours showcase what TensorTours can do, but don't use your actual location.
             </Text>
             
-            <Text style={styles.modalTitle2}>Benefits of Logging In</Text>
-            <Text style={styles.modalText}>
+            <Text style={dynamicStyles.modalTitle2}>Benefits of Logging In</Text>
+            <Text style={dynamicStyles.modalText}>
               When you create an account and log in, TensorTours will:
             </Text>
             <View style={styles.benefitsList}>
               <View style={styles.benefitItem}>
-                <Ionicons name="location" size={16} color="#FF5722" style={styles.benefitIcon} />
-                <Text style={styles.benefitText}>Generate tours based on your current location</Text>
+                <Ionicons name="location" size={16} color={colors.primary} style={styles.benefitIcon} />
+                <Text style={dynamicStyles.benefitText}>Generate tours based on your current location</Text>
               </View>
               <View style={styles.benefitItem}>
-                <Ionicons name="options" size={16} color="#FF5722" style={styles.benefitIcon} />
-                <Text style={styles.benefitText}>Personalize content based on your preferences</Text>
+                <Ionicons name="options" size={16} color={colors.primary} style={styles.benefitIcon} />
+                <Text style={dynamicStyles.benefitText}>Personalize content based on your preferences</Text>
               </View>
             </View>
             

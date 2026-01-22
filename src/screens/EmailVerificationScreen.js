@@ -3,14 +3,45 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingVi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../contexts';
+import { useTheme } from '../contexts';
 import logger from '../utils/logger';
 
 const EmailVerificationScreen = ({ route, navigation }) => {
+  const { colors, isDark } = useTheme();
   const [verificationCode, setVerificationCode] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { email, unverifiedLogin = false, message = null } = route.params;
   const auth = useContext(AuthContext);
+
+  const dynamicStyles = {
+    container: { flex: 1, backgroundColor: colors.background },
+    formContainer: {
+      backgroundColor: colors.card,
+      borderRadius: 15,
+      padding: 20,
+      shadowColor: colors.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDark ? 0.3 : 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    formTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: colors.text },
+    subtitle: { fontSize: 16, color: colors.textSecondary, textAlign: 'center', marginBottom: 20 },
+    errorContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.primaryFaded,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.primary,
+      paddingVertical: 12,
+      paddingHorizontal: 15,
+      borderRadius: 10,
+      marginBottom: 15,
+    },
+    input: { backgroundColor: colors.inputBackground, borderRadius: 8, padding: 15, marginBottom: 15, fontSize: 16, color: colors.text },
+    resendButtonText: { color: colors.primary, fontSize: 14, textAlign: 'center', textDecorationLine: 'underline' },
+  };
 
   const handleVerification = async () => {
     if (!verificationCode) {
@@ -58,28 +89,29 @@ const EmailVerificationScreen = ({ route, navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={dynamicStyles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>Verify Your Email</Text>
-            <Text style={styles.subtitle}>
+          <View style={dynamicStyles.formContainer}>
+            <Text style={dynamicStyles.formTitle}>Verify Your Email</Text>
+            <Text style={dynamicStyles.subtitle}>
               {message || `Please enter the verification code sent to ${email}`}
             </Text>
 
             {errorMessage ? (
-              <View style={styles.errorContainer}>
-                <Ionicons name="alert-circle-outline" size={20} style={styles.errorIcon} />
-                <Text style={styles.errorText}>{errorMessage}</Text>
+              <View style={dynamicStyles.errorContainer}>
+                <Ionicons name="alert-circle-outline" size={20} color={colors.primary} style={styles.errorIcon} />
+                <Text style={[styles.errorText, { color: colors.primary }]}>{errorMessage}</Text>
               </View>
             ) : null}
 
             <TextInput
-              style={styles.input}
+              style={dynamicStyles.input}
               placeholder="Verification Code"
+              placeholderTextColor={colors.textPlaceholder}
               value={verificationCode}
               onChangeText={setVerificationCode}
               keyboardType="number-pad"
@@ -100,7 +132,7 @@ const EmailVerificationScreen = ({ route, navigation }) => {
               style={styles.resendButton}
               onPress={handleResendCode}
             >
-              <Text style={styles.resendButtonText}>Resend Code</Text>
+              <Text style={dynamicStyles.resendButtonText}>Resend Code</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

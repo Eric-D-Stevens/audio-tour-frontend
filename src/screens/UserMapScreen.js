@@ -6,12 +6,13 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import AppHeader from '../components/AppHeader';
 import MiniAudioPlayer from '../components/MiniAudioPlayer';
-import { TourContext, AuthContext } from '../contexts';
+import { TourContext, AuthContext, useTheme } from '../contexts';
 import { getPlaces } from '../services/api.ts';
 import audioManager from '../services/audioManager';
 import logger from '../utils/logger';
 
 const UserMapScreen = ({ navigation }) => {
+  const { colors, isDark } = useTheme();
   const { tourParams } = useContext(TourContext);
   const { isAuthenticated, checkAuthAndRedirect, signOut } = useContext(AuthContext);
   const [region, setRegion] = useState(null);
@@ -392,9 +393,46 @@ const UserMapScreen = ({ navigation }) => {
     }
   };
 
+  // Dynamic styles based on theme
+  const dynamicStyles = {
+    container: { flex: 1, backgroundColor: colors.background },
+    modalContent: {
+      backgroundColor: colors.card,
+      borderRadius: 10,
+      padding: 20,
+      width: '90%',
+      maxWidth: 400,
+      shadowColor: colors.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    modalTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text },
+    modalText: { fontSize: 16, color: colors.textSecondary, marginBottom: 15, lineHeight: 22 },
+    secondaryButton: { backgroundColor: colors.surface },
+    secondaryButtonText: { color: colors.textSecondary, fontWeight: 'bold', fontSize: 16 },
+    loadingContainer: { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surface },
+    loadingText: { marginTop: 10, fontSize: 16, color: colors.textSecondary },
+    loadingOverlayText: { marginTop: 10, fontSize: 16, color: colors.text, textAlign: 'center' },
+    userLocationButton: {
+      position: 'absolute',
+      bottom: 100,
+      right: 15,
+      backgroundColor: colors.card,
+      padding: 12,
+      borderRadius: 30,
+      shadowColor: colors.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+  };
+
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <AppHeader navigation={navigation} title="TensorTours Map Shibby" />
+    <SafeAreaView style={dynamicStyles.container} edges={['top', 'left', 'right']}>
+      <AppHeader navigation={navigation} title="TensorTours" />
       
       {/* Location Permission Modal */}
       <Modal
@@ -404,25 +442,25 @@ const UserMapScreen = ({ navigation }) => {
         onRequestClose={() => navigation.navigate('Auth')}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={dynamicStyles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Location Access</Text>
+              <Text style={dynamicStyles.modalTitle}>Location Access</Text>
             </View>
             
-            <Text style={styles.modalText}>
+            <Text style={dynamicStyles.modalText}>
               TensorTours uses your location to create personalized audio tours for attractions near you. Your location is only used while you're using the app.
             </Text>
             
-            <Text style={styles.modalText}>
+            <Text style={dynamicStyles.modalText}>
               Without location access, the app cannot function properly.
             </Text>
             
             <View style={styles.modalButtonContainer}>
               <TouchableOpacity 
-                style={[styles.modalButton, styles.secondaryButton]}
+                style={[styles.modalButton, dynamicStyles.secondaryButton]}
                 onPress={handleDeclineLocationPermission}
               >
-                <Text style={styles.secondaryButtonText}>Decline</Text>
+                <Text style={dynamicStyles.secondaryButtonText}>Decline</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
@@ -493,9 +531,9 @@ const UserMapScreen = ({ navigation }) => {
             ))}
           </MapView>
         ) : (
-          <View style={[styles.map, styles.loadingContainer]}>
-            <ActivityIndicator size="large" color="#FF5722" />
-            <Text style={styles.loadingText}>Loading map...</Text>
+          <View style={[styles.map, dynamicStyles.loadingContainer]}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={dynamicStyles.loadingText}>Loading map...</Text>
           </View>
         )}
         
@@ -505,8 +543,8 @@ const UserMapScreen = ({ navigation }) => {
             style={[styles.loadingOverlay, { opacity: fadeAnim }]}
           >
             <View style={styles.loadingContent}>
-              <ActivityIndicator size="large" color="#FF5722" />
-              <Text style={styles.loadingOverlayText}>Loading tour points...</Text>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={dynamicStyles.loadingOverlayText}>Loading tour points...</Text>
             </View>
           </Animated.View>
         )}
@@ -514,10 +552,10 @@ const UserMapScreen = ({ navigation }) => {
         {/* User location button */}
         {region && (
           <TouchableOpacity
-            style={styles.userLocationButton}
+            style={dynamicStyles.userLocationButton}
             onPress={centerOnUser}
           >
-            <Ionicons name="locate" size={24} color="#FF5722" />
+            <Ionicons name="locate" size={24} color={colors.primary} />
           </TouchableOpacity>
         )}
         

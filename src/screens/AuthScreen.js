@@ -1,9 +1,9 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView, Switch } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView, Switch, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { AuthContext } from '../contexts';
+import { AuthContext, useTheme } from '../contexts';
 import logger from '../utils/logger';
 
 // Get color based on strength percentage
@@ -16,6 +16,8 @@ const getStrengthColor = (percentage) => {
 };
 
 const AuthScreen = ({ route, navigation }) => {
+  const { colors, isDark } = useTheme();
+  
   // Check if we're coming back from email verification
   const verifiedEmail = route.params?.verifiedEmail || '';
   
@@ -107,33 +109,81 @@ const AuthScreen = ({ route, navigation }) => {
     navigation.navigate('GuestMap');
   };
 
+  // Dynamic styles based on theme
+  const dynamicStyles = {
+    container: { flex: 1, backgroundColor: colors.background },
+    tagline: { fontSize: 16, color: colors.textSecondary },
+    formContainer: {
+      backgroundColor: colors.card,
+      borderRadius: 15,
+      padding: 20,
+      shadowColor: colors.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDark ? 0.3 : 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    formTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: colors.text },
+    errorContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.primaryFaded,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.primary,
+      paddingVertical: 12,
+      paddingHorizontal: 15,
+      borderRadius: 10,
+      marginBottom: 15,
+    },
+    input: { backgroundColor: colors.inputBackground, borderRadius: 10, padding: 15, marginBottom: 15, fontSize: 16, color: colors.text },
+    passwordRequirementsContainer: { backgroundColor: colors.primaryFadedMore, borderRadius: 8, padding: 12, marginBottom: 15 },
+    passwordRequirementsTitle: { color: colors.textSecondary, fontSize: 14, fontWeight: '600', marginBottom: 10 },
+    requirementText: { color: colors.textSecondary, fontSize: 13 },
+    passwordInputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.inputBackground, borderRadius: 8, marginBottom: 15 },
+    passwordInput: { flex: 1, backgroundColor: colors.inputBackground, borderRadius: 8, padding: 15, fontSize: 16, color: colors.text },
+    dividerLine: { flex: 1, height: 1, backgroundColor: colors.divider },
+    dividerText: { marginHorizontal: 10, color: colors.textSecondary },
+    privacyText: { color: colors.textSecondary, fontSize: 14 },
+    guestButton: {
+      backgroundColor: colors.guestButtonBackground,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      borderRadius: 10,
+      padding: 15,
+      alignItems: 'center',
+      marginTop: 5,
+    },
+    guestButtonSubtext: { color: colors.textMuted, fontSize: 12, marginTop: 5 },
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={dynamicStyles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.logoContainer}>
-            <View style={styles.logoPlaceholder}>
+            <View style={[styles.logoPlaceholder, { backgroundColor: colors.primary }]}>
               <Text style={styles.logoText}>TensorTours</Text>
             </View>
-            <Text style={styles.tagline}>Discover the world through AI-powered audio</Text>
+            <Text style={dynamicStyles.tagline}>Discover the world through AI-powered audio</Text>
           </View>
 
-          <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>{isLogin ? 'Sign In' : 'Create Account'}</Text>
+          <View style={dynamicStyles.formContainer}>
+            <Text style={dynamicStyles.formTitle}>{isLogin ? 'Sign In' : 'Create Account'}</Text>
 
             {errorMessage ? (
-              <View style={styles.errorContainer}>
-                <Ionicons name="alert-circle-outline" size={20} style={styles.errorIcon} />
-                <Text style={styles.errorText}>{errorMessage}</Text>
+              <View style={dynamicStyles.errorContainer}>
+                <Ionicons name="alert-circle-outline" size={20} color={colors.primary} style={{ marginRight: 10 }} />
+                <Text style={{ color: colors.primary, flex: 1, fontSize: 14 }}>{errorMessage}</Text>
               </View>
             ) : null}
 
             <TextInput
-              style={styles.input}
+              style={dynamicStyles.input}
               placeholder="Email"
+              placeholderTextColor={colors.textPlaceholder}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -141,52 +191,52 @@ const AuthScreen = ({ route, navigation }) => {
             />
             
             {!isLogin && (
-              <View style={styles.passwordRequirementsContainer}>
-                <Text style={styles.passwordRequirementsTitle}>Password requirements:</Text>
+              <View style={dynamicStyles.passwordRequirementsContainer}>
+                <Text style={dynamicStyles.passwordRequirementsTitle}>Password requirements:</Text>
                 
                 <View style={styles.passwordRequirementItem}>
                   <Ionicons 
                     name={lengthValid ? "checkmark-circle" : "checkmark-circle-outline"} 
                     size={18} 
-                    color={lengthValid ? "#FF5722" : "#AAAAAA"} 
+                    color={lengthValid ? colors.primary : colors.textPlaceholder} 
                     style={{marginRight: 8}} 
                   />
-                  <Text style={styles.requirementText}>At least 8 characters</Text>
+                  <Text style={dynamicStyles.requirementText}>At least 8 characters</Text>
                 </View>
                 
                 <View style={styles.passwordRequirementItem}>
                   <Ionicons 
                     name={hasUppercase ? "checkmark-circle" : "checkmark-circle-outline"} 
                     size={18} 
-                    color={hasUppercase ? "#FF5722" : "#AAAAAA"} 
+                    color={hasUppercase ? colors.primary : colors.textPlaceholder} 
                     style={{marginRight: 8}} 
                   />
-                  <Text style={styles.requirementText}>Contains uppercase letter</Text>
+                  <Text style={dynamicStyles.requirementText}>Contains uppercase letter</Text>
                 </View>
                 
                 <View style={styles.passwordRequirementItem}>
                   <Ionicons 
                     name={hasLowercase ? "checkmark-circle" : "checkmark-circle-outline"} 
                     size={18} 
-                    color={hasLowercase ? "#FF5722" : "#AAAAAA"} 
+                    color={hasLowercase ? colors.primary : colors.textPlaceholder} 
                     style={{marginRight: 8}} 
                   />
-                  <Text style={styles.requirementText}>Contains lowercase letter</Text>
+                  <Text style={dynamicStyles.requirementText}>Contains lowercase letter</Text>
                 </View>
                 
                 <View style={styles.passwordRequirementItem}>
                   <Ionicons 
                     name={hasNumber ? "checkmark-circle" : "checkmark-circle-outline"} 
                     size={18} 
-                    color={hasNumber ? "#FF5722" : "#AAAAAA"} 
+                    color={hasNumber ? colors.primary : colors.textPlaceholder} 
                     style={{marginRight: 8}} 
                   />
-                  <Text style={styles.requirementText}>Contains a number</Text>
+                  <Text style={dynamicStyles.requirementText}>Contains a number</Text>
                 </View>
                 
                 {/* Password strength bar */}
                 <View style={styles.strengthBarContainer}>
-                  <View style={styles.strengthBarBackground}>
+                  <View style={[styles.strengthBarBackground, { backgroundColor: colors.border }]}>
                     <View 
                       style={[
                         styles.strengthBar, 
@@ -201,10 +251,11 @@ const AuthScreen = ({ route, navigation }) => {
               </View>
             )}
 
-            <View style={styles.passwordInputContainer}>
+            <View style={dynamicStyles.passwordInputContainer}>
               <TextInput
-                style={styles.passwordInput}
+                style={dynamicStyles.passwordInput}
                 placeholder="Password"
+                placeholderTextColor={colors.textPlaceholder}
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);
@@ -233,17 +284,18 @@ const AuthScreen = ({ route, navigation }) => {
                 <Ionicons 
                   name={showPassword ? "eye-off-outline" : "eye-outline"} 
                   size={22} 
-                  color="#666"
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
 
             {!isLogin && (
               <>
-                <View style={styles.passwordInputContainer}>
+                <View style={dynamicStyles.passwordInputContainer}>
                   <TextInput
-                    style={styles.passwordInput}
+                    style={dynamicStyles.passwordInput}
                     placeholder="Confirm Password"
+                    placeholderTextColor={colors.textPlaceholder}
                     value={confirmPassword}
                     onChangeText={(text) => {
                       setConfirmPassword(text);
@@ -258,7 +310,7 @@ const AuthScreen = ({ route, navigation }) => {
                     <Ionicons 
                       name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} 
                       size={22} 
-                      color="#666"
+                      color={colors.textSecondary}
                     />
                   </TouchableOpacity>
                 </View>
@@ -268,10 +320,10 @@ const AuthScreen = ({ route, navigation }) => {
                     <Ionicons 
                       name={passwordsMatch ? "checkmark-circle" : "close-circle"} 
                       size={16} 
-                      color={passwordsMatch ? "#FF5722" : "#F44336"} 
+                      color={passwordsMatch ? colors.primary : colors.error} 
                       style={{marginRight: 8}} 
                     />
-                    <Text style={[styles.passwordMatchText, { color: passwordsMatch ? "#4CAF50" : "#F44336" }]}>
+                    <Text style={[styles.passwordMatchText, { color: passwordsMatch ? colors.success : colors.error }]}>
                       {passwordsMatch ? "Passwords match" : "Passwords don't match"}
                     </Text>
                   </View>
@@ -280,15 +332,15 @@ const AuthScreen = ({ route, navigation }) => {
                   <Switch
                     value={privacyPolicyAgreed}
                     onValueChange={setPrivacyPolicyAgreed}
-                    trackColor={{ false: '#d1d1d1', true: '#FF8a65' }}
-                    thumbColor={privacyPolicyAgreed ? '#FF5722' : '#f4f3f4'}
+                    trackColor={{ false: colors.border, true: colors.primaryLight }}
+                    thumbColor={privacyPolicyAgreed ? colors.primary : colors.surface}
                   />
                   <View style={styles.privacyTextContainer}>
-                    <Text style={styles.privacyText}>I agree to the </Text>
+                    <Text style={dynamicStyles.privacyText}>I agree to the </Text>
                     <TouchableOpacity 
                       onPress={() => navigation.navigate('Privacy')}
                     >
-                      <Text style={styles.privacyLink}>Privacy Policy</Text>
+                      <Text style={[styles.privacyLink, { color: colors.primary }]}>Privacy Policy</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -296,7 +348,7 @@ const AuthScreen = ({ route, navigation }) => {
             )}
 
             <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
+              style={[styles.button, { backgroundColor: colors.primary }, isLoading && styles.buttonDisabled]}
               onPress={handleAuth}
               disabled={isLoading}
             >
@@ -308,7 +360,7 @@ const AuthScreen = ({ route, navigation }) => {
                 style={styles.forgotPasswordContainer}
                 onPress={() => navigation.navigate('ForgotPassword')}
               >
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>Forgot Password?</Text>
               </TouchableOpacity>
             )}
 
@@ -319,20 +371,20 @@ const AuthScreen = ({ route, navigation }) => {
                 setErrorMessage('');
               }}
             >
-              <Text style={styles.switchModeText}>
+              <Text style={[styles.switchModeText, { color: colors.primary }]}>
                 {isLogin ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
               </Text>
             </TouchableOpacity>
 
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR</Text>
-              <View style={styles.dividerLine} />
+              <View style={dynamicStyles.dividerLine} />
+              <Text style={dynamicStyles.dividerText}>OR</Text>
+              <View style={dynamicStyles.dividerLine} />
             </View>
 
-            <TouchableOpacity style={styles.guestButton} onPress={handleGuestAccess}>
-              <Text style={styles.guestButtonText}>Continue as Guest</Text>
-              <Text style={styles.guestButtonSubtext}>Explore preset cities without an account</Text>
+            <TouchableOpacity style={dynamicStyles.guestButton} onPress={handleGuestAccess}>
+              <Text style={[styles.guestButtonText, { color: colors.primary }]}>Continue as Guest</Text>
+              <Text style={dynamicStyles.guestButtonSubtext}>Explore preset cities without an account</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

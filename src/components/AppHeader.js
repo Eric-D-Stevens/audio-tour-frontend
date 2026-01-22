@@ -11,9 +11,10 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AuthContext } from '../contexts';
+import { AuthContext, useTheme } from '../contexts';
 
 const AppHeader = ({ navigation, title }) => {
+  const { colors, isDark } = useTheme();
   const authContext = useContext(AuthContext);
   const { user, handleLogout } = authContext;
   const [menuVisible, setMenuVisible] = useState(false);
@@ -32,13 +33,13 @@ const AppHeader = ({ navigation, title }) => {
   };
   
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
       <View style={styles.headerLeft}>
         <Image 
           source={require('../../assets/header-icon.png')} 
           style={styles.logoImage} 
         />
-        <Text style={styles.headerTitle}>{title || 'TensorTours'}</Text>
+        <Text style={[styles.headerTitle, { color: colors.primary }]}>{title || 'TensorTours'}</Text>
       </View>
       
       <View style={styles.headerRight}>
@@ -46,7 +47,7 @@ const AppHeader = ({ navigation, title }) => {
           style={styles.iconButton}
           onPress={toggleMenu}
         >
-          <Ionicons name="menu" size={24} color="#333" />
+          <Ionicons name="menu" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
       
@@ -57,21 +58,21 @@ const AppHeader = ({ navigation, title }) => {
         visible={menuVisible}
         onRequestClose={closeMenu}
       >
-        <SafeAreaView style={styles.menuContainer}>
-          <View style={styles.menuHeader}>
+        <SafeAreaView style={[styles.menuContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.menuHeader, { borderBottomColor: colors.border }]}>
             <TouchableOpacity onPress={closeMenu}>
-              <Ionicons name="close" size={24} color="#333" />
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
-            <Text style={styles.menuTitle}>Menu</Text>
+            <Text style={[styles.menuTitle, { color: colors.text }]}>Menu</Text>
             <View style={styles.placeholder} />
           </View>
           
           <ScrollView style={styles.menuContent}>
-            <View style={styles.userSection}>
-              <View style={styles.userIcon}>
+            <View style={[styles.userSection, { borderBottomColor: colors.border }]}>
+              <View style={[styles.userIcon, { backgroundColor: colors.primary }]}>
                 <Ionicons name="person" size={32} color="#FFF" />
               </View>
-              <Text style={styles.userName}>{user ? user.username : 'Guest'}</Text>
+              <Text style={[styles.userName, { color: colors.text }]}>{user ? user.username : 'Guest'}</Text>
             </View>
             
             <View style={styles.menuItems}>
@@ -79,43 +80,43 @@ const AppHeader = ({ navigation, title }) => {
                 style={styles.menuItem}
                 onPress={() => handleNavigate(user ? 'Map' : 'GuestMap')}
               >
-                <Ionicons name="map-outline" size={20} color="#333" />
-                <Text style={styles.menuItemText}>Map</Text>
+                <Ionicons name="map-outline" size={20} color={colors.text} />
+                <Text style={[styles.menuItemText, { color: colors.text }]}>Map</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
                 style={styles.menuItem}
                 onPress={() => handleNavigate('About')}
               >
-                <Ionicons name="information-circle-outline" size={20} color="#333" />
-                <Text style={styles.menuItemText}>About</Text>
+                <Ionicons name="information-circle-outline" size={20} color={colors.text} />
+                <Text style={[styles.menuItemText, { color: colors.text }]}>About</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
                 style={styles.menuItem}
                 onPress={() => handleNavigate('Contact')}
               >
-                <Ionicons name="mail-outline" size={20} color="#333" />
-                <Text style={styles.menuItemText}>Contact Us</Text>
+                <Ionicons name="mail-outline" size={20} color={colors.text} />
+                <Text style={[styles.menuItemText, { color: colors.text }]}>Contact Us</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
                 style={styles.menuItem}
                 onPress={() => handleNavigate('Support')}
               >
-                <Ionicons name="help-circle-outline" size={20} color="#333" />
-                <Text style={styles.menuItemText}>Support</Text>
+                <Ionicons name="help-circle-outline" size={20} color={colors.text} />
+                <Text style={[styles.menuItemText, { color: colors.text }]}>Support</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
                 style={styles.menuItem}
                 onPress={() => handleNavigate('Privacy')}
               >
-                <Ionicons name="shield-outline" size={20} color="#333" />
-                <Text style={styles.menuItemText}>Privacy</Text>
+                <Ionicons name="shield-outline" size={20} color={colors.text} />
+                <Text style={[styles.menuItemText, { color: colors.text }]}>Privacy</Text>
               </TouchableOpacity>
               
-              <View style={styles.divider} />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
               
               {user ? (
                 <>
@@ -131,8 +132,8 @@ const AppHeader = ({ navigation, title }) => {
                       });
                     }}
                   >
-                    <Ionicons name="log-out-outline" size={20} color="#FF5722" />
-                    <Text style={[styles.menuItemText, { color: '#FF5722' }]}>Logout</Text>
+                    <Ionicons name="log-out-outline" size={20} color={colors.primary} />
+                    <Text style={[styles.menuItemText, { color: colors.primary }]}>Logout</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity 
@@ -174,8 +175,8 @@ const AppHeader = ({ navigation, title }) => {
                       );
                     }}
                   >
-                    <Ionicons name="trash-outline" size={20} color="#FF5722" />
-                    <Text style={[styles.menuItemText, { color: '#FF5722' }]}>Delete Account</Text>
+                    <Ionicons name="trash-outline" size={20} color={colors.error} />
+                    <Text style={[styles.menuItemText, { color: colors.error }]}>Delete Account</Text>
                   </TouchableOpacity>
                 </>
               ) : (
@@ -186,8 +187,8 @@ const AppHeader = ({ navigation, title }) => {
                     navigation.navigate('Auth');
                   }}
                 >
-                  <Ionicons name="log-in-outline" size={20} color="#FF5722" />
-                  <Text style={[styles.menuItemText, { color: '#FF5722' }]}>Sign In</Text>
+                  <Ionicons name="log-in-outline" size={20} color={colors.primary} />
+                  <Text style={[styles.menuItemText, { color: colors.primary }]}>Sign In</Text>
                 </TouchableOpacity>
               )}
             </View>

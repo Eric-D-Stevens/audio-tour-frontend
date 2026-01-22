@@ -8,7 +8,7 @@ export default {
     orientation: "portrait",
     privacyPolicyUrl: "https://www.tensortrix.com/demos/audio-tour/privacy-policy",
     icon: "./assets/app-store-icon.png", // Using non-transparent icon for better App Store display
-    userInterfaceStyle: "light",
+    userInterfaceStyle: "automatic",
     newArchEnabled: true,
     splash: {
       image: "./assets/splash-icon.png",
@@ -27,11 +27,7 @@ export default {
         ITSAppUsesNonExemptEncryption: false,
         UIBackgroundModes: ["audio"],
       },
-      statusBar: {
-        backgroundColor: "#FFFFFF",
-        style: "dark"
-      },
-      backgroundColor: "#FFFFFF"
+      backgroundColor: "#121212"
     },
     android: {
       adaptiveIcon: {

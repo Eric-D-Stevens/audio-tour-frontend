@@ -34,7 +34,7 @@ import * as AuthService from './src/services/auth';
 import { COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID, REGION } from './src/constants/config';
 
 // Import contexts from the separate contexts file
-import { AuthContext, TourContext } from './src/contexts';
+import { AuthContext, TourContext, ThemeProvider, useTheme } from './src/contexts';
 
 // Create navigator
 const Stack = createStackNavigator();
@@ -295,19 +295,21 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="auto" />
-      <NetworkProvider>
-        <AppContent 
-          isLoading={isLoading}
-          isAuthenticated={isAuthenticated}
-          authContext={authContext}
-          tourParams={tourParams}
-          setTourParams={setTourParams}
-          guestTourParams={guestTourParams}
-          setGuestTourParams={setGuestTourParams}
-          navigationRef={navigationRef}
-        />
-      </NetworkProvider>
+      <ThemeProvider>
+        <StatusBar style="auto" />
+        <NetworkProvider>
+          <AppContent 
+            isLoading={isLoading}
+            isAuthenticated={isAuthenticated}
+            authContext={authContext}
+            tourParams={tourParams}
+            setTourParams={setTourParams}
+            guestTourParams={guestTourParams}
+            setGuestTourParams={setGuestTourParams}
+            navigationRef={navigationRef}
+          />
+        </NetworkProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
@@ -315,6 +317,7 @@ export default function App() {
 // Separate component to use the network context inside
 const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTourParams, guestTourParams, setGuestTourParams, navigationRef }) => {
   const { isConnected } = useNetwork();
+  const { colors, isDark } = useTheme();
   
   // If we're not connected to the internet, show the offline screen
   if (!isConnected) {
@@ -324,8 +327,8 @@ const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTo
   // Show loading screen if still checking auth status
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#FF5722" />{/* Orange color for TensorTours branding */}
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -335,40 +338,24 @@ const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTo
         <TourContext.Provider value={{ tourParams, setTourParams, guestTourParams, setGuestTourParams }}>
           <NavigationContainer 
             ref={navigationRef}
-            style={{ flex: 1, backgroundColor: '#FFFFFF' }}
             theme={{
+              dark: isDark,
               colors: {
-                background: '#FFFFFF',
-                card: '#FFFFFF',
-                border: '#FFFFFF',
-                primary: '#FF5722',
-                text: '#000000'
+                background: colors.background,
+                card: colors.card,
+                border: colors.border,
+                primary: colors.primary,
+                text: colors.text,
+                notification: colors.primary,
               },
-              fonts: {
-                regular: {
-                  fontFamily: 'System',
-                  fontWeight: '400',
-                },
-                medium: {
-                  fontFamily: 'System',
-                  fontWeight: '500',
-                },
-                light: {
-                  fontFamily: 'System',
-                  fontWeight: '300',
-                },
-                thin: {
-                  fontFamily: 'System',
-                  fontWeight: '100',
-                },
-              }
             }}>
             <Stack.Navigator
               initialRouteName={isAuthenticated ? "Map" : "Auth"}
               screenOptions={{
-                cardStyle: { backgroundColor: '#FFFFFF' },
-                headerStyle: { backgroundColor: '#FFFFFF' },
-                contentStyle: { backgroundColor: '#FFFFFF' }
+                cardStyle: { backgroundColor: colors.background },
+                headerStyle: { backgroundColor: colors.card },
+                headerTintColor: colors.text,
+                contentStyle: { backgroundColor: colors.background }
               }}>
               {/* All screens available regardless of auth state, but we'll control access in the components */}
               <Stack.Screen 

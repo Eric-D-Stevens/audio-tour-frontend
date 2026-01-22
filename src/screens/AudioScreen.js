@@ -7,6 +7,7 @@ import PhotoAttribution from '../components/PhotoAttribution';
 import { getTour, getOnDemandTour } from '../services/api';
 import { AuthContext, TourContext, useTheme } from '../contexts';
 import logger from '../utils/logger';
+import { CDN_ACCESS_KEY, CDN_ACCESS_HEADER } from '../constants/config';
 
 const AudioScreen = ({ route, navigation }) => {
   const { colors, isDark } = useTheme();
@@ -62,7 +63,9 @@ const AudioScreen = ({ route, navigation }) => {
       if (tourData?.script?.cloudfront_url) {
         setScriptText("Loading script...");
         
-        const response = await fetch(tourData.script.cloudfront_url);
+        const response = await fetch(tourData.script.cloudfront_url, {
+          headers: { [CDN_ACCESS_HEADER]: CDN_ACCESS_KEY }
+        });
         if (!response.ok) {
           throw new Error(`Failed to load script: ${response.status}`);
         }
@@ -269,7 +272,10 @@ const AudioScreen = ({ route, navigation }) => {
                 {photos.map((photoUrl, index) => (
                   <View key={index} style={styles.imageSlide}>
                     <Image
-                      source={{ uri: photoUrl }}
+                      source={{ 
+                        uri: photoUrl,
+                        headers: { [CDN_ACCESS_HEADER]: CDN_ACCESS_KEY }
+                      }}
                       style={styles.placeImage}
                       onLoadStart={() => setImageLoading(true)}
                       onLoadEnd={() => setImageLoading(false)}

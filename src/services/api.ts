@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../constants/config';
+import { API_BASE_URL, CDN_ACCESS_KEY, CDN_ACCESS_HEADER } from '../constants/config';
 import { getAuthToken, refreshTokenIfNeeded, cleanupInvalidAuth } from './auth';
 import { 
   GetPlacesRequest, 
@@ -425,7 +425,9 @@ export const getPreviewPlaces = async (
         // Fetch the JSON directly with more detailed logging
         logger.debug(`Attempting to fetch from exact URL: ${jsonUrl}`);
         
-        const response = await fetch(jsonUrl);
+        const response = await fetch(jsonUrl, {
+          headers: { [CDN_ACCESS_HEADER]: CDN_ACCESS_KEY }
+        });
         
         if (!response.ok) {
           // If we get a 403 or 404, log it with more details

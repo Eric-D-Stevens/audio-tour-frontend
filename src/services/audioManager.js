@@ -1,6 +1,7 @@
 import { Audio } from 'expo-av';
 import { Platform } from 'react-native';
 import logger from '../utils/logger';
+import { CDN_ACCESS_KEY, CDN_ACCESS_HEADER } from '../constants/config';
 
 class AudioManager {
   static instance = null;
@@ -46,9 +47,12 @@ class AudioManager {
         shouldDuckAndroid: true,
       });
 
-      // Load the new sound
+      // Load the new sound with CDN authentication header
       const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri },
+        { 
+          uri,
+          headers: { [CDN_ACCESS_HEADER]: CDN_ACCESS_KEY }
+        },
         { shouldPlay: false },
         this.onPlaybackStatusUpdate
       );

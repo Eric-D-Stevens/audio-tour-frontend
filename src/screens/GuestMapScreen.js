@@ -29,11 +29,11 @@ const GuestMapScreen = ({ navigation }) => {
     container: { flex: 1, backgroundColor: colors.background },
     loadingContainer: { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surface },
     loadingText: { marginTop: 10, fontSize: 16, color: colors.textSecondary },
-    loadingOverlayText: { marginTop: 10, fontSize: 16, color: colors.text, textAlign: 'center' },
+    loadingOverlayText: { marginTop: 10, fontSize: 16, color: colors.text, textAlign: 'center', fontWeight: '600' },
     loadingContent: {
       backgroundColor: colors.card,
-      padding: 20,
-      borderRadius: 10,
+      padding: 24,
+      borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
       shadowColor: colors.shadowColor,
@@ -41,6 +41,7 @@ const GuestMapScreen = ({ navigation }) => {
       shadowOpacity: 0.25,
       shadowRadius: 3.84,
       elevation: 5,
+      minWidth: 200,
     },
     userLocationButton: {
       position: 'absolute',
@@ -388,7 +389,7 @@ const GuestMapScreen = ({ navigation }) => {
           <Animated.View style={[styles.loadingOverlay, { opacity: fadeAnim }]}>
             <View style={dynamicStyles.loadingContent}>
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={dynamicStyles.loadingOverlayText}>Loading places...</Text>
+              <Text style={dynamicStyles.loadingOverlayText}>Loading Preview Locations</Text>
             </View>
           </Animated.View>
         )}

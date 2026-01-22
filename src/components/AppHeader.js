@@ -33,7 +33,7 @@ const AppHeader = ({ navigation, title }) => {
   };
   
   return (
-    <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+    <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
       <View style={styles.headerLeft}>
         <Image 
           source={require('../../assets/header-icon.png')} 

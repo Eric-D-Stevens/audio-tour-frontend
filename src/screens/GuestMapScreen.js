@@ -86,7 +86,7 @@ const GuestMapScreen = ({ navigation }) => {
     modalTitle2: { fontSize: 16, fontWeight: 'bold', color: colors.text, marginTop: 15, marginBottom: 5 },
     modalText: { fontSize: 14, color: colors.textSecondary, marginBottom: 10, lineHeight: 20 },
     benefitText: { flex: 1, fontSize: 14, color: colors.textSecondary },
-    infoPanel: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border },
+    infoPanel: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border },
     errorContainer: { position: 'absolute', top: 80, left: 20, right: 20, backgroundColor: colors.error, padding: 10, borderRadius: 8 },
     errorText: { color: colors.buttonText, fontSize: 14, textAlign: 'center' },
   };

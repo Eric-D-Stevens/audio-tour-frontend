@@ -441,7 +441,7 @@ const UserMapScreen = ({ navigation }) => {
     },
     calloutTitle: { fontSize: 16, fontWeight: 'bold', color: colors.text, marginBottom: 4 },
     calloutDescription: { fontSize: 14, color: colors.textSecondary, marginBottom: 8 },
-    infoPanel: { backgroundColor: colors.card },
+    infoPanel: { backgroundColor: colors.background },
   };
 
   return (

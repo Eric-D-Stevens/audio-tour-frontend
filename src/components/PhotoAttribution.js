@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, Linking, TouchableOpacity } from 'react-native';
+import { useTheme } from '../contexts';
 
 /**
  * PhotoAttribution Component
@@ -9,6 +10,8 @@ import { View, Text, Image, StyleSheet, Linking, TouchableOpacity } from 'react-
  * If attributionUri is provided, the author name becomes clickable and links to that URI.
  */
 const PhotoAttribution = ({ attributionName, attributionUri }) => {
+  const { colors, isDark } = useTheme();
+  
   const openGoogleTerms = () => {
     Linking.openURL('https://cloud.google.com/maps-platform/terms/');
   };
@@ -19,15 +22,41 @@ const PhotoAttribution = ({ attributionName, attributionUri }) => {
     }
   };
 
+  // Dynamic styles based on theme
+  const dynamicStyles = {
+    container: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: isDark ? 'rgba(30, 30, 30, 0.95)' : 'rgba(250, 250, 250, 0.95)',
+    },
+    imageFromText: {
+      fontSize: 11,
+      color: colors.textSecondary,
+      marginRight: 4,
+      fontWeight: '400',
+    },
+    attributionText: {
+      fontSize: 11,
+      color: colors.textSecondary,
+      fontWeight: '400',
+    },
+    attributionLink: {
+      color: colors.primary,
+    },
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       {/* Google logo on the bottom left */}
       <TouchableOpacity 
         style={styles.googleLogoContainer} 
         onPress={openGoogleTerms}
         activeOpacity={0.7}
       >
-        <Text style={styles.imageFromText}>Image from </Text>
+        <Text style={dynamicStyles.imageFromText}>Image from </Text>
         <Image 
           source={require('../../assets/google_logo.png')} 
           style={styles.googleLogo}
@@ -40,13 +69,13 @@ const PhotoAttribution = ({ attributionName, attributionUri }) => {
         <View style={styles.attributionContainer}>
           {attributionUri ? (
             <TouchableOpacity onPress={openAttributionLink} activeOpacity={0.7}>
-              <Text style={[styles.attributionText, styles.attributionLink]}>
-                Photo By: {attributionName}
+              <Text style={[dynamicStyles.attributionText, dynamicStyles.attributionLink]}>
+                Photo by {attributionName}
               </Text>
             </TouchableOpacity>
           ) : (
-            <Text style={styles.attributionText}>
-              Photo By: {attributionName}
+            <Text style={dynamicStyles.attributionText}>
+              Photo by {attributionName}
             </Text>
           )}
         </View>
@@ -56,41 +85,20 @@ const PhotoAttribution = ({ attributionName, attributionUri }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: '#f5f5f5',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
   googleLogoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  imageFromText: {
-    fontSize: 12,
-    color: '#555',
-    marginRight: 4,
-  },
   googleLogo: {
-    width: 60,
-    height: 20,
+    width: 50,
+    height: 16,
   },
   attributionContainer: {
     justifyContent: 'center',
+    flexShrink: 1,
+    marginLeft: 8,
   },
-  attributionText: {
-    fontSize: 12,
-    color: '#333',
-    fontWeight: '400',
-  },
-  attributionLink: {
-    color: '#FF5722',  // Using TensorTours orange for links
-    textDecorationLine: 'underline',
-  }
 });
 
 export default PhotoAttribution;

@@ -236,7 +236,7 @@ const GuestAudioScreen = ({ route, navigation }) => {
                 scrollEventThrottle={200}
               >
                 {photos.map((photoUrl, index) => (
-                  <View key={index} style={styles.imageSlide}>
+                  <View key={index} style={[styles.imageSlide, { backgroundColor: colors.surface }]}>
                     <Image
                       source={{ 
                         uri: photoUrl,
@@ -567,7 +567,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     resizeMode: 'contain',
-    backgroundColor: '#f5f5f5',
   },
   imagePlaceholder: {
     height: 250,

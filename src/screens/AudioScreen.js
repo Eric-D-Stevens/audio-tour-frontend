@@ -270,7 +270,7 @@ const AudioScreen = ({ route, navigation }) => {
                 scrollEventThrottle={200}
               >
                 {photos.map((photoUrl, index) => (
-                  <View key={index} style={styles.imageSlide}>
+                  <View key={index} style={[styles.imageSlide, { backgroundColor: colors.surface }]}>
                     <Image
                       source={{ 
                         uri: photoUrl,
@@ -734,7 +734,6 @@ const styles = StyleSheet.create({
     height: 250,
     width: '100%',
     resizeMode: 'contain',
-    backgroundColor: '#f5f5f5',
   },
 
   contentContainer: {

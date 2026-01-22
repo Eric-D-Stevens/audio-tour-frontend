@@ -27,9 +27,6 @@ export default {
         ITSAppUsesNonExemptEncryption: false,
         UIBackgroundModes: ["audio"],
       },
-      config: {
-        googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS
-      },
       statusBar: {
         backgroundColor: "#FFFFFF",
         style: "dark"

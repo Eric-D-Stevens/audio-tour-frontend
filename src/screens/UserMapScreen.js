@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated, Platform, Alert, Modal } from 'react-native';
-import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
-import Constants from 'expo-constants';
+import MapView, { Marker, Callout } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -395,7 +394,7 @@ const UserMapScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <AppHeader navigation={navigation} title="TensorTours Map" />
+      <AppHeader navigation={navigation} title="TensorTours Map Shibby" />
       
       {/* Location Permission Modal */}
       <Modal
@@ -441,7 +440,6 @@ const UserMapScreen = ({ navigation }) => {
         {region ? (
           <MapView
             ref={mapRef}
-            provider={Constants.appOwnership === 'expo' ? undefined : PROVIDER_GOOGLE}
             style={styles.map}
             initialRegion={region}
             onRegionChangeComplete={setRegion}

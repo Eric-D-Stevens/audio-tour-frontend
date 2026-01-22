@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, ActivityIndicator, Alert } from 'react-native';
+import { View, ActivityIndicator, Alert, Platform } from 'react-native';
+import * as Updates from 'expo-updates';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -66,12 +67,36 @@ export default function App() {
     saveGuestTourParams();
   }, [guestTourParams]);
 
-  // Load auth state and tour parameters on app start
+  // Check for OTA updates first, then load everything else
   useEffect(() => {
-    checkAuthStatus();
-    loadTourParams();
-    loadGuestTourParams();
+    const initializeApp = async () => {
+      await checkForOTAUpdates();
+      checkAuthStatus();
+      loadTourParams();
+      loadGuestTourParams();
+    };
+    initializeApp();
   }, []);
+
+  // Check for OTA updates and apply immediately on app open
+  const checkForOTAUpdates = async () => {
+    if (__DEV__) {
+      logger.debug('Skipping OTA update check in development mode');
+      return;
+    }
+
+    try {
+      const update = await Updates.checkForUpdateAsync();
+      if (update.isAvailable) {
+        logger.info('OTA update available, downloading...');
+        await Updates.fetchUpdateAsync();
+        logger.info('Update downloaded, reloading app...');
+        await Updates.reloadAsync();
+      }
+    } catch (error) {
+      logger.error('Error checking for OTA updates:', error);
+    }
+  };
 
   // Check authentication status using the enhanced secure auth service
   const checkAuthStatus = async () => {

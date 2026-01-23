@@ -1,51 +1,36 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { Platform } from 'react-native';
-import { requestTrackingPermissionsAsync, getTrackingPermissionsAsync } from 'expo-tracking-transparency';
+import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import logger from '../utils/logger';
+
+/**
+ * Request tracking permission - call this and await it before other initialization
+ * Returns the tracking status
+ */
+export const requestTrackingPermission = async () => {
+  if (Platform.OS !== 'ios') {
+    return 'not-applicable';
+  }
+  
+  try {
+    const { status } = await requestTrackingPermissionsAsync();
+    logger.info('Tracking permission result:', status);
+    return status;
+  } catch (error) {
+    logger.error('Error requesting tracking permission:', error);
+    return 'error';
+  }
+};
 
 const TrackingContext = createContext();
 
-export const TrackingProvider = ({ children }) => {
-  const [trackingStatus, setTrackingStatus] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    requestTrackingOnLaunch();
-  }, []);
-
-  const requestTrackingOnLaunch = async () => {
-    try {
-      // Only relevant on iOS
-      if (Platform.OS !== 'ios') {
-        setIsLoading(false);
-        return;
-      }
-
-      // Check current status first
-      const { status: currentStatus } = await getTrackingPermissionsAsync();
-      
-      // If already determined, just set the status
-      if (currentStatus !== 'undetermined') {
-        setTrackingStatus(currentStatus);
-        setIsLoading(false);
-        logger.debug('Tracking already determined:', currentStatus);
-        return;
-      }
-
-      // Request permission - shows iOS system dialog
-      const { status } = await requestTrackingPermissionsAsync();
-      setTrackingStatus(status);
-      logger.info('Tracking permission result:', status);
-    } catch (error) {
-      logger.error('Error requesting tracking permission:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+export const TrackingProvider = ({ children, initialStatus }) => {
+  // Status is passed in from App.js after awaiting the permission request
+  const [trackingStatus] = useState(initialStatus);
 
   const value = {
     trackingStatus,
-    isLoading,
+    isLoading: false, // Always false since we await before rendering
   };
 
   return (

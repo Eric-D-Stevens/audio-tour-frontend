@@ -16,7 +16,7 @@ import { NetworkProvider, useNetwork } from './src/context/NetworkContext';
 import OfflineScreen from './src/components/OfflineScreen';
 
 // Import tracking context
-import { TrackingProvider, useTracking } from './src/context/TrackingContext';
+import { TrackingProvider, requestTrackingPermission } from './src/context/TrackingContext';
 
 // Import screens
 import UserMapScreen from './src/screens/UserMapScreen';
@@ -56,6 +56,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [trackingStatus, setTrackingStatus] = useState(null);
   // Remove the initialRoute state as we'll determine it dynamically
   const [tourParams, setTourParams] = useState({ distance: 1448, numAttractions: 15, category: 'history' });
   const [guestTourParams, setGuestTourParams] = useState({ cityId: 'san-francisco', category: 'history' });
@@ -70,10 +71,14 @@ export default function App() {
     saveGuestTourParams();
   }, [guestTourParams]);
 
-  // Check for OTA updates first, then load everything else
+  // Initialize app: OTA updates -> Tracking permission -> Auth check
   useEffect(() => {
     const initializeApp = async () => {
       await checkForOTAUpdates();
+      // IMPORTANT: Await tracking permission BEFORE auth check to prevent race condition
+      const status = await requestTrackingPermission();
+      setTrackingStatus(status);
+      // Now safe to check auth
       checkAuthStatus();
       loadTourParams();
       loadGuestTourParams();
@@ -326,7 +331,7 @@ export default function App() {
       <ThemeProvider>
         <StatusBar style="auto" />
         <NetworkProvider>
-          <TrackingProvider>
+          <TrackingProvider initialStatus={trackingStatus}>
             <AppContent 
             isLoading={isLoading}
             isAuthenticated={isAuthenticated}
@@ -348,16 +353,14 @@ export default function App() {
 const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTourParams, guestTourParams, setGuestTourParams, navigationRef }) => {
   const { isConnected } = useNetwork();
   const { colors, isDark } = useTheme();
-  const { isLoading: trackingLoading } = useTracking();
   
   // If we're not connected to the internet, show the offline screen
   if (!isConnected) {
     return <OfflineScreen />;
   }
   
-  // Show loading screen if still checking auth status or tracking status
-  // The iOS ATT dialog will appear during trackingLoading
-  if (isLoading || trackingLoading) {
+  // Show loading screen while initializing (tracking + auth are awaited sequentially in App.js)
+  if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
         <ActivityIndicator size="large" color={colors.primary} />

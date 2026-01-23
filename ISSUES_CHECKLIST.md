@@ -1,6 +1,6 @@
-# TensorTrix Issue Tracking Checklist
+# TensorWorks Issue Tracking Checklist
 
-This document tracks outstanding issues, tasks, and improvements for the TensorTrix audio tour application.
+This document tracks outstanding issues, tasks, and improvements for the TensorWorks audio tour application.
 
 ## 🔄 In Progress
 

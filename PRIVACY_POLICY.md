@@ -103,6 +103,6 @@ TensorTours collects precise location data to provide you with audio tours relev
 
 If you have questions or concerns about this Privacy Policy, please contact us at:
 
-Email: privacy@tensortrix.com
+Email: e.stevens@tensorworks.co
 
-Tensortrix
+TensorWorks

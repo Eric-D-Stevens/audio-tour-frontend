@@ -115,8 +115,8 @@ const PrivacyPolicyScreen = ({ navigation }) => {
         <Text style={[styles.paragraph, dynamicStyles.paragraph]}>
           If you have questions or concerns about this Privacy Policy, please contact us at:
         </Text>
-        <Text style={[styles.contactInfo, dynamicStyles.contactInfo]}>Email: privacy@tensortrix.com</Text>
-        <Text style={[styles.contactInfo, dynamicStyles.contactInfo]}>Tensortrix</Text>
+        <Text style={[styles.contactInfo, dynamicStyles.contactInfo]}>Email: e.stevens@tensorworks.co</Text>
+        <Text style={[styles.contactInfo, dynamicStyles.contactInfo]}>TensorWorks</Text>
         
         <View style={styles.bottomPadding} />
       </ScrollView>

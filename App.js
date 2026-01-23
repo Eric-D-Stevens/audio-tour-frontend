@@ -373,6 +373,24 @@ const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTo
                 text: colors.text,
                 notification: colors.primary,
               },
+              fonts: {
+                regular: {
+                  fontFamily: 'System',
+                  fontWeight: '400',
+                },
+                medium: {
+                  fontFamily: 'System',
+                  fontWeight: '500',
+                },
+                bold: {
+                  fontFamily: 'System',
+                  fontWeight: '700',
+                },
+                heavy: {
+                  fontFamily: 'System',
+                  fontWeight: '900',
+                },
+              },
             }}>
             <Stack.Navigator
               initialRouteName={isAuthenticated ? "Map" : "Auth"}

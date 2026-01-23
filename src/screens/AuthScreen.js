@@ -12,7 +12,7 @@ const getStrengthColor = (percentage) => {
   if (percentage < 50) return '#FFCBB3'; // Lightest orange
   if (percentage < 75) return '#FFA579'; // Light orange
   if (percentage < 100) return '#FF8F59'; // Medium orange
-  return '#FF5722'; // TensorTrix orange
+  return '#FF5722'; // TensorWorks orange
 };
 
 const AuthScreen = ({ route, navigation }) => {
@@ -188,6 +188,8 @@ const AuthScreen = ({ route, navigation }) => {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              textContentType={isLogin ? "username" : "none"}
+              autoComplete={isLogin ? "email" : "off"}
             />
             
             {!isLogin && (
@@ -276,6 +278,8 @@ const AuthScreen = ({ route, navigation }) => {
                   setPasswordStrength(strength);
                 }}
                 secureTextEntry={!showPassword}
+                textContentType={isLogin ? "password" : "newPassword"}
+                autoComplete={isLogin ? "password" : "password-new"}
               />
               <TouchableOpacity 
                 style={styles.passwordToggle}
@@ -302,6 +306,8 @@ const AuthScreen = ({ route, navigation }) => {
                       setPasswordsMatch(password === text && text.length > 0);
                     }}
                     secureTextEntry={!showConfirmPassword}
+                    textContentType="newPassword"
+                    autoComplete="password-new"
                   />
                   <TouchableOpacity 
                     style={styles.passwordToggle}

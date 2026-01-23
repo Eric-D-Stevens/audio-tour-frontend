@@ -1,7 +1,7 @@
 # TensorTours App Review Notes
 
 ## Test Account Information
-- Email: tensortours-tester@tensortrix.com
+- Email: tensortours-tester@tensorworks.co
 - Password: TensorToursTester25
 
 ## App Store Review Compliance 

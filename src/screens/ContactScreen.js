@@ -32,11 +32,11 @@ const ContactScreen = ({ navigation }) => {
   };
 
   const handleEmailPress = () => {
-    Linking.openURL('mailto:support@tensortrix.com');
+    Linking.openURL('mailto:e.stevens@tensorworks.co');
   };
 
   const handleWebsitePress = () => {
-    Linking.openURL('https://tensortrix.com');
+    Linking.openURL('https://eric-d-stevens.github.io/tensortours-app-site/');
   };
 
   return (
@@ -57,7 +57,7 @@ const ContactScreen = ({ navigation }) => {
             <View style={styles.contactTextContainer}>
               <Text style={dynamicStyles.contactLabel}>Email Us</Text>
               <TouchableOpacity onPress={handleEmailPress}>
-                <Text style={dynamicStyles.contactValue}>support@tensortrix.com</Text>
+                <Text style={dynamicStyles.contactValue}>e.stevens@tensorworks.co</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -69,9 +69,7 @@ const ContactScreen = ({ navigation }) => {
             <View style={styles.contactTextContainer}>
               <Text style={dynamicStyles.contactLabel}>Website</Text>
               <TouchableOpacity onPress={handleWebsitePress}>
-                <TouchableOpacity onPress={handleWebsitePress}>
-                  <Text style={[dynamicStyles.contactValue, { textDecorationLine: 'underline' }]}>tensortrix.com</Text>
-                </TouchableOpacity>
+                <Text style={[dynamicStyles.contactValue, { textDecorationLine: 'underline' }]}>TensorTours Website</Text>
               </TouchableOpacity>
             </View>
           </View>

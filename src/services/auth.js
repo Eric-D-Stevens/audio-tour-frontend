@@ -563,7 +563,7 @@ export const signUp = (username, password, email, policyVersion = '1.0', consent
       
       // Also store consent data in AsyncStorage for local reference
       try {
-        AsyncStorage.setItem('tensortrix_privacy_consent', JSON.stringify({
+        AsyncStorage.setItem('tensorworks_privacy_consent', JSON.stringify({
           version: policyVersion,
           timestamp: consentTimestamp,
           username: username

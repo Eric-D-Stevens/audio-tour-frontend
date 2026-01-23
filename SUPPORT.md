@@ -43,7 +43,7 @@ Our support team is here to help you with any questions or issues you may encoun
 
 ### Contact Information
 
-- **Email**: support@tensortrix.com
+- **Email**: e.stevens@tensorworks.co
 - **Response Time**: We aim to respond to all inquiries within 24-48 hours during business days.
 
 ### Reporting Issues
@@ -71,7 +71,7 @@ Account deletion will permanently remove your account and immediately revoke you
 
 To request access to your personal data or to request deletion of specific personal data while maintaining your account:
 
-1. Send an email to support@tensortrix.com
+1. Send an email to e.stevens@tensorworks.co
 2. Include "Data Access Request" or "Data Deletion Request" in the subject line
 3. Provide your registered email address and a description of the data you'd like to access or delete
 
@@ -147,6 +147,6 @@ A: We continuously improve our AI systems to enhance content quality. Informatio
 
 If you have any questions, concerns, or feedback that isn't addressed in this support guide, please contact us at:
 
-Email: support@tensortrix.com
+Email: e.stevens@tensorworks.co
 
-Tensortrix
+TensorWorks

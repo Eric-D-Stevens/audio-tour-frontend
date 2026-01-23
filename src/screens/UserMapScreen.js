@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated, Platform, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated, Platform, Alert, Linking, AppState } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,13 +25,40 @@ const UserMapScreen = ({ navigation }) => {
   const mapRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  // State for permission modal - initially hidden until we check permission status
-  const [showPermissionModal, setShowPermissionModal] = useState(false);
+  // State for tracking if location permission was denied
+  const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
+  // Ref for AppState listener
+  const appState = useRef(AppState.currentState);
   
-  // Function to handle accepting location permission
-  const handleAcceptLocationPermission = async () => {
-    setShowPermissionModal(false);
-    
+  // Effect to re-check permissions when app returns from background (e.g., from Settings)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', async (nextAppState) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active' &&
+        locationPermissionDenied
+      ) {
+        // App has come to foreground and we previously showed the denied UI
+        // Re-check if user granted permission in Settings
+        logger.debug('App returned to foreground, re-checking location permission');
+        const { status } = await Location.getForegroundPermissionsAsync();
+        
+        if (status === 'granted') {
+          logger.debug('Location permission now granted, proceeding');
+          setLocationPermissionDenied(false);
+          requestLocationPermission();
+        }
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [locationPermissionDenied]);
+  
+  // Function to request location permission and get user's location
+  const requestLocationPermission = async () => {
     // Explicitly set loading states to true and animate the loading overlay
     setLoading(true);
     setLoadingPoints(true);
@@ -46,8 +73,8 @@ const UserMapScreen = ({ navigation }) => {
     try {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        // If permission still denied, show error
-        setError('Permission to access location was denied');
+        // If permission denied, show the denied permission UI
+        setLocationPermissionDenied(true);
         setLoading(false);
         setLoadingPoints(false);
         
@@ -59,6 +86,9 @@ const UserMapScreen = ({ navigation }) => {
         }).start();
         return;
       }
+      
+      // Permission granted, clear any denied state
+      setLocationPermissionDenied(false);
 
       // Permission granted, get location and proceed
       const location = await Location.getCurrentPositionAsync({
@@ -94,13 +124,6 @@ const UserMapScreen = ({ navigation }) => {
     }
   };
   
-  // Function to handle declining location permission
-  const handleDeclineLocationPermission = async () => {
-    // Logout the user through the auth context
-    // This will automatically navigate to the Auth screen
-    await signOut();
-  };
-  
   // Initialize with authentication check and permission check
   useEffect(() => {
     // Immediately show loading state and animate the loading overlay when component mounts
@@ -133,23 +156,32 @@ const UserMapScreen = ({ navigation }) => {
       logger.debug('Current location permission status:', status);
       
       if (status !== 'granted') {
-        // Only show the modal if we don't have permission yet
-        logger.debug('No location permission, showing modal');
-        setShowPermissionModal(true);
-        setLoading(false);
-        setLoadingPoints(false);
+        // Check if permission was previously denied (user explicitly denied) vs never asked
+        // On iOS, 'denied' means user explicitly denied, 'undetermined' means never asked
+        const isDenied = status === 'denied';
         
-        // Fade out the loading overlay
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }).start();
+        if (isDenied) {
+          // Permission was explicitly denied, show the denied UI with settings link
+          logger.debug('Location permission denied, showing settings prompt');
+          setLocationPermissionDenied(true);
+          setLoading(false);
+          setLoadingPoints(false);
+          
+          // Fade out the loading overlay
+          Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start();
+        } else {
+          // Permission never asked, request it directly
+          logger.debug('No location permission yet, requesting');
+          requestLocationPermission();
+        }
       } else {
         logger.debug('Location permission already granted, proceeding');
         // Since we have permission, get the user's location
-        // handleAcceptLocationPermission will handle the loading states
-        handleAcceptLocationPermission();
+        requestLocationPermission();
       }
     })();
   }, []);
@@ -224,8 +256,8 @@ const UserMapScreen = ({ navigation }) => {
           logger.debug('Current location permission status for tour params update:', status);
           
           if (status !== 'granted') {
-            logger.debug('No location permission, showing modal');
-            setShowPermissionModal(true);
+            logger.debug('No location permission, showing denied UI');
+            setLocationPermissionDenied(true);
             setLoadingPoints(false);
             return;
           }
@@ -396,22 +428,6 @@ const UserMapScreen = ({ navigation }) => {
   // Dynamic styles based on theme
   const dynamicStyles = {
     container: { flex: 1, backgroundColor: colors.background },
-    modalContent: {
-      backgroundColor: colors.card,
-      borderRadius: 10,
-      padding: 20,
-      width: '90%',
-      maxWidth: 400,
-      shadowColor: colors.shadowColor,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-    },
-    modalTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text },
-    modalText: { fontSize: 16, color: colors.textSecondary, marginBottom: 15, lineHeight: 22 },
-    secondaryButton: { backgroundColor: colors.surface },
-    secondaryButtonText: { color: colors.textSecondary, fontWeight: 'bold', fontSize: 16 },
     loadingContainer: { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surface },
     loadingText: { marginTop: 10, fontSize: 16, color: colors.textSecondary },
     loadingOverlayText: { marginTop: 10, fontSize: 16, color: colors.text, textAlign: 'center', fontWeight: '600' },
@@ -455,52 +471,81 @@ const UserMapScreen = ({ navigation }) => {
     calloutTitle: { fontSize: 16, fontWeight: 'bold', color: colors.text, marginBottom: 4 },
     calloutDescription: { fontSize: 14, color: colors.textSecondary, marginBottom: 8 },
     infoPanel: { backgroundColor: colors.background },
+    permissionDeniedContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      padding: 30,
+    },
+    permissionDeniedTitle: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginTop: 20,
+      marginBottom: 12,
+      textAlign: 'center',
+    },
+    permissionDeniedText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 24,
+      marginBottom: 24,
+    },
+    settingsButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: 14,
+      paddingHorizontal: 32,
+      borderRadius: 10,
+      marginBottom: 12,
+    },
+    settingsButtonText: {
+      color: 'white',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    logoutLink: {
+      marginTop: 8,
+    },
+    logoutLinkText: {
+      color: colors.primary,
+      fontSize: 14,
+    },
   };
 
   return (
     <SafeAreaView style={dynamicStyles.container} edges={['top', 'left', 'right']}>
       <AppHeader navigation={navigation} title="TensorTours" />
       
-      {/* Location Permission Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={showPermissionModal}
-        onRequestClose={() => navigation.navigate('Auth')}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={dynamicStyles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={dynamicStyles.modalTitle}>Location Access</Text>
-            </View>
-            
-            <Text style={dynamicStyles.modalText}>
-              TensorTours uses your location to create personalized audio tours for attractions near you. Your location is only used while you're using the app.
-            </Text>
-            
-            <Text style={dynamicStyles.modalText}>
-              Without location access, the app cannot function properly.
-            </Text>
-            
-            <View style={styles.modalButtonContainer}>
-              <TouchableOpacity 
-                style={[styles.modalButton, dynamicStyles.secondaryButton]}
-                onPress={handleDeclineLocationPermission}
-              >
-                <Text style={dynamicStyles.secondaryButtonText}>Decline</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.primaryButton]}
-                onPress={handleAcceptLocationPermission}
-              >
-                <Text style={styles.primaryButtonText}>Accept</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+      {/* Location Permission Denied UI */}
+      {locationPermissionDenied ? (
+        <View style={dynamicStyles.permissionDeniedContainer}>
+          <Ionicons name="location-outline" size={64} color={colors.primary} />
+          <Text style={dynamicStyles.permissionDeniedTitle}>Location Access Required</Text>
+          <Text style={dynamicStyles.permissionDeniedText}>
+            TensorTours needs access to your location to find nearby attractions and create personalized audio tours for you.
+          </Text>
+          <Text style={dynamicStyles.permissionDeniedText}>
+            Please enable location access in your device settings to continue.
+          </Text>
+          <TouchableOpacity 
+            style={dynamicStyles.settingsButton}
+            onPress={() => Linking.openSettings()}
+          >
+            <Text style={dynamicStyles.settingsButtonText}>Open Settings</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={dynamicStyles.logoutLink}
+            onPress={async () => {
+              await signOut();
+            }}
+          >
+            <Text style={dynamicStyles.logoutLinkText}>Log out instead</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
-      
+      ) : (
+      <>
       <View style={styles.mapContainer}>
         {region ? (
           <MapView
@@ -608,6 +653,8 @@ const UserMapScreen = ({ navigation }) => {
           <Ionicons name="settings-outline" size={16} color="white" style={styles.buttonIcon} />
         </TouchableOpacity>
       </View>
+      </>
+      )}
     </SafeAreaView>
   );
 };
@@ -770,70 +817,6 @@ const styles = StyleSheet.create({
   },
   calloutButtonIcon: {
     marginLeft: 4,
-  },
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-    width: '90%',
-    maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalText: {
-    fontSize: 16,
-    color: '#555',
-    marginBottom: 15,
-    lineHeight: 22,
-  },
-  modalButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
-  modalButton: {
-    borderRadius: 8,
-    padding: 12,
-    minWidth: '45%',
-    alignItems: 'center',
-  },
-  primaryButton: {
-    backgroundColor: '#FF5722',
-  },
-  primaryButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  secondaryButton: {
-    backgroundColor: '#f0f0f0',
-  },
-  secondaryButtonText: {
-    color: '#555',
-    fontWeight: 'bold',
-    fontSize: 16,
   },
 });
 

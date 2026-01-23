@@ -15,6 +15,9 @@ import logger from './src/utils/logger';
 import { NetworkProvider, useNetwork } from './src/context/NetworkContext';
 import OfflineScreen from './src/components/OfflineScreen';
 
+// Import tracking context
+import { TrackingProvider, useTracking } from './src/context/TrackingContext';
+
 // Import screens
 import UserMapScreen from './src/screens/UserMapScreen';
 import GuestMapScreen from './src/screens/GuestMapScreen';
@@ -323,7 +326,8 @@ export default function App() {
       <ThemeProvider>
         <StatusBar style="auto" />
         <NetworkProvider>
-          <AppContent 
+          <TrackingProvider>
+            <AppContent 
             isLoading={isLoading}
             isAuthenticated={isAuthenticated}
             authContext={authContext}
@@ -332,7 +336,8 @@ export default function App() {
             guestTourParams={guestTourParams}
             setGuestTourParams={setGuestTourParams}
             navigationRef={navigationRef}
-          />
+            />
+          </TrackingProvider>
         </NetworkProvider>
       </ThemeProvider>
     </SafeAreaProvider>
@@ -343,14 +348,16 @@ export default function App() {
 const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTourParams, guestTourParams, setGuestTourParams, navigationRef }) => {
   const { isConnected } = useNetwork();
   const { colors, isDark } = useTheme();
+  const { isLoading: trackingLoading } = useTracking();
   
   // If we're not connected to the internet, show the offline screen
   if (!isConnected) {
     return <OfflineScreen />;
   }
   
-  // Show loading screen if still checking auth status
-  if (isLoading) {
+  // Show loading screen if still checking auth status or tracking status
+  // The iOS ATT dialog will appear during trackingLoading
+  if (isLoading || trackingLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
         <ActivityIndicator size="large" color={colors.primary} />

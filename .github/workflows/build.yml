@@ -1,9 +1,8 @@
 name: Build Frontend
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
+    # Manual trigger only - no automatic builds on push to save EAS credits
 
 jobs:
   build:

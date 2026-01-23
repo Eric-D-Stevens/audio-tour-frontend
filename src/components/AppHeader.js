@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext, useTheme } from '../contexts';
+import audioManager from '../services/audioManager';
 
 const AppHeader = ({ navigation, title }) => {
   const { colors, isDark } = useTheme();
@@ -124,6 +125,8 @@ const AppHeader = ({ navigation, title }) => {
                     style={styles.menuItem}
                     onPress={async () => {
                       closeMenu();
+                      // Stop and clear audio before logout
+                      await audioManager.unloadAudio();
                       await handleLogout();
                       // Force navigation to Auth screen after logout
                       navigation.reset({
@@ -182,8 +185,10 @@ const AppHeader = ({ navigation, title }) => {
               ) : (
                 <TouchableOpacity 
                   style={styles.menuItem}
-                  onPress={() => {
+                  onPress={async () => {
                     closeMenu();
+                    // Stop and clear audio before navigating to login
+                    await audioManager.unloadAudio();
                     navigation.navigate('Auth');
                   }}
                 >

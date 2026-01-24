@@ -337,6 +337,9 @@ const GuestMapScreen = ({ navigation }) => {
             style={styles.map}
             initialRegion={region}
             onRegionChangeComplete={setRegion}
+            clusteringEnabled={false}
+            minZoomLevel={0}
+            maxZoomLevel={20}
           >
             {tourPoints.map((point) => (
               <Marker
@@ -344,6 +347,9 @@ const GuestMapScreen = ({ navigation }) => {
                 coordinate={point.coordinate}
                 tracksViewChanges={false}
               >
+                <View style={styles.customMarker}>
+                  <Ionicons name="location" size={30} color="#FF5722" />
+                </View>
                 <Callout
                   tooltip={true}
                   onPress={() => {
@@ -785,6 +791,20 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  customMarker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 2,
+    borderWidth: 2,
+    borderColor: '#FF5722',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
   },
 });
 

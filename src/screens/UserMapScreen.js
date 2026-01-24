@@ -560,6 +560,7 @@ const UserMapScreen = ({ navigation }) => {
               <Marker
                 key={point.id}
                 coordinate={point.coordinate}
+                tracksViewChanges={false}
               >
                 <Callout
                   tooltip={true}

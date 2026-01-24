@@ -342,6 +342,7 @@ const GuestMapScreen = ({ navigation }) => {
               <Marker
                 key={point.id}
                 coordinate={point.coordinate}
+                tracksViewChanges={false}
               >
                 <Callout
                   tooltip={true}

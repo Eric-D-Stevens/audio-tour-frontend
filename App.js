@@ -15,9 +15,6 @@ import logger from './src/utils/logger';
 import { NetworkProvider, useNetwork } from './src/context/NetworkContext';
 import OfflineScreen from './src/components/OfflineScreen';
 
-// Import tracking context
-import { TrackingProvider, requestTrackingPermission } from './src/context/TrackingContext';
-
 // Import screens
 import UserMapScreen from './src/screens/UserMapScreen';
 import GuestMapScreen from './src/screens/GuestMapScreen';
@@ -56,7 +53,6 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const [trackingStatus, setTrackingStatus] = useState(null);
   // Remove the initialRoute state as we'll determine it dynamically
   const [tourParams, setTourParams] = useState({ distance: 1448, numAttractions: 15, category: 'history' });
   const [guestTourParams, setGuestTourParams] = useState({ cityId: 'san-francisco', category: 'history' });
@@ -71,14 +67,10 @@ export default function App() {
     saveGuestTourParams();
   }, [guestTourParams]);
 
-  // Initialize app: OTA updates -> Tracking permission -> Auth check
+  // Initialize app: OTA updates -> Auth check
   useEffect(() => {
     const initializeApp = async () => {
       await checkForOTAUpdates();
-      // IMPORTANT: Await tracking permission BEFORE auth check to prevent race condition
-      const status = await requestTrackingPermission();
-      setTrackingStatus(status);
-      // Now safe to check auth
       checkAuthStatus();
       loadTourParams();
       loadGuestTourParams();
@@ -331,8 +323,7 @@ export default function App() {
       <ThemeProvider>
         <StatusBar style="auto" />
         <NetworkProvider>
-          <TrackingProvider initialStatus={trackingStatus}>
-            <AppContent 
+          <AppContent 
             isLoading={isLoading}
             isAuthenticated={isAuthenticated}
             authContext={authContext}
@@ -341,8 +332,7 @@ export default function App() {
             guestTourParams={guestTourParams}
             setGuestTourParams={setGuestTourParams}
             navigationRef={navigationRef}
-            />
-          </TrackingProvider>
+          />
         </NetworkProvider>
       </ThemeProvider>
     </SafeAreaProvider>

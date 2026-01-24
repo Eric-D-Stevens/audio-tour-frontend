@@ -18,13 +18,12 @@ export default {
     ios: {
       supportsTablet: false,
       bundleIdentifier: "com.tensortours.app",
-      buildNumber: "1",
+      buildNumber: "8",
       icon: "./assets/app-store-icon.png", // Using non-transparent icon for iOS
       infoPlist: {
         NSLocationWhenInUseUsageDescription: "TensorTours needs access to your location to find nearby points of interest for audio tours.",
         NSLocationAlwaysAndWhenInUseUsageDescription: "TensorTours uses your location to find nearby points of interest and provide location-based audio tours.",
         NSLocationAlwaysUsageDescription: "TensorTours uses your location in the background to notify you of nearby points of interest.",
-        NSUserTrackingUsageDescription: "TensorTours uses this identifier to provide personalized tour recommendations and improve your experience.",
         ITSAppUsesNonExemptEncryption: false,
         UIBackgroundModes: ["audio"],
       },
@@ -63,8 +62,6 @@ export default {
       enabled: true,
       checkAutomatically: "ON_LOAD"
     },
-    plugins: [
-      "expo-tracking-transparency"
-    ]
+    plugins: []
   }
 };

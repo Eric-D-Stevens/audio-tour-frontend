@@ -116,11 +116,11 @@ const UserMapScreen = ({ navigation }) => {
       setUserLocation({ latitude, longitude });
       
       // Set initial map region
+      const mapDeltas = distanceToMapDelta(tourParams?.distance || 8000);
       const newRegion = {
         latitude,
         longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
+        ...mapDeltas,
       };
       setRegion(newRegion);
 
@@ -293,11 +293,11 @@ const UserMapScreen = ({ navigation }) => {
             
             // Recenter the map on user's location
             if (mapRef.current) {
+              const mapDeltas = distanceToMapDelta(tourParams?.distance || 8000);
               const newRegion = {
                 latitude,
                 longitude,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
+                ...mapDeltas,
               };
               mapRef.current.animateToRegion(newRegion);
               // Update region state to keep it in sync with the map
@@ -447,11 +447,11 @@ const UserMapScreen = ({ navigation }) => {
       
       // Animate map to new location
       if (mapRef.current) {
+        const mapDeltas = distanceToMapDelta(tourParams?.distance || 8000);
         const newRegion = {
           latitude,
           longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
+          ...mapDeltas,
         };
         mapRef.current.animateToRegion(newRegion);
         // Also update the region state to keep it in sync

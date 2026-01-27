@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import AppHeader from '../components/AppHeader';
 import MiniAudioPlayer from '../components/MiniAudioPlayer';
+import SearchResultToast from '../components/SearchResultToast';
 import { TourContext, AuthContext, useTheme } from '../contexts';
 import { getPlaces } from '../services/api.ts';
 import audioManager from '../services/audioManager';
@@ -22,6 +23,8 @@ const UserMapScreen = ({ navigation }) => {
   const [loadingPoints, setLoadingPoints] = useState(false);
   const [error, setError] = useState(null);
   const [needsJiggle, setNeedsJiggle] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [searchResult, setSearchResult] = useState({ placesCount: 0, distance: 2000 });
   const mapRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -357,10 +360,16 @@ const UserMapScreen = ({ navigation }) => {
         // Set the tour points with the new data
         setTourPoints(transformedPlaces);
         logger.debug(`Loaded ${transformedPlaces.length} places`);
+        
+        // Update search result for toast
+        setSearchResult({ placesCount: transformedPlaces.length, distance });
       } else {
         // If no places are found, set empty array
         setTourPoints([]);
         logger.debug('No places found');
+        
+        // Update search result for toast
+        setSearchResult({ placesCount: 0, distance });
       }
     } catch (err) {
       logger.error('Error fetching places:', err);
@@ -378,6 +387,9 @@ const UserMapScreen = ({ navigation }) => {
         // Instead of immediately jiggling, set a flag that we need to jiggle
         // The actual jiggle will happen after the map has finished any ongoing animations
         setNeedsJiggle(true);
+        
+        // Show the search result toast
+        setToastVisible(true);
       });
     }
   };
@@ -616,6 +628,15 @@ const UserMapScreen = ({ navigation }) => {
             <Text style={dynamicStyles.loadingText}>Loading map...</Text>
           </View>
         )}
+        
+        {/* Search result toast */}
+        <SearchResultToast
+          visible={toastVisible}
+          placesCount={searchResult.placesCount}
+          currentDistance={searchResult.distance}
+          tourType={tourParams?.category || 'history'}
+          onHide={() => setToastVisible(false)}
+        />
         
         {/* Loading overlay for tour points */}
         {(loadingPoints || loading) && (

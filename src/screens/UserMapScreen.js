@@ -12,6 +12,20 @@ import { getPlaces } from '../services/api.ts';
 import audioManager from '../services/audioManager';
 import logger from '../utils/logger';
 
+// Convert distance in meters to appropriate map delta
+// 1 degree of latitude ≈ 111,000 meters
+const distanceToMapDelta = (distanceMeters) => {
+  // We want the search area to be visible with comfortable padding
+  // Multiply by 2 for diameter, then 1.6 for margin
+  const latDelta = (distanceMeters * 2 * 1.6) / 111000;
+  // Longitude delta is similar but we'll use same value for simplicity
+  // (actual ratio depends on latitude but this works well enough)
+  return {
+    latitudeDelta: Math.max(0.01, Math.min(latDelta, 0.5)), // Clamp between reasonable values
+    longitudeDelta: Math.max(0.01, Math.min(latDelta, 0.5)),
+  };
+};
+
 const UserMapScreen = ({ navigation }) => {
   const { colors, isDark } = useTheme();
   const { tourParams } = useContext(TourContext);
@@ -308,6 +322,9 @@ const UserMapScreen = ({ navigation }) => {
 
   // Fetch nearby places based on location and tour parameters
   const fetchNearbyPlacesData = async (latitude, longitude) => {
+    // Get distance from tour parameters (declared outside try for use in finally)
+    const distance = tourParams?.distance || 2000;
+    
     try {
       // Verify authentication is still valid before proceeding with API request
       const isAuthValid = await checkAuthAndRedirect(navigation);
@@ -323,8 +340,7 @@ const UserMapScreen = ({ navigation }) => {
       
       // Ensure the tour type is lowercase to match backend expectations
       const tourType = (tourParams?.category || 'history').toLowerCase();
-      // Get distance and number of attractions from tour parameters
-      const distance = tourParams?.distance || 2000;
+      // Get number of attractions from tour parameters
       const maxResults = tourParams?.numAttractions || 15;
       
       logger.debug(`Fetching places with params: ${tourType}, ${distance}m, max results: ${maxResults}`);
@@ -390,6 +406,18 @@ const UserMapScreen = ({ navigation }) => {
         
         // Show the search result toast
         setToastVisible(true);
+        
+        // Resize map to match search distance
+        if (mapRef.current && userLocation) {
+          const mapDeltas = distanceToMapDelta(distance);
+          const newRegion = {
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+            ...mapDeltas,
+          };
+          mapRef.current.animateToRegion(newRegion, 500);
+          setRegion(newRegion);
+        }
       });
     }
   };

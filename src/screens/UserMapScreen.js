@@ -323,7 +323,7 @@ const UserMapScreen = ({ navigation }) => {
   // Fetch nearby places based on location and tour parameters
   const fetchNearbyPlacesData = async (latitude, longitude) => {
     // Get distance from tour parameters (declared outside try for use in finally)
-    const distance = tourParams?.distance || 2000;
+    const distance = tourParams?.distance || 8000;
     
     try {
       // Verify authentication is still valid before proceeding with API request

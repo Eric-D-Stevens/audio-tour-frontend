@@ -41,6 +41,7 @@ const UserMapScreen = ({ navigation }) => {
   const [searchResult, setSearchResult] = useState({ placesCount: 0, distance: 2000 });
   const mapRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const isSelectingRef = useRef(false);
 
   // State for tracking if location permission was denied
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
@@ -611,6 +612,11 @@ const UserMapScreen = ({ navigation }) => {
                 <Callout
                   tooltip={true}
                   onPress={async () => {
+                    // Prevent multiple rapid selections when markers are close together
+                    if (isSelectingRef.current) return;
+                    isSelectingRef.current = true;
+                    setTimeout(() => { isSelectingRef.current = false; }, 250);
+                    
                     // Verify authentication is still valid before navigating
                     const isAuthValid = await checkAuthAndRedirect(navigation);
                     if (!isAuthValid) {

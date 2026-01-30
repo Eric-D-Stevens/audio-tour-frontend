@@ -23,6 +23,7 @@ const GuestMapScreen = ({ navigation }) => {
   const [needsJiggle, setNeedsJiggle] = useState(false);
   const mapRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const isSelectingRef = useRef(false);
 
   // Dynamic styles based on theme
   const dynamicStyles = {
@@ -353,6 +354,11 @@ const GuestMapScreen = ({ navigation }) => {
                 <Callout
                   tooltip={true}
                   onPress={() => {
+                    // Prevent multiple rapid selections when markers are close together
+                    if (isSelectingRef.current) return;
+                    isSelectingRef.current = true;
+                    setTimeout(() => { isSelectingRef.current = false; }, 250);
+                    
                     // Navigate to Audio screen
                     // Include the tour type from guestTourParams when navigating to AudioScreen
                     const placeWithTourType = {

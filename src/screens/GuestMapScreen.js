@@ -347,6 +347,7 @@ const GuestMapScreen = ({ navigation }) => {
                 key={point.id}
                 coordinate={point.coordinate}
                 tracksViewChanges={false}
+                pointerEvents={"auto"}
               >
                 <View style={styles.customMarker}>
                   <Ionicons name="location" size={30} color="#FF5722" />

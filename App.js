@@ -54,7 +54,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
   // Remove the initialRoute state as we'll determine it dynamically
-  const [tourParams, setTourParams] = useState({ distance: 8000, numAttractions: 15, category: 'history' });
+  const [tourParams, setTourParams] = useState({ distance: 1500, numAttractions: 15, category: 'history' });
   const [guestTourParams, setGuestTourParams] = useState({ cityId: 'san-francisco', category: 'history' });
 
   // Save tour parameters to AsyncStorage whenever they change

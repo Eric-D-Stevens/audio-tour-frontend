@@ -117,7 +117,7 @@ const UserMapScreen = ({ navigation }) => {
       setUserLocation({ latitude, longitude });
       
       // Set initial map region
-      const mapDeltas = distanceToMapDelta(tourParams?.distance || 8000);
+      const mapDeltas = distanceToMapDelta(tourParams?.distance || 1500);
       const newRegion = {
         latitude,
         longitude,
@@ -294,7 +294,7 @@ const UserMapScreen = ({ navigation }) => {
             
             // Recenter the map on user's location
             if (mapRef.current) {
-              const mapDeltas = distanceToMapDelta(tourParams?.distance || 8000);
+              const mapDeltas = distanceToMapDelta(tourParams?.distance || 1500);
               const newRegion = {
                 latitude,
                 longitude,
@@ -324,7 +324,7 @@ const UserMapScreen = ({ navigation }) => {
   // Fetch nearby places based on location and tour parameters
   const fetchNearbyPlacesData = async (latitude, longitude) => {
     // Get distance from tour parameters (declared outside try for use in finally)
-    const distance = tourParams?.distance || 8000;
+    const distance = tourParams?.distance || 1500;
     
     try {
       // Verify authentication is still valid before proceeding with API request
@@ -448,7 +448,7 @@ const UserMapScreen = ({ navigation }) => {
       
       // Animate map to new location
       if (mapRef.current) {
-        const mapDeltas = distanceToMapDelta(tourParams?.distance || 8000);
+        const mapDeltas = distanceToMapDelta(tourParams?.distance || 1500);
         const newRegion = {
           latitude,
           longitude,

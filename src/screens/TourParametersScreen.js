@@ -16,7 +16,7 @@ const TourParametersScreen = ({ navigation }) => {
   const { tourParams, setTourParams } = useContext(TourContext);
   
   // Local state to track changes before saving
-  const [distance, setDistance] = useState(tourParams.distance ?? 8000);
+  const [distance, setDistance] = useState(tourParams.distance ?? 1500);
   const [numAttractions, setNumAttractions] = useState(tourParams.numAttractions ?? 15);
   const [category, setCategory] = useState(tourParams.category ?? 'history');
 

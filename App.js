@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Import custom logger utility
 import logger from './src/utils/logger';
@@ -319,7 +320,8 @@ export default function App() {
   // Loading screen is now handled in the AppContent component
 
   return (
-    <SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
       <ThemeProvider>
         <StatusBar style="auto" />
         <NetworkProvider>
@@ -336,6 +338,7 @@ export default function App() {
         </NetworkProvider>
       </ThemeProvider>
     </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

@@ -699,6 +699,12 @@ const UserMapScreen = ({ navigation }) => {
         {error && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity 
+              style={styles.errorDismiss} 
+              onPress={() => setError(null)}
+            >
+              <Ionicons name="close" size={18} color="white" />
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -837,11 +843,21 @@ const styles = StyleSheet.create({
     right: 20,
     backgroundColor: 'rgba(255, 0, 0, 0.7)',
     padding: 10,
+    paddingRight: 35,
     borderRadius: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  errorDismiss: {
+    position: 'absolute',
+    right: 8,
+    top: 8,
+    padding: 4,
   },
   errorText: {
     color: 'white',
     textAlign: 'center',
+    flex: 1,
   },
   callout: {
     width: 200,

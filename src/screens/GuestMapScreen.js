@@ -429,8 +429,14 @@ const GuestMapScreen = ({ navigation }) => {
         
         {/* Error message */}
         {error && (
-          <View style={dynamicStyles.errorContainer}>
+          <View style={[dynamicStyles.errorContainer, styles.errorContainerFlex]}>
             <Text style={dynamicStyles.errorText}>{error}</Text>
+            <TouchableOpacity 
+              style={styles.errorDismiss} 
+              onPress={() => setError(null)}
+            >
+              <Ionicons name="close" size={18} color="white" />
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -696,6 +702,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 0, 0, 0.7)',
     padding: 10,
     borderRadius: 5,
+  },
+  errorContainerFlex: {
+    paddingRight: 35,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  errorDismiss: {
+    position: 'absolute',
+    right: 8,
+    top: 8,
+    padding: 4,
   },
   errorText: {
     color: 'white',

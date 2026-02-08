@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions, Modal } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions, Modal, Linking, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import GuestAudioPlayer from '../components/GuestAudioPlayer';
@@ -285,12 +285,22 @@ const GuestAudioScreen = ({ route, navigation }) => {
           {/* Place Information Section */}
           <Text style={dynamicStyles.tourTitle}>{tourData?.place_info?.place_name || place.name}</Text>
           
-          {/* Address */}
+          {/* Address - Clickable to open directions */}
           {tourData?.place_info?.place_address && (
-            <View style={styles.infoSection}>
-              <Ionicons name="location-outline" size={18} color={colors.textSecondary} style={styles.infoIcon} />
-              <Text style={dynamicStyles.addressText}>{tourData.place_info.place_address}</Text>
-            </View>
+            <TouchableOpacity 
+              style={styles.infoSection}
+              onPress={() => {
+                const address = encodeURIComponent(tourData.place_info.place_address);
+                const url = Platform.OS === 'ios'
+                  ? `maps://maps.apple.com/?daddr=${address}`
+                  : `https://www.google.com/maps/dir/?api=1&destination=${address}`;
+                Linking.openURL(url);
+              }}
+            >
+              <Ionicons name="location-outline" size={18} color={colors.primary} style={styles.infoIcon} />
+              <Text style={[dynamicStyles.addressText, { color: colors.primary, textDecorationLine: 'underline' }]}>{tourData.place_info.place_address}</Text>
+              <Ionicons name="navigate-outline" size={16} color={colors.primary} style={{ marginLeft: 6 }} />
+            </TouchableOpacity>
           )}
           
           {/* Editorial Description with Title */}

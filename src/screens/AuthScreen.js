@@ -80,8 +80,8 @@ const AuthScreen = ({ route, navigation }) => {
         const consentTimestamp = new Date().toISOString();
         await auth.signUp(email, password, email, policyVersion, consentTimestamp);
         
-        // Navigate to email verification screen
-        navigation.navigate('EmailVerification', { email });
+        // Navigate to email verification screen with password for auto-login
+        navigation.navigate('EmailVerification', { email, password });
         return;
       }
     } catch (error) {

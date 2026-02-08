@@ -11,7 +11,7 @@ const EmailVerificationScreen = ({ route, navigation }) => {
   const [verificationCode, setVerificationCode] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { email, unverifiedLogin = false, message = null } = route.params;
+  const { email, password = null, unverifiedLogin = false, message = null } = route.params;
   const auth = useContext(AuthContext);
 
   const dynamicStyles = {
@@ -55,17 +55,28 @@ const EmailVerificationScreen = ({ route, navigation }) => {
     try {
       // Use email as username since we're using email-based authentication
       await auth.confirmSignUp(email.toLowerCase(), verificationCode);
-      setErrorMessage('Email verified successfully!');
       
-      // Short pause to show success message
-      setTimeout(() => {
-        // If this was from an unverified login attempt, go back to Auth with email prefilled
-        if (unverifiedLogin) {
-          navigation.replace('Auth', { verifiedEmail: email });
-        } else {
-          navigation.replace('Auth');
+      // If we have the password (fresh signup), auto-login
+      if (password) {
+        setErrorMessage('Email verified! Logging you in...');
+        try {
+          await auth.signIn(email.toLowerCase(), password);
+          // signIn handles navigation to Map screen
+        } catch (signInError) {
+          logger.error('Auto-login after verification failed:', signInError);
+          // Fall back to manual login if auto-login fails
+          setErrorMessage('Verified! Please log in.');
+          setTimeout(() => {
+            navigation.replace('Auth', { verifiedEmail: email });
+          }, 1500);
         }
-      }, 1500); // Show success message briefly before redirecting
+      } else {
+        // No password available (e.g., unverified login attempt), go back to Auth
+        setErrorMessage('Email verified successfully!');
+        setTimeout(() => {
+          navigation.replace('Auth', { verifiedEmail: email });
+        }, 1500);
+      }
     } catch (error) {
       logger.error('Verification error:', error);
       setErrorMessage(error.message || 'Verification failed');

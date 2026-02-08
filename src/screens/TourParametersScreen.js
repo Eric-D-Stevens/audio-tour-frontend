@@ -11,14 +11,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { TourContext, useTheme } from '../contexts';
 
-const TourParametersScreen = ({ navigation }) => {
+const TourParametersScreen = ({ navigation, route }) => {
   const { colors, isDark } = useTheme();
   const { tourParams, setTourParams } = useContext(TourContext);
   
+  // Check for preselected category from navigation params
+  const preselectedCategory = route.params?.preselectedCategory;
+  
   // Local state to track changes before saving
-  const [distance, setDistance] = useState(tourParams.distance ?? 1500);
+  const [distance, setDistance] = useState(() => {
+    if (preselectedCategory === 'event:portland-winter-lights') {
+      return milesToMeters(3); // Auto-set 3 miles for Winter Lights
+    }
+    return tourParams.distance ?? 1500;
+  });
   const [numAttractions, setNumAttractions] = useState(tourParams.numAttractions ?? 15);
-  const [category, setCategory] = useState(tourParams.category ?? 'history');
+  const [category, setCategory] = useState(preselectedCategory ?? tourParams.category ?? 'history');
 
   // Convert meters to miles for display
   const metersToMiles = (meters) => (meters * 0.000621371).toFixed(1);
@@ -31,7 +39,7 @@ const TourParametersScreen = ({ navigation }) => {
     { id: 'cultural', name: 'Cultural' },
     { id: 'art', name: 'Art' },
     { id: 'nature', name: 'Nature' },
-    { id: 'architecture', name: 'Architecture' }
+    { id: 'architecture', name: 'Architecture' },
   ];
 
   // Dynamic styles based on theme

@@ -57,6 +57,7 @@ export default function App() {
   // Remove the initialRoute state as we'll determine it dynamically
   const [tourParams, setTourParams] = useState({ distance: 1500, numAttractions: 15, category: 'history' });
   const [guestTourParams, setGuestTourParams] = useState({ cityId: 'san-francisco', category: 'history' });
+  const [isNearPortland, setIsNearPortland] = useState(false);
 
   // Save tour parameters to AsyncStorage whenever they change
   useEffect(() => {
@@ -333,6 +334,8 @@ export default function App() {
             setTourParams={setTourParams}
             guestTourParams={guestTourParams}
             setGuestTourParams={setGuestTourParams}
+            isNearPortland={isNearPortland}
+            setIsNearPortland={setIsNearPortland}
             navigationRef={navigationRef}
           />
         </NetworkProvider>
@@ -343,7 +346,7 @@ export default function App() {
 }
 
 // Separate component to use the network context inside
-const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTourParams, guestTourParams, setGuestTourParams, navigationRef }) => {
+const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTourParams, guestTourParams, setGuestTourParams, isNearPortland, setIsNearPortland, navigationRef }) => {
   const { isConnected } = useNetwork();
   const { colors, isDark } = useTheme();
   
@@ -363,7 +366,7 @@ const AppContent = ({ isLoading, isAuthenticated, authContext, tourParams, setTo
   
   return (
       <AuthContext.Provider value={authContext}>
-        <TourContext.Provider value={{ tourParams, setTourParams, guestTourParams, setGuestTourParams }}>
+        <TourContext.Provider value={{ tourParams, setTourParams, guestTourParams, setGuestTourParams, isNearPortland, setIsNearPortland }}>
           <NavigationContainer 
             ref={navigationRef}
             theme={{

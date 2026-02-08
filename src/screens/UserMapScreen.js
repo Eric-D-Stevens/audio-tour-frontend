@@ -12,6 +12,33 @@ import { getPlaces } from '../services/api.ts';
 import audioManager from '../services/audioManager';
 import logger from '../utils/logger';
 
+// Downtown Portland coordinates (Pioneer Courthouse Square area)
+const PORTLAND_CENTER = {
+  latitude: 45.5189,
+  longitude: -122.6794,
+};
+
+// 15 miles in meters
+const PROXIMITY_THRESHOLD_METERS = 15 * 1609.34;
+
+/**
+ * Calculate distance between two coordinates using Haversine formula
+ */
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371e3; // Earth's radius in meters
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+};
+
 // Convert distance in meters to appropriate map delta
 // 1 degree of latitude ≈ 111,000 meters
 const distanceToMapDelta = (distanceMeters) => {
@@ -26,9 +53,109 @@ const distanceToMapDelta = (distanceMeters) => {
   };
 };
 
+// Animated Winter Lights Banner Component - Disco style with gradient border
+const AnimatedWinterLightsBanner = ({ onPress, colors }) => {
+  const borderAnim = useRef(new Animated.Value(0)).current;
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+  const [isAnimating, setIsAnimating] = useState(true);
+  
+  useEffect(() => {
+    // Border color cycling animation - runs for 5 seconds
+    const borderAnimation = Animated.loop(
+      Animated.timing(borderAnim, {
+        toValue: 1,
+        duration: 2000,
+        useNativeDriver: false,
+      })
+    );
+    
+    // Shimmer effect inside the banner
+    const shimmerAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmerAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shimmerAnim, {
+          toValue: 0,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    
+    borderAnimation.start();
+    shimmerAnimation.start();
+    
+    // Stop border animation after 5 seconds
+    const timeout = setTimeout(() => {
+      borderAnimation.stop();
+      borderAnim.setValue(0);
+      setIsAnimating(false);
+    }, 5000);
+    
+    return () => {
+      clearTimeout(timeout);
+      borderAnimation.stop();
+      shimmerAnimation.stop();
+    };
+  }, []);
+  
+  // Purple to teal gradient cycle
+  const borderColor = borderAnim.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: ['#8B5CF6', '#06B6D4', '#8B5CF6', '#06B6D4', '#8B5CF6'],
+  });
+  
+  // Shimmer opacity for sparkle effect
+  const shimmerOpacity = shimmerAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0.1, 0.3, 0.1],
+  });
+  
+  return (
+    <TouchableOpacity 
+      onPress={onPress} 
+      activeOpacity={0.8}
+      style={styles.discoBannerContainer}
+    >
+      <Animated.View
+        style={[
+          styles.discoBanner,
+          { backgroundColor: colors.card },
+          isAnimating && {
+            borderColor: borderColor,
+            shadowColor: borderColor,
+            shadowOpacity: 0.4,
+            shadowRadius: 6,
+          },
+          !isAnimating && {
+            borderColor: '#8B5CF6',
+          }
+        ]}
+      >
+        {/* Shimmer overlay */}
+        <Animated.View 
+          style={[
+            styles.shimmerOverlay,
+            { opacity: shimmerOpacity }
+          ]} 
+        />
+        
+        {/* Content */}
+        <Text style={styles.discoEmoji}>✨</Text>
+        <Text style={[styles.discoTitle, { color: colors.text }]}>Portland Winter Lights Festival</Text>
+        <Text style={[styles.discoDate, { color: colors.text }]}>2/6 - 2/14</Text>
+        <Ionicons name="chevron-forward" size={14} color="#8B5CF6" />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
 const UserMapScreen = ({ navigation }) => {
   const { colors, isDark } = useTheme();
-  const { tourParams } = useContext(TourContext);
+  const { tourParams, setTourParams, setIsNearPortland, isNearPortland } = useContext(TourContext);
   const { isAuthenticated, checkAuthAndRedirect, signOut } = useContext(AuthContext);
   const [region, setRegion] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
@@ -238,6 +365,23 @@ const UserMapScreen = ({ navigation }) => {
     }
   }, [region, needsJiggle]);
 
+  // Effect to calculate Portland proximity when user location changes
+  useEffect(() => {
+    if (userLocation && isAuthenticated) {
+      const distance = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        PORTLAND_CENTER.latitude,
+        PORTLAND_CENTER.longitude
+      );
+      
+      const nearPortland = distance <= PROXIMITY_THRESHOLD_METERS;
+      setIsNearPortland(nearPortland);
+      
+      logger.debug(`Portland proximity: ${(distance / 1609.34).toFixed(2)} miles, nearPortland: ${nearPortland}`);
+    }
+  }, [userLocation, isAuthenticated, setIsNearPortland]);
+
   // Effect to update tour points when tour parameters change
   useEffect(() => {
     if (tourParams) {
@@ -292,8 +436,8 @@ const UserMapScreen = ({ navigation }) => {
             // Set the location in context
             setUserLocation(newUserLocation);
             
-            // Recenter the map on user's location
-            if (mapRef.current) {
+            // Recenter the map on user's location (skip for Winter Lights - it centers on Portland)
+            if (mapRef.current && tourParams?.category !== 'event:portland-winter-lights') {
               const mapDeltas = distanceToMapDelta(tourParams?.distance || 1500);
               const newRegion = {
                 latitude,
@@ -408,8 +552,8 @@ const UserMapScreen = ({ navigation }) => {
         // Show the search result toast
         setToastVisible(true);
         
-        // Resize map to match search distance
-        if (mapRef.current && userLocation) {
+        // Resize map to match search distance (skip for Winter Lights - it centers on Portland)
+        if (mapRef.current && userLocation && tourParams?.category !== 'event:portland-winter-lights') {
           const mapDeltas = distanceToMapDelta(distance);
           const newRegion = {
             latitude: userLocation.latitude,
@@ -707,6 +851,49 @@ const UserMapScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         )}
+
+        {/* Magical Winter Lights Banner - shows when near Portland on first render */}
+        {isNearPortland && (
+          <AnimatedWinterLightsBanner 
+            onPress={() => {
+              // Set Winter Lights tour params
+              setTourParams({
+                ...tourParams,
+                category: 'event:portland-winter-lights'
+              });
+              
+              // Center map on Portland with 6 mile radius view
+              const portlandRadius = 6 * 1609.34; // 6 miles in meters
+              const mapDeltas = distanceToMapDelta(portlandRadius);
+              const portlandRegion = {
+                latitude: PORTLAND_CENTER.latitude,
+                longitude: PORTLAND_CENTER.longitude,
+                ...mapDeltas,
+              };
+              
+              if (mapRef.current) {
+                mapRef.current.animateToRegion(portlandRegion, 500);
+                setRegion(portlandRegion);
+              }
+            }}
+            colors={colors}
+          />
+        )}
+
+        {/* Standard Winter Lights Banner - always visible at bottom */}
+        <TouchableOpacity
+          style={styles.winterLightsBanner}
+          onPress={() => navigation.navigate('TourParameters', {
+            preselectedCategory: 'event:portland-winter-lights'
+          })}
+        >
+          <Text style={styles.winterLightsEmoji}>🎆</Text>
+          <View style={styles.winterLightsTextContainer}>
+            <Text style={styles.winterLightsTitle}>Portland Winter Lights</Text>
+            <Text style={styles.winterLightsSubtitle}>192 light installations to explore</Text>
+          </View>
+          <Text style={styles.winterLightsArrow}>→</Text>
+        </TouchableOpacity>
       </View>
       
       {/* Bottom Info Panel with Tour Selection Button */}
@@ -910,6 +1097,82 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 5,
+  },
+  winterLightsBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF5722',
+    borderRadius: 12,
+    padding: 15,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  winterLightsEmoji: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  winterLightsTextContainer: {
+    flex: 1,
+  },
+  winterLightsTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  winterLightsSubtitle: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 14,
+  },
+  winterLightsArrow: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  discoBannerContainer: {
+    position: 'absolute',
+    top: 4,
+    left: 12,
+    right: 12,
+    zIndex: 100,
+  },
+  discoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 6,
+    overflow: 'hidden',
+  },
+  shimmerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+  },
+  discoEmoji: {
+    fontSize: 12,
+    marginRight: 6,
+  },
+  discoTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    flex: 1,
+  },
+  discoDate: {
+    fontSize: 11,
+    marginRight: 4,
   },
 });
 

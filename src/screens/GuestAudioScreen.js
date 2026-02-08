@@ -28,7 +28,9 @@ const GuestAudioScreen = ({ route, navigation }) => {
   const dynamicStyles = {
     container: { flex: 1, backgroundColor: colors.background },
     backButtonText: { marginLeft: 5, fontSize: 16, color: colors.text, fontWeight: '500' },
-    tourTitle: { fontSize: 22, fontWeight: 'bold', color: colors.text, marginBottom: 10 },
+    tourTitle: { fontSize: 22, fontWeight: 'bold', color: colors.text, flex: 1 },
+    titleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
+    metadataDates: { fontSize: 14, color: colors.textSecondary, marginBottom: 10 },
     addressText: { fontSize: 14, color: colors.textSecondary, flex: 1, lineHeight: 20 },
     descriptionTitle: { fontSize: 18, fontWeight: '600', color: colors.text, marginBottom: 8 },
     tourDescription: { fontSize: 16, color: colors.textSecondary, lineHeight: 24, marginBottom: 15 },
@@ -283,7 +285,31 @@ const GuestAudioScreen = ({ route, navigation }) => {
         
         <View style={styles.contentContainer}>
           {/* Place Information Section */}
-          <Text style={dynamicStyles.tourTitle}>{tourData?.place_info?.place_name || place.name}</Text>
+          <View style={dynamicStyles.titleRow}>
+            <Text style={dynamicStyles.tourTitle}>{tourData?.place_info?.place_name || place.name}</Text>
+            {tourData?.metadata && (() => {
+              try {
+                const meta = JSON.parse(tourData.metadata);
+                if (meta.title_url) {
+                  return (
+                    <TouchableOpacity onPress={() => Linking.openURL(meta.title_url)} style={{ marginLeft: 8 }}>
+                      <Ionicons name="information-circle-outline" size={22} color="#38BDF8" />
+                    </TouchableOpacity>
+                  );
+                }
+              } catch (e) {}
+              return null;
+            })()}
+          </View>
+          {tourData?.metadata && (() => {
+            try {
+              const meta = JSON.parse(tourData.metadata);
+              if (meta.dates) {
+                return <Text style={dynamicStyles.metadataDates}>{meta.dates}</Text>;
+              }
+            } catch (e) {}
+            return null;
+          })()}
           
           {/* Address - Clickable to open directions */}
           {tourData?.place_info?.place_address && (

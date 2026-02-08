@@ -111,6 +111,7 @@ export interface TTour {
   photos: TTPlacePhotos[];
   script: TTScript;
   audio: TTAudio;
+  metadata?: string;  // JSON-encoded string with original scraped data (Winter Lights)
 }
 /**
  * Place information model

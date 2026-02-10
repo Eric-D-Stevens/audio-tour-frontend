@@ -36,7 +36,7 @@ import * as AuthService from './src/services/auth';
 import { COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID, REGION } from './src/constants/config';
 
 // Import contexts from the separate contexts file
-import { AuthContext, TourContext, ThemeProvider, useTheme } from './src/contexts';
+import { AuthContext, TourContext, ThemeProvider, useTheme, AudioProvider } from './src/contexts';
 
 // Create navigator
 const Stack = createStackNavigator();
@@ -325,20 +325,22 @@ export default function App() {
       <SafeAreaProvider>
       <ThemeProvider>
         <StatusBar style="auto" />
-        <NetworkProvider>
-          <AppContent 
-            isLoading={isLoading}
-            isAuthenticated={isAuthenticated}
-            authContext={authContext}
-            tourParams={tourParams}
-            setTourParams={setTourParams}
-            guestTourParams={guestTourParams}
-            setGuestTourParams={setGuestTourParams}
-            isNearPortland={isNearPortland}
-            setIsNearPortland={setIsNearPortland}
-            navigationRef={navigationRef}
-          />
-        </NetworkProvider>
+        <AudioProvider>
+          <NetworkProvider>
+            <AppContent 
+              isLoading={isLoading}
+              isAuthenticated={isAuthenticated}
+              authContext={authContext}
+              tourParams={tourParams}
+              setTourParams={setTourParams}
+              guestTourParams={guestTourParams}
+              setGuestTourParams={setGuestTourParams}
+              isNearPortland={isNearPortland}
+              setIsNearPortland={setIsNearPortland}
+              navigationRef={navigationRef}
+            />
+          </NetworkProvider>
+        </AudioProvider>
       </ThemeProvider>
     </SafeAreaProvider>
     </GestureHandlerRootView>

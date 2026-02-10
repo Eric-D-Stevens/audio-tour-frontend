@@ -1,10 +1,4 @@
-import TrackPlayer, {
-  Capability,
-  State,
-  Event,
-  useProgress,
-  usePlaybackState,
-} from 'react-native-track-player';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import logger from '../utils/logger';
 import { CDN_ACCESS_KEY, CDN_ACCESS_HEADER } from '../constants/config';
 
@@ -15,6 +9,7 @@ class AudioManager {
   subscribers = new Set();
   isSetup = false;
   progressInterval = null;
+  player = null;
 
   static getInstance() {
     if (!AudioManager.instance) {
@@ -27,38 +22,19 @@ class AudioManager {
     if (this.isSetup) return;
 
     try {
-      await TrackPlayer.setupPlayer({
-        waitForBuffer: true,
-      });
-
-      await TrackPlayer.updateOptions({
-        capabilities: [
-          Capability.Play,
-          Capability.Pause,
-          Capability.Stop,
-          Capability.SeekTo,
-          Capability.JumpForward,
-          Capability.JumpBackward,
-        ],
-        compactCapabilities: [Capability.Play, Capability.Pause],
-        forwardJumpInterval: 15,
-        backwardJumpInterval: 15,
-        progressUpdateEventInterval: 1,
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        shouldPlayInBackground: true,
+        interruptionMode: 'doNotMix',
       });
 
       this.isSetup = true;
-      logger.debug('TrackPlayer setup complete');
+      logger.debug('Audio player setup complete');
 
       // Start progress monitoring
       this.startProgressMonitoring();
     } catch (error) {
-      // Player might already be setup
-      if (error.message?.includes('already been initialized')) {
-        this.isSetup = true;
-        this.startProgressMonitoring();
-      } else {
-        logger.error('Error setting up TrackPlayer:', error);
-      }
+      logger.error('Error setting up audio player:', error);
     }
   }
 
@@ -69,23 +45,19 @@ class AudioManager {
     }
 
     // Poll for progress updates to notify subscribers
-    this.progressInterval = setInterval(async () => {
+    this.progressInterval = setInterval(() => {
       try {
-        const state = await TrackPlayer.getPlaybackState();
-        const position = await TrackPlayer.getPosition();
-        const duration = await TrackPlayer.getDuration();
-        const buffered = await TrackPlayer.getBufferedPosition();
+        if (!this.player) return;
 
-        const isBuffering = state.state === State.Buffering || state.state === State.Loading;
         const status = {
-          isLoaded: true,
-          isPlaying: state.state === State.Playing,
-          isBuffering: isBuffering,
-          isLoading: isBuffering, // Alias for backwards compatibility
-          positionMillis: position * 1000,
-          durationMillis: duration * 1000,
-          playableDurationMillis: buffered * 1000,
-          didJustFinish: state.state === State.Ended,
+          isLoaded: this.player.isLoaded,
+          isPlaying: this.player.playing,
+          isBuffering: this.player.isBuffering,
+          isLoading: this.player.isBuffering,
+          positionMillis: this.player.currentTime * 1000,
+          durationMillis: this.player.duration * 1000,
+          playableDurationMillis: this.player.duration * 1000,
+          didJustFinish: false,
         };
 
         this.notifySubscribers(status);
@@ -110,28 +82,40 @@ class AudioManager {
       await this.setupPlayer();
 
       // If we're already playing this audio, don't reload it
-      if (this.currentPlaceId === placeId) {
-        const queue = await TrackPlayer.getQueue();
-        if (queue.length > 0) {
-          return;
-        }
+      if (this.currentPlaceId === placeId && this.player) {
+        return;
       }
 
       this.currentPlaceName = placeName;
       this.currentPlaceId = placeId;
 
-      // Reset the player
-      await TrackPlayer.reset();
+      // Remove old player if it exists
+      if (this.player) {
+        try {
+          this.player.remove();
+        } catch (e) {
+          // ignore cleanup errors
+        }
+      }
 
-      // Add the track with CDN headers and artwork
-      await TrackPlayer.add({
-        id: placeId,
-        url: uri,
-        title: placeName || 'Audio Tour',
-        artist: 'TensorTours',
-        artwork: require('../../assets/app-store-icon.png'),
+      // Create a new player with the audio source
+      this.player = createAudioPlayer({
+        uri: uri,
         headers: { [CDN_ACCESS_HEADER]: CDN_ACCESS_KEY },
       });
+
+      // Set up lock screen controls
+      this.player.setActiveForLockScreen(
+        true,
+        {
+          title: placeName || 'Audio Tour',
+          artist: 'TensorTours',
+        },
+        {
+          showSeekForward: true,
+          showSeekBackward: true,
+        }
+      );
 
       logger.debug('Audio loaded:', placeName);
     } catch (error) {
@@ -142,7 +126,9 @@ class AudioManager {
 
   async play() {
     try {
-      await TrackPlayer.play();
+      if (this.player) {
+        this.player.play();
+      }
     } catch (error) {
       logger.error('Error playing audio:', error);
     }
@@ -150,7 +136,9 @@ class AudioManager {
 
   async pause() {
     try {
-      await TrackPlayer.pause();
+      if (this.player) {
+        this.player.pause();
+      }
     } catch (error) {
       logger.error('Error pausing audio:', error);
     }
@@ -158,8 +146,10 @@ class AudioManager {
 
   async seekTo(positionMillis) {
     try {
-      // TrackPlayer uses seconds, not milliseconds
-      await TrackPlayer.seekTo(positionMillis / 1000);
+      if (this.player) {
+        // expo-audio seekTo uses seconds
+        await this.player.seekTo(positionMillis / 1000);
+      }
     } catch (error) {
       logger.error('Error seeking:', error);
     }
@@ -167,21 +157,17 @@ class AudioManager {
 
   async getStatus() {
     try {
-      const state = await TrackPlayer.getPlaybackState();
-      const position = await TrackPlayer.getPosition();
-      const duration = await TrackPlayer.getDuration();
-      const buffered = await TrackPlayer.getBufferedPosition();
+      if (!this.player) return null;
 
-      const isBuffering = state.state === State.Buffering || state.state === State.Loading;
       return {
-        isLoaded: true,
-        isPlaying: state.state === State.Playing,
-        isBuffering: isBuffering,
-        isLoading: isBuffering, // Alias for backwards compatibility
-        positionMillis: position * 1000,
-        durationMillis: duration * 1000,
-        playableDurationMillis: buffered * 1000,
-        didJustFinish: state.state === State.Ended,
+        isLoaded: this.player.isLoaded,
+        isPlaying: this.player.playing,
+        isBuffering: this.player.isBuffering,
+        isLoading: this.player.isBuffering,
+        positionMillis: this.player.currentTime * 1000,
+        durationMillis: this.player.duration * 1000,
+        playableDurationMillis: this.player.duration * 1000,
+        didJustFinish: false,
       };
     } catch (error) {
       return null;
@@ -190,7 +176,10 @@ class AudioManager {
 
   async unloadAudio() {
     try {
-      await TrackPlayer.reset();
+      if (this.player) {
+        this.player.remove();
+        this.player = null;
+      }
       this.currentPlaceId = null;
       this.currentPlaceName = null;
     } catch (error) {
@@ -202,9 +191,11 @@ class AudioManager {
     if (this.progressInterval) {
       clearInterval(this.progressInterval);
     }
+    if (this.player) {
+      this.player.remove();
+      this.player = null;
+    }
   }
 }
-
-
 
 export default AudioManager.getInstance();

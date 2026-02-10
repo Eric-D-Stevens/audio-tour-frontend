@@ -20,6 +20,7 @@
     "amazon-cognito-identity-js": "^6.3.12",
     "dotenv": "^16.4.7",
     "expo": "^54.0.0",
+    "expo-audio": "~1.1.0",
     "expo-av": "~16.0.8",
     "expo-background-fetch": "~14.0.9",
     "expo-constants": "~18.0.13",
@@ -39,7 +40,6 @@
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-    "react-native-track-player": "^4.1.2",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {

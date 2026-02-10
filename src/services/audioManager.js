@@ -1,4 +1,5 @@
 import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import { Asset } from 'expo-asset';
 import logger from '../utils/logger';
 import { CDN_ACCESS_KEY, CDN_ACCESS_HEADER } from '../constants/config';
 
@@ -10,6 +11,7 @@ class AudioManager {
   isSetup = false;
   progressInterval = null;
   player = null;
+  artworkUri = null;
 
   static getInstance() {
     if (!AudioManager.instance) {
@@ -27,6 +29,16 @@ class AudioManager {
         shouldPlayInBackground: true,
         interruptionMode: 'doNotMix',
       });
+
+      // Pre-load artwork asset for lock screen
+      try {
+        const asset = Asset.fromModule(require('../../assets/app-store-icon.png'));
+        await asset.downloadAsync();
+        this.artworkUri = asset.localUri;
+        logger.debug('Lock screen artwork loaded:', this.artworkUri);
+      } catch (e) {
+        logger.error('Failed to load lock screen artwork:', e);
+      }
 
       this.isSetup = true;
       logger.debug('Audio player setup complete');
@@ -110,6 +122,7 @@ class AudioManager {
         {
           title: placeName || 'Audio Tour',
           artist: 'TensorTours',
+          artworkUrl: this.artworkUri,
         },
         {
           showSeekForward: true,

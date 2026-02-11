@@ -11,7 +11,9 @@ import { TourContext, AuthContext, useTheme } from '../contexts';
 import { getPlaces } from '../services/api.ts';
 import audioManager from '../services/audioManager';
 import logger from '../utils/logger';
-import { PlatformMarker, AndroidCallout, useAndroidMarkerHandler } from '../components/map';
+import Marker from '../components/map/markers/Marker';
+import Sheet from '../components/map/sheet/Sheet';
+import { useMarkerHandler } from '../components/map/useMarkerHandler';
 
 // Downtown Portland coordinates (Pioneer Courthouse Square area)
 const PORTLAND_CENTER = {
@@ -174,7 +176,8 @@ const UserMapScreen = ({ navigation }) => {
   // State for tracking if location permission was denied
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   // Ref for AppState listener
-  const { selectedPlace, bottomSheetAnim, handleMarkerPress, handleClose } = useAndroidMarkerHandler();
+  const appState = useRef(AppState.currentState);
+  const { selectedPlace, bottomSheetAnim, handleMarkerPress, handleClose, isVisible } = useMarkerHandler();
   
   // Effect to re-check permissions when app returns from background (e.g., from Settings)
   useEffect(() => {
@@ -781,7 +784,7 @@ const UserMapScreen = ({ navigation }) => {
             maxZoomLevel={20}
           >
             {tourPoints.map((point) => (
-              <PlatformMarker
+              <Marker
                 key={point.id}
                 point={point}
                 onPress={handleMarkerPress}
@@ -796,9 +799,9 @@ const UserMapScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* Android Bottom Sheet Callout */}
-        {selectedPlace && (
-          <AndroidCallout
+        {/* Bottom Sheet */}
+        {isVisible && (
+          <Sheet
             selectedPlace={selectedPlace}
             bottomSheetAnim={bottomSheetAnim}
             onClose={handleClose}
@@ -959,7 +962,7 @@ const styles = StyleSheet.create({
   infoPanel: {
     backgroundColor: 'white',
     paddingTop: 8,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 8, // Extra padding for iOS home indicator
+    paddingBottom: Platform.OS === 'ios' ? 30 : 8,
     paddingHorizontal: 12,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
@@ -972,6 +975,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     minHeight: 52,
+    zIndex: 200,
   },
   leftControls: {
     flex: 1,

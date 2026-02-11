@@ -7,7 +7,7 @@ import logger from '../../../utils/logger';
 /**
  * iOS Marker Component
  * Self-contained marker with custom circular pin view.
- * Uses two separate View components to avoid relocation issues.
+ * Uses bottom sheet for place details instead of callout.
  * 
  * Props:
  *   - point: { id, title, coordinate, ... } — the place data

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, ActivityIndicator, Alert, Platform } from 'react-native';
+import { View, ActivityIndicator, Alert, Platform, AppState } from 'react-native';
 import * as Updates from 'expo-updates';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -59,6 +59,12 @@ export default function App() {
   const [guestTourParams, setGuestTourParams] = useState({ cityId: 'san-francisco', category: 'history' });
   const [isNearPortland, setIsNearPortland] = useState(false);
 
+  // OTA update cooldown: track last check time to avoid spamming
+  const lastOTACheck = useRef(0);
+  const OTA_CHECK_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+  const OTA_PERIODIC_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
+  const appState = useRef(AppState.currentState);
+
   // Save tour parameters to AsyncStorage whenever they change
   useEffect(() => {
     saveTourParams();
@@ -80,12 +86,47 @@ export default function App() {
     initializeApp();
   }, []);
 
-  // Check for OTA updates and apply immediately on app open
+  // Check for OTA updates when app returns to foreground
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        checkForOTAUpdates();
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  // Periodic OTA check for long foreground sessions
+  useEffect(() => {
+    if (__DEV__) return;
+
+    const interval = setInterval(() => {
+      if (appState.current === 'active') {
+        checkForOTAUpdates();
+      }
+    }, OTA_PERIODIC_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Check for OTA updates and apply immediately (with cooldown)
   const checkForOTAUpdates = async () => {
     if (__DEV__) {
       logger.debug('Skipping OTA update check in development mode');
       return;
     }
+
+    const now = Date.now();
+    if (now - lastOTACheck.current < OTA_CHECK_COOLDOWN_MS) {
+      logger.debug('OTA check skipped — cooldown active');
+      return;
+    }
+    lastOTACheck.current = now;
 
     try {
       const update = await Updates.checkForUpdateAsync();

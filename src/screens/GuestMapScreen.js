@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Modal, ActivityIndicator, Animated, Platform } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../components/AppHeader';
@@ -11,6 +11,7 @@ import { PRESET_CITIES, getCityById, getDefaultCity } from '../constants/cities'
 import audioManager from '../services/audioManager';
 import logger from '../utils/logger';
 import Sheet from '../components/map/sheet/Sheet';
+import Marker from '../components/map/markers/Marker';
 
 const GuestMapScreen = ({ navigation }) => {
   const { colors, isDark } = useTheme();
@@ -381,14 +382,10 @@ const GuestMapScreen = ({ navigation }) => {
             {tourPoints.map((point) => (
               <Marker
                 key={point.id}
-                coordinate={point.coordinate}
-                tracksViewChanges={false}
-                onPress={() => handleMarkerPress(point)}
-              >
-                <View style={styles.customMarker}>
-                  <Ionicons name="location" size={30} color="#FF5722" />
-                </View>
-              </Marker>
+                point={point}
+                onPress={handleMarkerPress}
+                selected={selectedPlace?.id === point.id}
+              />
             ))}
           </MapView>
         ) : (

@@ -408,6 +408,7 @@ const GuestMapScreen = ({ navigation }) => {
             onClose={handleClose}
             onStartTour={handleStartTour}
             colors={colors}
+            tourType={guestTourParams?.category || 'history'}
           />
         )}
         

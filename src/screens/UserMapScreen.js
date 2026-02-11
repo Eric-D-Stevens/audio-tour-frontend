@@ -799,6 +799,7 @@ const UserMapScreen = ({ navigation }) => {
             onClose={handleClose}
             onStartTour={() => handleStartTour(selectedPlace)}
             colors={colors}
+            tourType={tourParams?.category || 'history'}
           />
         )}
         

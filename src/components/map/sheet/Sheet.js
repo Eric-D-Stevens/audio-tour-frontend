@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
+  Image,
   Animated,
   StyleSheet,
   PanResponder,
@@ -8,6 +9,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { tourCache } from '../../../services/tourCache';
+import { CDN_ACCESS_KEY, CDN_ACCESS_HEADER } from '../../../constants/config';
 
 /**
  * Bottom Sheet Component
@@ -25,6 +28,7 @@ const Sheet = ({
   colors = {},
   buttonText = 'Start Tour',
   closeText = 'Close',
+  tourType = 'history',
 }) => {
   const [displayedPlace, setDisplayedPlace] = useState(selectedPlace);
   const [isSwapping, setIsSwapping] = useState(false);
@@ -135,9 +139,25 @@ const Sheet = ({
               {displayedPlace.description}
             </Text>
           </View>
-          <View style={[styles.imagePlaceholder, { backgroundColor: colors.border || '#e5e5e5' }]}>
-            <Ionicons name="image-outline" size={28} color={colors.textSecondary || '#999'} />
-          </View>
+          {(() => {
+            const placeId = displayedPlace.id || displayedPlace.originalData?.place_id;
+            const cached = placeId ? tourCache.get(placeId, tourType) : null;
+            const photoUrl = cached?.tour?.photos?.[0]?.cloudfront_url;
+            if (photoUrl) {
+              return (
+                <Image
+                  key={placeId}
+                  source={{ uri: photoUrl, headers: { [CDN_ACCESS_HEADER]: CDN_ACCESS_KEY } }}
+                  style={styles.thumbnailImage}
+                />
+              );
+            }
+            return (
+              <View style={[styles.imagePlaceholder, { backgroundColor: colors.border || '#e5e5e5' }]}>
+                <Ionicons name="image-outline" size={28} color={colors.textSecondary || '#999'} />
+              </View>
+            );
+          })()}
         </View>
         <TouchableOpacity
           style={styles.startButton}
@@ -205,6 +225,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  thumbnailImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 10,
   },
   startButton: {
     flexDirection: 'row',

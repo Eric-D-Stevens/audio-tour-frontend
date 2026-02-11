@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated, Platform, Alert, Linking, AppState, Image } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import MapView from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -11,6 +11,7 @@ import { TourContext, AuthContext, useTheme } from '../contexts';
 import { getPlaces } from '../services/api.ts';
 import audioManager from '../services/audioManager';
 import logger from '../utils/logger';
+import { PlatformMarker, AndroidCallout, useAndroidMarkerHandler } from '../components/map';
 
 // Downtown Portland coordinates (Pioneer Courthouse Square area)
 const PORTLAND_CENTER = {
@@ -173,7 +174,7 @@ const UserMapScreen = ({ navigation }) => {
   // State for tracking if location permission was denied
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   // Ref for AppState listener
-  const appState = useRef(AppState.currentState);
+  const { selectedPlace, bottomSheetAnim, handleMarkerPress, handleClose } = useAndroidMarkerHandler();
   
   // Effect to re-check permissions when app returns from background (e.g., from Settings)
   useEffect(() => {
@@ -610,6 +611,41 @@ const UserMapScreen = ({ navigation }) => {
     }
   };
 
+  // Handle starting a tour from the Android bottom sheet
+  const handleStartTour = async (place) => {
+    // Close the bottom sheet first
+    handleClose();
+    
+    // Prevent multiple rapid selections
+    if (isSelectingRef.current) return;
+    isSelectingRef.current = true;
+    setTimeout(() => { isSelectingRef.current = false; }, 250);
+    
+    // Verify authentication
+    const isAuthValid = await checkAuthAndRedirect(navigation);
+    if (!isAuthValid) {
+      logger.debug('Authentication validation failed, aborting navigation to AudioScreen');
+      return;
+    }
+    
+    // Navigate to Audio screen with tour type
+    const placeWithTourType = {
+      ...place.originalData,
+      tourType: tourParams.category
+    };
+    logger.debug(`Navigating to AudioScreen with tour type: ${tourParams.category}`);
+    navigation.navigate('Audio', { place: placeWithTourType });
+    
+    // Load audio if available
+    if (place.originalData && place.originalData.audio_url) {
+      audioManager.loadAudio(
+        place.originalData.audio_url,
+        place.originalData.place_id,
+        place.originalData.name
+      );
+    }
+  };
+
   // Dynamic styles based on theme
   const dynamicStyles = {
     container: { flex: 1, backgroundColor: colors.background },
@@ -745,60 +781,12 @@ const UserMapScreen = ({ navigation }) => {
             maxZoomLevel={20}
           >
             {tourPoints.map((point) => (
-              <Marker
+              <PlatformMarker
                 key={point.id}
-                coordinate={point.coordinate}
-                tracksViewChanges={false}
-                pointerEvents={"auto"}
-              >
-                <View style={styles.customMarker}>
-                  <Ionicons name="location" size={30} color="#FF5722" />
-                </View>
-                <Callout
-                  tooltip={true}
-                  onPress={async () => {
-                    // Prevent multiple rapid selections when markers are close together
-                    if (isSelectingRef.current) return;
-                    isSelectingRef.current = true;
-                    setTimeout(() => { isSelectingRef.current = false; }, 250);
-                    
-                    // Verify authentication is still valid before navigating
-                    const isAuthValid = await checkAuthAndRedirect(navigation);
-                    if (!isAuthValid) {
-                      logger.debug('Authentication validation failed, aborting navigation to AudioScreen');
-                      return;
-                    }
-                    
-                    // Navigate to Audio screen
-                    // Include the tour type from TourContext when navigating to AudioScreen
-                    const placeWithTourType = {
-                      ...point.originalData,
-                      tourType: tourParams.category // Add the current tour type from context
-                    };
-                    logger.debug(`Navigating to AudioScreen with tour type: ${tourParams.category}`);
-                    navigation.navigate('Audio', { place: placeWithTourType });
-                    
-                    // Also load the audio in the mini player if available
-                    if (point.originalData && point.originalData.audio_url) {
-                      audioManager.loadAudio(
-                        point.originalData.audio_url,
-                        point.originalData.place_id,
-                        point.originalData.name
-                      );
-                    }
-                  }}
-                  style={[styles.callout, dynamicStyles.callout]}
-                >
-                  <View style={dynamicStyles.calloutContent}>
-                    <Text style={dynamicStyles.calloutTitle}>{point.title}</Text>
-                    <Text style={dynamicStyles.calloutDescription}>{point.description}</Text>
-                    <View style={styles.calloutButton}>
-                      <Text style={styles.calloutButtonText}>Start Audio Tour</Text>
-                      <Ionicons name="play" size={16} color="white" style={styles.calloutButtonIcon} />
-                    </View>
-                  </View>
-                </Callout>
-              </Marker>
+                point={point}
+                onPress={handleMarkerPress}
+                selected={selectedPlace?.id === point.id}
+              />
             ))}
           </MapView>
         ) : (
@@ -806,6 +794,17 @@ const UserMapScreen = ({ navigation }) => {
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={dynamicStyles.loadingText}>Loading map...</Text>
           </View>
+        )}
+
+        {/* Android Bottom Sheet Callout */}
+        {selectedPlace && (
+          <AndroidCallout
+            selectedPlace={selectedPlace}
+            bottomSheetAnim={bottomSheetAnim}
+            onClose={handleClose}
+            onStartTour={() => handleStartTour(selectedPlace)}
+            colors={colors}
+          />
         )}
         
         {/* Search result toast */}
@@ -1045,58 +1044,6 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     flex: 1,
-  },
-  callout: {
-    width: 200,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 0,
-  },
-  calloutContent: {
-    padding: 12,
-  },
-  calloutTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  calloutDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  calloutButton: {
-    backgroundColor: '#FF5722',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 8,
-    borderRadius: 6,
-    marginTop: 4,
-  },
-  calloutButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '500',
-    marginRight: 4,
-  },
-  calloutButtonIcon: {
-    marginLeft: 4,
-  },
-  customMarker: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 2,
-    borderWidth: 2,
-    borderColor: '#FF5722',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 5,
   },
   winterLightsBanner: {
     flexDirection: 'row',

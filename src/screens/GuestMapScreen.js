@@ -384,26 +384,14 @@ const GuestMapScreen = ({ navigation }) => {
             minZoomLevel={0}
             maxZoomLevel={20}
           >
-            {/* Render unselected markers first */}
-            {tourPoints
-              .filter((point) => point.id !== selectedPlace?.id)
-              .map((point) => (
-                <Marker
-                  key={point.id}
-                  point={point}
-                  onPress={handleMarkerPress}
-                  selected={false}
-                />
-              ))}
-            {/* Render selected marker last so it appears on top */}
-            {selectedPlace && (
+            {tourPoints.map((point) => (
               <Marker
-                key={selectedPlace.id}
-                point={selectedPlace}
+                key={point.id}
+                point={point}
                 onPress={handleMarkerPress}
-                selected={true}
+                selected={selectedPlace?.id === point.id}
               />
-            )}
+            ))}
           </MapView>
         ) : (
           <View style={[styles.map, dynamicStyles.loadingContainer]}>

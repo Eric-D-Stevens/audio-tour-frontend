@@ -6,7 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../components/AppHeader';
 import MiniAudioPlayer from '../components/MiniAudioPlayer';
 import { TourContext, useTheme } from '../contexts';
-import { getPreviewPlaces } from '../services/api.ts';
+import { getPreviewPlaces, fetchPreviewTour } from '../services/api.ts';
+import { tourCache } from '../services/tourCache';
 import { PRESET_CITIES, getCityById, getDefaultCity } from '../constants/cities';
 import audioManager from '../services/audioManager';
 import logger from '../utils/logger';
@@ -284,6 +285,10 @@ const GuestMapScreen = ({ navigation }) => {
         // Set the new points
         logger.debug(`Setting ${transformedPlaces.length} valid tour points for ${cityId}`);
         setTourPoints(transformedPlaces);
+        
+        // Prefill tour cache in background
+        const placeIds = transformedPlaces.map(p => p.originalData?.place_id).filter(Boolean);
+        tourCache.prefill(placeIds, tourType, fetchPreviewTour);
         
         // Trigger map refresh with delay to ensure React has updated state
         setTimeout(() => {

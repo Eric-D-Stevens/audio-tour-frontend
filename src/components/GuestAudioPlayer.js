@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'rea
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchPreviewTour } from '../services/api.ts';
+import { tourCache } from '../services/tourCache';
 import audioManager from '../services/audioManager';
 import { TourContext, useTheme } from '../contexts';
 import logger from '../utils/logger';
@@ -47,9 +48,15 @@ const GuestAudioPlayer = ({ placeId, tourType = 'history' }) => {
       
       logger.debug(`Loading preview audio tour for place: ${placeId}, type: ${tourType}`);
       
-      // Fetch preview audio data from the API using the new function
-      const data = await fetchPreviewTour(placeId, tourType);
-      logger.debug(`Preview tour data received for ${placeId}`); // Remove JSON.stringify to avoid large data dumps
+      // Check tour cache first
+      let data = tourCache.get(placeId, tourType);
+      if (data) {
+        logger.debug(`TourCache hit for ${placeId}`);
+      } else {
+        // Fetch preview audio data from the API
+        data = await fetchPreviewTour(placeId, tourType);
+        logger.debug(`Preview tour data received for ${placeId}`);
+      }
       
       // Save the full audio data to state
       setAudioData(data);

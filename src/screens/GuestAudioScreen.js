@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import GuestAudioPlayer from '../components/GuestAudioPlayer';
 import PhotoAttribution from '../components/PhotoAttribution';
 import { fetchPreviewTour } from '../services/api';
+import { tourCache } from '../services/tourCache';
 import { TourContext, useTheme } from '../contexts';
 import logger from '../utils/logger';
 import { CDN_ACCESS_KEY, CDN_ACCESS_HEADER } from '../constants/config';
@@ -96,6 +97,29 @@ const GuestAudioScreen = ({ route, navigation }) => {
         const tourType = place.tourType || guestTourParams?.category || 'history';
         
         logger.debug(`Using tour type: ${tourType} for place: ${place.place_id}`);
+        
+        // Check tour cache first
+        const cached = tourCache.get(place.place_id, tourType);
+        if (cached) {
+          logger.debug(`TourCache hit for ${place.place_id}`);
+          setTourData(cached.tour || null);
+          if (cached?.tour?.photos && Array.isArray(cached.tour.photos)) {
+            const photoUrls = cached.tour.photos
+              .filter(photo => photo?.cloudfront_url)
+              .map(photo => photo.cloudfront_url);
+            const attributions = cached.tour.photos
+              .filter(photo => photo?.cloudfront_url)
+              .map(photo => photo.attribution?.displayName || '');
+            const attributionUris = cached.tour.photos
+              .filter(photo => photo?.cloudfront_url)
+              .map(photo => photo.attribution?.uri || '');
+            setPhotos(photoUrls);
+            setPhotoAttributions(attributions);
+            setPhotoAttributionUris(attributionUris);
+          }
+          setLoading(false);
+          return;
+        }
         
         // For guest mode, we use the preview tour endpoint
         const response = await fetchPreviewTour(place.place_id, tourType);

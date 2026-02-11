@@ -8,7 +8,8 @@ import AppHeader from '../components/AppHeader';
 import MiniAudioPlayer from '../components/MiniAudioPlayer';
 import SearchResultToast from '../components/SearchResultToast';
 import { TourContext, AuthContext, useTheme } from '../contexts';
-import { getPlaces } from '../services/api.ts';
+import { getPlaces, getTour } from '../services/api.ts';
+import { tourCache } from '../services/tourCache';
 import audioManager from '../services/audioManager';
 import logger from '../utils/logger';
 import Marker from '../components/map/markers/Marker';
@@ -525,6 +526,10 @@ const UserMapScreen = ({ navigation }) => {
         // Set the tour points with the new data
         setTourPoints(transformedPlaces);
         logger.debug(`Loaded ${transformedPlaces.length} places`);
+        
+        // Prefill tour cache in background
+        const placeIds = transformedPlaces.map(p => p.originalData?.place_id).filter(Boolean);
+        tourCache.prefill(placeIds, tourType, getTour);
         
         // Update search result for toast
         setSearchResult({ placesCount: transformedPlaces.length, distance });

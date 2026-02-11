@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AudioPlayer from '../components/AudioPlayer';
 import PhotoAttribution from '../components/PhotoAttribution';
 import { getTour, getOnDemandTour } from '../services/api';
+import { tourCache } from '../services/tourCache';
 import { AuthContext, TourContext, useTheme } from '../contexts';
 import logger from '../utils/logger';
 import { CDN_ACCESS_KEY, CDN_ACCESS_HEADER } from '../constants/config';
@@ -108,6 +109,22 @@ const AudioScreen = ({ route, navigation }) => {
         }
         
         logger.debug(`Using tour type: ${tourType} for place: ${place.place_id}`);
+        
+        // Check tour cache first
+        const cached = tourCache.get(place.place_id, tourType);
+        if (cached) {
+          logger.debug(`TourCache hit for ${place.place_id}`);
+          setTourData(cached.tour || null);
+          const photoUrls = cached.tour?.photos?.map(photo => photo.cloudfront_url) || [];
+          const attributions = cached.tour?.photos?.map(photo => photo.attribution?.displayName || '') || [];
+          const attributionUris = cached.tour?.photos?.map(photo => photo.attribution?.uri || '') || [];
+          setPhotos(photoUrls);
+          setPhotoAttributions(attributions);
+          setPhotoAttributionUris(attributionUris);
+          setLoading(false);
+          return;
+        }
+        
         try {
           
           // First, try to get a pre-generated tour
@@ -138,6 +155,9 @@ const AudioScreen = ({ route, navigation }) => {
             // Fallback to generating a tour on demand
             const onDemandResponse = await getOnDemandTour(place.place_id, tourType);
             setTourData(onDemandResponse.tour || null);
+            
+            // Store in tour cache for future use
+            tourCache.set(place.place_id, tourType, onDemandResponse);
             
             // Extract photo URLs and attributions from the on-demand tour data
             const photoUrls = onDemandResponse.tour?.photos?.map(photo => photo.cloudfront_url) || [];

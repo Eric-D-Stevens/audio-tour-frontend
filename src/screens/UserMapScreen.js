@@ -392,6 +392,9 @@ const UserMapScreen = ({ navigation }) => {
     if (tourParams) {
       logger.debug('Tour parameters updated:', tourParams);
       
+      // Close the bottom sheet if open
+      handleClose();
+      
       // Clear existing points and show loading animation
       setTourPoints([]);
       setLoadingPoints(true);

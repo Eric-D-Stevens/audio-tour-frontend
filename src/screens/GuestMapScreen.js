@@ -125,6 +125,10 @@ const GuestMapScreen = ({ navigation }) => {
     const handleTourParamsChange = async () => {
       if (guestTourParams && guestTourParams.cityId) {
         logger.debug('Guest tour parameters updated:', JSON.stringify(guestTourParams));
+        
+        // Close the bottom sheet if open
+        handleClose();
+        
         const city = getCityById(guestTourParams.cityId);
         
         if (city) {

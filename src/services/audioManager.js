@@ -51,8 +51,9 @@ class AudioManager {
       // Add app state listener for cleanup
       this.appStateListener = AppState.addEventListener('change', (nextAppState) => {
         if (nextAppState === 'background' || nextAppState === 'inactive') {
-          logger.debug('App going to background, pausing audio');
-          this.pause();
+          // TODO: Enable for later app setting to control background audio behavior
+          // logger.debug('App going to background, pausing audio');
+          // this.pause();
         }
       });
     } catch (error) {

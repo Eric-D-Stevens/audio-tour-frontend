@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Modal, ActivityIndicator, Animated, Platform } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../components/AppHeader';
@@ -10,6 +10,7 @@ import { getPreviewPlaces } from '../services/api.ts';
 import { PRESET_CITIES, getCityById, getDefaultCity } from '../constants/cities';
 import audioManager from '../services/audioManager';
 import logger from '../utils/logger';
+import Sheet from '../components/map/sheet/Sheet';
 
 const GuestMapScreen = ({ navigation }) => {
   const { colors, isDark } = useTheme();
@@ -21,6 +22,9 @@ const GuestMapScreen = ({ navigation }) => {
   const [error, setError] = useState(null);
   const [previewModalVisible, setPreviewModalVisible] = useState(true);
   const [needsJiggle, setNeedsJiggle] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const bottomSheetAnim = useRef(new Animated.Value(0)).current;
   const mapRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const isSelectingRef = useRef(false);
@@ -57,20 +61,6 @@ const GuestMapScreen = ({ navigation }) => {
       shadowRadius: 3.84,
       elevation: 5,
     },
-    callout: { backgroundColor: 'transparent' },
-    calloutContent: { 
-      padding: 10, 
-      minWidth: 180, 
-      backgroundColor: colors.card, 
-      borderRadius: 8,
-      shadowColor: colors.shadowColor,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-    },
-    calloutTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 5, color: colors.text },
-    calloutDescription: { fontSize: 14, color: colors.textSecondary, marginBottom: 10 },
     modalOverlay: { flex: 1, backgroundColor: colors.modalBackground, justifyContent: 'center', alignItems: 'center' },
     modalContent: {
       backgroundColor: colors.card,
@@ -88,7 +78,7 @@ const GuestMapScreen = ({ navigation }) => {
     modalTitle2: { fontSize: 16, fontWeight: 'bold', color: colors.text, marginTop: 15, marginBottom: 5 },
     modalText: { fontSize: 14, color: colors.textSecondary, marginBottom: 10, lineHeight: 20 },
     benefitText: { flex: 1, fontSize: 14, color: colors.textSecondary },
-    infoPanel: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border },
+    infoPanel: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, paddingBottom: Platform.OS === 'ios' ? 30 : 8, paddingHorizontal: 12, backgroundColor: colors.background, borderTopLeftRadius: 12, borderTopRightRadius: 12, shadowColor: colors.shadowColor, shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 5, minHeight: 52, zIndex: 200 },
     errorContainer: { position: 'absolute', top: 80, left: 20, right: 20, backgroundColor: colors.error, padding: 10, borderRadius: 8 },
     errorText: { color: colors.buttonText, fontSize: 14, textAlign: 'center' },
   };
@@ -314,6 +304,52 @@ const GuestMapScreen = ({ navigation }) => {
     }
   };
 
+  const handleMarkerPress = (point) => {
+    setSelectedPlace({
+      id: point.id,
+      title: point.title,
+      description: point.description,
+      originalData: point.originalData,
+    });
+    setIsVisible(true);
+    Animated.spring(bottomSheetAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 40,
+    }).start();
+  };
+
+  const handleClose = () => {
+    Animated.timing(bottomSheetAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setIsVisible(false);
+      setSelectedPlace(null);
+    });
+  };
+
+  const handleStartTour = (place) => {
+    // Include the tour type from guestTourParams when navigating to AudioScreen
+    const placeWithTourType = {
+      ...place.originalData,
+      tourType: guestTourParams?.category || 'history'
+    };
+    logger.debug(`Navigating to GuestAudio with tour type: ${guestTourParams?.category || 'history'}`);
+    navigation.navigate('GuestAudio', { place: placeWithTourType });
+    
+    // Also load the audio in the mini player if available
+    if (place.originalData && place.originalData.audio_url) {
+      audioManager.loadAudio(
+        place.originalData.audio_url,
+        place.originalData.place_id,
+        place.originalData.name
+      );
+    }
+  };
+
   // Center the map on the selected city
   const centerOnCity = () => {
     if (selectedCity && mapRef.current) {
@@ -329,7 +365,7 @@ const GuestMapScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={dynamicStyles.container}>
+    <SafeAreaView style={dynamicStyles.container} edges={['top', 'left', 'right']}>
       <AppHeader navigation={navigation} title="TensorTours Preview" />
       <View style={styles.mapContainer}>
         {region ? (
@@ -347,48 +383,11 @@ const GuestMapScreen = ({ navigation }) => {
                 key={point.id}
                 coordinate={point.coordinate}
                 tracksViewChanges={false}
-                pointerEvents={"auto"}
+                onPress={() => handleMarkerPress(point)}
               >
                 <View style={styles.customMarker}>
                   <Ionicons name="location" size={30} color="#FF5722" />
                 </View>
-                <Callout
-                  tooltip={true}
-                  onPress={() => {
-                    // Prevent multiple rapid selections when markers are close together
-                    if (isSelectingRef.current) return;
-                    isSelectingRef.current = true;
-                    setTimeout(() => { isSelectingRef.current = false; }, 250);
-                    
-                    // Navigate to Audio screen
-                    // Include the tour type from guestTourParams when navigating to AudioScreen
-                    const placeWithTourType = {
-                      ...point.originalData,
-                      tourType: guestTourParams?.category || 'history' // Add the current tour type from context
-                    };
-                    logger.debug(`Navigating to AudioScreen with tour type: ${guestTourParams?.category || 'history'}`);
-                    navigation.navigate('GuestAudio', { place: placeWithTourType });
-                    
-                    // Also load the audio in the mini player if available
-                    if (point.originalData && point.originalData.audio_url) {
-                      audioManager.loadAudio(
-                        point.originalData.audio_url,
-                        point.originalData.place_id,
-                        point.originalData.name
-                      );
-                    }
-                  }}
-                  style={[styles.callout, dynamicStyles.callout]}
-                >
-                  <View style={dynamicStyles.calloutContent}>
-                    <Text style={dynamicStyles.calloutTitle}>{point.title}</Text>
-                    <Text style={dynamicStyles.calloutDescription}>{point.description}</Text>
-                    <View style={styles.calloutButton}>
-                      <Text style={styles.calloutButtonText}>Start Audio Tour</Text>
-                      <Ionicons name="play" size={16} color="white" style={styles.calloutButtonIcon} />
-                    </View>
-                  </View>
-                </Callout>
               </Marker>
             ))}
           </MapView>
@@ -397,6 +396,17 @@ const GuestMapScreen = ({ navigation }) => {
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={dynamicStyles.loadingText}>Loading map...</Text>
           </View>
+        )}
+        
+        {/* Bottom Sheet */}
+        {isVisible && (
+          <Sheet
+            selectedPlace={selectedPlace}
+            bottomSheetAnim={bottomSheetAnim}
+            onClose={handleClose}
+            onStartTour={handleStartTour}
+            colors={colors}
+          />
         )}
         
         {loading && (
@@ -442,7 +452,7 @@ const GuestMapScreen = ({ navigation }) => {
       </View>
       
       {/* Bottom Info Panel with Tour Selection Button */}
-      <View style={dynamicStyles.infoPanel}>
+      <View style={[styles.infoPanel, dynamicStyles.infoPanel]}>
         <View style={styles.leftControls}>
           <MiniAudioPlayer targetScreen="GuestAudio" />
         </View>
@@ -559,41 +569,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
-  callout: {
-    width: 250,
-    padding: 0,
-  },
-  calloutContent: {
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: 'white',
-  },
-  calloutTitle: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 5,
-  },
-  calloutDescription: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 10,
-  },
-  calloutButton: {
-    backgroundColor: '#FF5722',
-    padding: 8,
-    borderRadius: 4,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  calloutButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    marginRight: 5,
-  },
-  calloutButtonIcon: {
-    marginLeft: 2,
-  },
   previewButton: {
     position: 'absolute',
     top: 15,
@@ -611,24 +586,22 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   infoPanel: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: 'white',
     paddingTop: 8,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 8, // Extra padding for iOS home indicator
+    paddingBottom: Platform.OS === 'ios' ? 30 : 8,
     paddingHorizontal: 12,
     borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#f8f8f8',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    zIndex: 10,
+    minHeight: 52,
+    zIndex: 200,
   },
   leftControls: {
     flexDirection: 'row',

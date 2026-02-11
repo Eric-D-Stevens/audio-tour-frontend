@@ -775,14 +775,26 @@ const UserMapScreen = ({ navigation }) => {
             minZoomLevel={0}
             maxZoomLevel={20}
           >
-            {tourPoints.map((point) => (
+            {/* Render unselected markers first */}
+            {tourPoints
+              .filter((point) => point.id !== selectedPlace?.id)
+              .map((point) => (
+                <Marker
+                  key={point.id}
+                  point={point}
+                  onPress={handleMarkerPress}
+                  selected={false}
+                />
+              ))}
+            {/* Render selected marker last so it appears on top */}
+            {selectedPlace && (
               <Marker
-                key={point.id}
-                point={point}
+                key={selectedPlace.id}
+                point={selectedPlace}
                 onPress={handleMarkerPress}
-                selected={selectedPlace?.id === point.id}
+                selected={true}
               />
-            ))}
+            )}
           </MapView>
         ) : (
           <View style={[styles.map, dynamicStyles.loadingContainer]}>

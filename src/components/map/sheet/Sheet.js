@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Animated,
@@ -18,6 +18,7 @@ import {
  * Slide-up bottom sheet for both iOS and Android.
  * Uses both shadow (iOS) and elevation (Android) styles.
  * Supports swipe-down gesture to close.
+ * Supports slide-down/slide-up swap animation when switching places.
  */
 const Sheet = ({
   selectedPlace,
@@ -28,13 +29,62 @@ const Sheet = ({
   buttonText = 'Start Tour',
   closeText = 'Close',
 }) => {
-  if (!selectedPlace || !bottomSheetAnim) return null;
+  const [displayedPlace, setDisplayedPlace] = useState(selectedPlace);
+  const [isSwapping, setIsSwapping] = useState(false);
+  const prevPlaceRef = useRef(null);
+
+  // Handle swap animation when selectedPlace changes
+  useEffect(() => {
+    if (!selectedPlace) {
+      setDisplayedPlace(null);
+      prevPlaceRef.current = null;
+      return;
+    }
+
+    const currentId = selectedPlace.id;
+    const prevId = prevPlaceRef.current;
+
+    // First open or same place - just display
+    if (!prevId || currentId === prevId) {
+      setDisplayedPlace(selectedPlace);
+      prevPlaceRef.current = currentId;
+      return;
+    }
+
+    // Different place selected - do swap animation
+    if (currentId !== prevId && !isSwapping) {
+      setIsSwapping(true);
+      
+      // Slide current sheet down
+      Animated.timing(bottomSheetAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }).start(() => {
+        // Swap content
+        setDisplayedPlace(selectedPlace);
+        prevPlaceRef.current = currentId;
+        
+        // Slide new sheet up with spring
+        Animated.spring(bottomSheetAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          friction: 8,
+          tension: 40,
+        }).start(() => {
+          setIsSwapping(false);
+        });
+      });
+    }
+  }, [selectedPlace, bottomSheetAnim, isSwapping]);
+
+  if (!displayedPlace || !bottomSheetAnim) return null;
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => !isSwapping,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        return gestureState.dy > 0;
+        return !isSwapping && gestureState.dy > 0;
       },
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
@@ -79,9 +129,9 @@ const Sheet = ({
     >
       <View style={styles.handle} />
       <View style={styles.sheetContent}>
-        <CalloutTitle title={selectedPlace.title} colors={colors} />
+        <CalloutTitle title={displayedPlace.title} colors={colors} />
         <CalloutDescription
-          description={selectedPlace.description}
+          description={displayedPlace.description}
           colors={colors}
         />
         <CalloutButtonRow>
@@ -92,7 +142,7 @@ const Sheet = ({
             colors={colors}
           />
           <CalloutButton
-            onPress={onStartTour}
+            onPress={() => onStartTour(displayedPlace)}
             text={buttonText}
             primary={true}
           />

@@ -130,15 +130,7 @@ const Sheet = ({
     >
       <View style={styles.handle} />
       <View style={styles.sheetContent}>
-        <View style={styles.topRow}>
-          <View style={styles.textArea}>
-            <Text style={[styles.title, { color: colors.text || '#1a1a1a' }]} numberOfLines={1}>
-              {displayedPlace.title}
-            </Text>
-            <Text style={[styles.description, { color: colors.textSecondary || '#666' }]} numberOfLines={2}>
-              {displayedPlace.description}
-            </Text>
-          </View>
+        <View style={styles.row}>
           {(() => {
             const placeId = displayedPlace.id || displayedPlace.originalData?.place_id;
             const cached = placeId ? tourCache.get(placeId, tourType) : null;
@@ -154,19 +146,29 @@ const Sheet = ({
             }
             return (
               <View style={[styles.imagePlaceholder, { backgroundColor: colors.border || '#e5e5e5' }]}>
-                <Ionicons name="image-outline" size={28} color={colors.textSecondary || '#999'} />
+                <Ionicons name="image-outline" size={32} color={colors.textSecondary || '#999'} />
               </View>
             );
           })()}
+          <View style={styles.rightColumn}>
+            <View>
+              <Text style={[styles.title, { color: colors.text || '#1a1a1a' }]} numberOfLines={1}>
+                {displayedPlace.title}
+              </Text>
+              <Text style={[styles.description, { color: colors.textSecondary || '#666' }]} numberOfLines={2}>
+                {displayedPlace.description}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.startButton}
+              onPress={() => onStartTour(displayedPlace)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.startButtonText}>{buttonText}</Text>
+              <Ionicons name="play" size={16} color="white" />
+            </TouchableOpacity>
+          </View>
         </View>
-        <TouchableOpacity
-          style={styles.startButton}
-          onPress={() => onStartTour(displayedPlace)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.startButtonText}>{buttonText}</Text>
-          <Ionicons name="play" size={16} color="white" />
-        </TouchableOpacity>
       </View>
     </Animated.View>
   );
@@ -201,14 +203,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
   },
-  topRow: {
+  row: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14,
+    alignItems: 'stretch',
   },
-  textArea: {
+  imagePlaceholder: {
+    width: 110,
+    height: 110,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  thumbnailImage: {
+    width: 110,
+    height: 110,
+    borderRadius: 10,
+  },
+  rightColumn: {
     flex: 1,
-    marginRight: 14,
+    marginLeft: 14,
+    justifyContent: 'space-between',
   },
   title: {
     fontSize: 17,
@@ -218,25 +232,15 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 13,
     lineHeight: 18,
-  },
-  imagePlaceholder: {
-    width: 64,
-    height: 64,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  thumbnailImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 10,
+    height: 36,
   },
   startButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FF5722',
-    paddingVertical: 12,
+    marginTop: 10,
+    paddingVertical: 10,
     borderRadius: 10,
     gap: 6,
   },

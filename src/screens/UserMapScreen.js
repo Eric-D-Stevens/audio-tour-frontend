@@ -621,9 +621,6 @@ const UserMapScreen = ({ navigation }) => {
 
   // Handle starting a tour from the Android bottom sheet
   const handleStartTour = async (place) => {
-    // Close the bottom sheet first
-    handleClose();
-    
     // Prevent multiple rapid selections
     if (isSelectingRef.current) return;
     isSelectingRef.current = true;

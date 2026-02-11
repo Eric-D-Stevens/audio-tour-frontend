@@ -4,13 +4,10 @@ import {
   Animated,
   StyleSheet,
   PanResponder,
+  Text,
+  TouchableOpacity,
 } from 'react-native';
-import {
-  CalloutTitle,
-  CalloutDescription,
-  CalloutButton,
-  CalloutButtonRow,
-} from '../CalloutContent';
+import { Ionicons } from '@expo/vector-icons';
 
 /**
  * Bottom Sheet Component
@@ -129,24 +126,27 @@ const Sheet = ({
     >
       <View style={styles.handle} />
       <View style={styles.sheetContent}>
-        <CalloutTitle title={displayedPlace.title} colors={colors} />
-        <CalloutDescription
-          description={displayedPlace.description}
-          colors={colors}
-        />
-        <CalloutButtonRow>
-          <CalloutButton
-            onPress={onClose}
-            text={closeText}
-            primary={false}
-            colors={colors}
-          />
-          <CalloutButton
-            onPress={() => onStartTour(displayedPlace)}
-            text={buttonText}
-            primary={true}
-          />
-        </CalloutButtonRow>
+        <View style={styles.topRow}>
+          <View style={styles.textArea}>
+            <Text style={[styles.title, { color: colors.text || '#1a1a1a' }]} numberOfLines={1}>
+              {displayedPlace.title}
+            </Text>
+            <Text style={[styles.description, { color: colors.textSecondary || '#666' }]} numberOfLines={2}>
+              {displayedPlace.description}
+            </Text>
+          </View>
+          <View style={[styles.imagePlaceholder, { backgroundColor: colors.border || '#e5e5e5' }]}>
+            <Ionicons name="image-outline" size={28} color={colors.textSecondary || '#999'} />
+          </View>
+        </View>
+        <TouchableOpacity
+          style={styles.startButton}
+          onPress={() => onStartTour(displayedPlace)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.startButtonText}>{buttonText}</Text>
+          <Ionicons name="play" size={16} color="white" />
+        </TouchableOpacity>
       </View>
     </Animated.View>
   );
@@ -178,7 +178,47 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sheetContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  textArea: {
+    flex: 1,
+    marginRight: 14,
+  },
+  title: {
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  description: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  imagePlaceholder: {
+    width: 64,
+    height: 64,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  startButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF5722',
+    paddingVertical: 12,
+    borderRadius: 10,
+    gap: 6,
+  },
+  startButtonText: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
 

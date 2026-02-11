@@ -32,11 +32,21 @@ class AudioManager {
         interruptionMode: 'doNotMix',
       });
 
-      // Pre-load artwork asset for lock screen
+      // Pre-load artwork asset for lock screen / media notification
       try {
-        const asset = Asset.fromModule(require('../../assets/app-store-icon.png'));
+        const asset = Asset.fromModule(require('../../assets/EarthAudio.jpg'));
         await asset.downloadAsync();
-        this.artworkUri = asset.localUri;
+        // On Android, ensure we have a proper file:// URI for the media notification
+        // Asset.fromModule can return a drawable resource name which may render at low resolution
+        if (asset.localUri && asset.localUri.startsWith('file://')) {
+          this.artworkUri = asset.localUri;
+        } else if (asset.uri && asset.uri.startsWith('file://')) {
+          this.artworkUri = asset.uri;
+        } else if (asset.localUri) {
+          this.artworkUri = asset.localUri;
+        } else {
+          this.artworkUri = asset.uri;
+        }
         logger.debug('Lock screen artwork loaded:', this.artworkUri);
       } catch (e) {
         logger.error('Failed to load lock screen artwork:', e);

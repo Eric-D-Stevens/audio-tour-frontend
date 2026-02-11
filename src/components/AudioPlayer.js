@@ -128,6 +128,12 @@ const AudioPlayer = ({ placeId, audioUrl, placeName, tourType = 'history' }) => 
 
 
 
+  // Helper to format tour type for display
+  const formatTourType = (type) => {
+    if (type === 'event:portland-winter-lights') return 'PWLF';
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
   if (isLoading) {
     return (
       <View style={dynamicStyles.container}>
@@ -155,7 +161,7 @@ const AudioPlayer = ({ placeId, audioUrl, placeName, tourType = 'history' }) => 
         <>
           {/* Tour type title */}
           <Text style={dynamicStyles.tourTypeTitle}>
-            {tourType.charAt(0).toUpperCase() + tourType.slice(1)} Tour
+            {formatTourType(tourType)} Tour
           </Text>
           
           <View style={styles.sliderContainer}>

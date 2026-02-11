@@ -34,6 +34,11 @@ export default {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#FF5722"
       },
+      splash: {
+        image: "./assets/android-splash.png",
+        resizeMode: "contain",
+        backgroundColor: "#FF5722"
+      },
       package: "com.tensortours.app",
       versionCode: 1,
       config: {

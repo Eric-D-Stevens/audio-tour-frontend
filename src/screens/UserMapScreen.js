@@ -805,6 +805,7 @@ const UserMapScreen = ({ navigation }) => {
             showsMyLocationButton={false}
             followsUserLocation={false}
             showsCompass={false}
+            toolbarEnabled={false}
             clusteringEnabled={false}
             minZoomLevel={0}
             maxZoomLevel={20}

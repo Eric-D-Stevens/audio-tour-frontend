@@ -954,8 +954,8 @@ const styles = StyleSheet.create({
   },
   infoPanel: {
     backgroundColor: 'white',
-    paddingTop: 8,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 8,
+    paddingTop: 4,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 4,
     paddingHorizontal: 12,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
@@ -967,7 +967,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    minHeight: 52,
+    minHeight: 40,
     zIndex: 200,
   },
   leftControls: {

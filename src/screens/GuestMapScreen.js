@@ -80,7 +80,7 @@ const GuestMapScreen = ({ navigation }) => {
     modalTitle2: { fontSize: 16, fontWeight: 'bold', color: colors.text, marginTop: 15, marginBottom: 5 },
     modalText: { fontSize: 14, color: colors.textSecondary, marginBottom: 10, lineHeight: 20 },
     benefitText: { flex: 1, fontSize: 14, color: colors.textSecondary },
-    infoPanel: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, paddingBottom: Platform.OS === 'ios' ? 30 : 8, paddingHorizontal: 12, backgroundColor: colors.background, borderTopLeftRadius: 12, borderTopRightRadius: 12, shadowColor: colors.shadowColor, shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 5, minHeight: 52, zIndex: 200 },
+    infoPanel: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4, paddingBottom: Platform.OS === 'ios' ? 24 : 4, paddingHorizontal: 12, backgroundColor: colors.background, borderTopLeftRadius: 12, borderTopRightRadius: 12, shadowColor: colors.shadowColor, shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 5, minHeight: 40, zIndex: 200 },
     errorContainer: { position: 'absolute', top: 80, left: 20, right: 20, backgroundColor: colors.error, padding: 10, borderRadius: 8 },
     errorText: { color: colors.buttonText, fontSize: 14, textAlign: 'center' },
   };
@@ -594,8 +594,8 @@ const styles = StyleSheet.create({
   },
   infoPanel: {
     backgroundColor: 'white',
-    paddingTop: 8,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 8,
+    paddingTop: 4,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 4,
     paddingHorizontal: 12,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    minHeight: 52,
+    minHeight: 40,
     zIndex: 200,
   },
   leftControls: {

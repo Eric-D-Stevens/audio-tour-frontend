@@ -36,3 +36,11 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 credentials.json
+
+# Flyer / marketing assets (not part of the app)
+assets/winter-lights-flyer.*
+assets/flyer-background.png
+assets/app-store-badge.svg
+assets/tensortours-qr-code*.png
+assets/screenshot-map.png
+assets/screenshot-audio.png

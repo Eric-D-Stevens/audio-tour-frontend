@@ -170,7 +170,6 @@ const UserMapScreen = ({ navigation }) => {
   const [loadingPoints, setLoadingPoints] = useState(false);
   const [error, setError] = useState(null);
   const [needsJiggle, setNeedsJiggle] = useState(false);
-  const [followsHeading, setFollowsHeading] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [searchResult, setSearchResult] = useState({ placesCount: 0, distance: 2000 });
   const mapRef = useRef(null);
@@ -182,7 +181,20 @@ const UserMapScreen = ({ navigation }) => {
   // Ref for AppState listener
   const appState = useRef(AppState.currentState);
   const { selectedPlace, bottomSheetAnim, handleMarkerPress, handleClose, isVisible, sheetOpen } = useMarkerHandler();
-  
+
+  const alignToHeading = async () => {
+    try {
+      const heading = await Location.getHeadingAsync();
+      const h = heading.trueHeading >= 0 ? heading.trueHeading : heading.magHeading;
+      if (h >= 0 && mapRef.current) {
+        const cam = await mapRef.current.getCamera();
+        mapRef.current.animateCamera({ ...cam, heading: h });
+      }
+    } catch (e) {
+      // heading unavailable
+    }
+  };
+
   // Effect to re-check permissions when app returns from background (e.g., from Settings)
   useEffect(() => {
     const subscription = AppState.addEventListener('change', async (nextAppState) => {
@@ -607,11 +619,31 @@ const UserMapScreen = ({ navigation }) => {
       
       // Animate map to new location, preserving current zoom level
       if (mapRef.current) {
+        // Read current map boundaries to get the actual visible deltas
+        // (region state can be stale after camera rotations)
+        let currentDeltas;
+        try {
+          const cam = await mapRef.current.getCamera();
+          // getCamera returns altitude on iOS; convert to approximate deltas
+          // by reading the actual map region instead
+          const mapRegion = await new Promise((resolve) => {
+            mapRef.current.getMapBoundaries().then(({ northEast, southWest }) => {
+              resolve({
+                latitudeDelta: northEast.latitude - southWest.latitude,
+                longitudeDelta: northEast.longitude - southWest.longitude,
+              });
+            }).catch(() => resolve(null));
+          });
+          currentDeltas = mapRegion;
+        } catch (e) {
+          currentDeltas = null;
+        }
+
         const newRegion = {
           latitude,
           longitude,
-          latitudeDelta: region?.latitudeDelta || distanceToMapDelta(tourParams?.distance || 1500).latitudeDelta,
-          longitudeDelta: region?.longitudeDelta || distanceToMapDelta(tourParams?.distance || 1500).longitudeDelta,
+          latitudeDelta: currentDeltas?.latitudeDelta || region?.latitudeDelta || distanceToMapDelta(tourParams?.distance || 1500).latitudeDelta,
+          longitudeDelta: currentDeltas?.longitudeDelta || region?.longitudeDelta || distanceToMapDelta(tourParams?.distance || 1500).longitudeDelta,
         };
         mapRef.current.animateToRegion(newRegion);
         // Also update the region state to keep it in sync
@@ -771,7 +803,7 @@ const UserMapScreen = ({ navigation }) => {
             onRegionChangeComplete={setRegion}
             showsUserLocation
             showsMyLocationButton={false}
-            followsUserLocation={followsHeading}
+            followsUserLocation={false}
             showsCompass={false}
             clusteringEnabled={false}
             minZoomLevel={0}
@@ -833,9 +865,9 @@ const UserMapScreen = ({ navigation }) => {
           <MapButtonGroup isOpen={sheetOpen}>
             <TouchableOpacity
               style={dynamicStyles.mapButton}
-              onPress={() => setFollowsHeading(prev => !prev)}
+              onPress={alignToHeading}
             >
-              <Ionicons name="compass-outline" size={24} color={followsHeading ? colors.primary : colors.textSecondary} />
+              <Ionicons name="compass-outline" size={24} color={colors.primary} />
             </TouchableOpacity>
             <TouchableOpacity
               style={dynamicStyles.mapButton}

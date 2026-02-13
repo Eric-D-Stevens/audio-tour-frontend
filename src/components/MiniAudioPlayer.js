@@ -12,16 +12,6 @@ const MiniAudioPlayer = ({ targetScreen = 'Audio' }) => {
     container: { 
       flexDirection: 'row', 
       alignItems: 'center', 
-      backgroundColor: colors.background, 
-      borderRadius: 25, 
-      paddingVertical: 4, 
-      paddingHorizontal: 10, 
-      shadowColor: colors.shadowColor, 
-      shadowOffset: { width: 0, height: 2 }, 
-      shadowOpacity: 0.2, 
-      shadowRadius: 3, 
-      elevation: 3,
-      zIndex: 200
     },
     placeName: { 
       fontSize: 14, 

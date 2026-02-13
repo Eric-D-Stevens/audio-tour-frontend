@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated, Platform, Alert, Linking, AppState, Image } from 'react-native';
 import MapView from 'react-native-maps';
+import darkMapStyle from '../styles/darkMapStyle.json';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -774,6 +775,8 @@ const UserMapScreen = ({ navigation }) => {
             clusteringEnabled={false}
             minZoomLevel={0}
             maxZoomLevel={20}
+            userInterfaceStyle={isDark ? 'dark' : 'light'}
+            customMapStyle={Platform.OS === 'android' && isDark ? darkMapStyle : []}
           >
             {tourPoints.map((point) => (
               <Marker
@@ -954,8 +957,8 @@ const styles = StyleSheet.create({
   },
   infoPanel: {
     backgroundColor: 'white',
-    paddingTop: 4,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 4,
+    paddingTop: Platform.OS === 'ios' ? 10 : 8,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 18,
     paddingHorizontal: 12,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Modal, ActivityIndicator, Animated, Platform } from 'react-native';
 import MapView from 'react-native-maps';
+import darkMapStyle from '../styles/darkMapStyle.json';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../components/AppHeader';
@@ -80,7 +81,7 @@ const GuestMapScreen = ({ navigation }) => {
     modalTitle2: { fontSize: 16, fontWeight: 'bold', color: colors.text, marginTop: 15, marginBottom: 5 },
     modalText: { fontSize: 14, color: colors.textSecondary, marginBottom: 10, lineHeight: 20 },
     benefitText: { flex: 1, fontSize: 14, color: colors.textSecondary },
-    infoPanel: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4, paddingBottom: Platform.OS === 'ios' ? 24 : 4, paddingHorizontal: 12, backgroundColor: colors.background, borderTopLeftRadius: 12, borderTopRightRadius: 12, shadowColor: colors.shadowColor, shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 5, minHeight: 40, zIndex: 200 },
+    infoPanel: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: Platform.OS === 'ios' ? 10 : 8, paddingBottom: Platform.OS === 'ios' ? 24 : 18, paddingHorizontal: 12, backgroundColor: colors.background, borderTopLeftRadius: 12, borderTopRightRadius: 12, shadowColor: colors.shadowColor, shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 5, minHeight: 40, zIndex: 200 },
     errorContainer: { position: 'absolute', top: 80, left: 20, right: 20, backgroundColor: colors.error, padding: 10, borderRadius: 8 },
     errorText: { color: colors.buttonText, fontSize: 14, textAlign: 'center' },
   };
@@ -387,6 +388,8 @@ const GuestMapScreen = ({ navigation }) => {
             clusteringEnabled={false}
             minZoomLevel={0}
             maxZoomLevel={20}
+            userInterfaceStyle={isDark ? 'dark' : 'light'}
+            customMapStyle={Platform.OS === 'android' && isDark ? darkMapStyle : []}
           >
             {tourPoints.map((point) => (
               <Marker
@@ -594,8 +597,8 @@ const styles = StyleSheet.create({
   },
   infoPanel: {
     backgroundColor: 'white',
-    paddingTop: 4,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 4,
+    paddingTop: Platform.OS === 'ios' ? 10 : 8,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 18,
     paddingHorizontal: 12,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,

@@ -16,6 +16,7 @@ import logger from '../utils/logger';
 import Marker from '../components/map/markers/Marker';
 import Sheet from '../components/map/sheet/Sheet';
 import { useMarkerHandler } from '../components/map/useMarkerHandler';
+import MapButtonGroup from '../components/map/MapButtonGroup';
 
 // Downtown Portland coordinates (Pioneer Courthouse Square area)
 const PORTLAND_CENTER = {
@@ -169,6 +170,7 @@ const UserMapScreen = ({ navigation }) => {
   const [loadingPoints, setLoadingPoints] = useState(false);
   const [error, setError] = useState(null);
   const [needsJiggle, setNeedsJiggle] = useState(false);
+  const [followsHeading, setFollowsHeading] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [searchResult, setSearchResult] = useState({ placesCount: 0, distance: 2000 });
   const mapRef = useRef(null);
@@ -179,7 +181,7 @@ const UserMapScreen = ({ navigation }) => {
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   // Ref for AppState listener
   const appState = useRef(AppState.currentState);
-  const { selectedPlace, bottomSheetAnim, handleMarkerPress, handleClose, isVisible } = useMarkerHandler();
+  const { selectedPlace, bottomSheetAnim, handleMarkerPress, handleClose, isVisible, sheetOpen } = useMarkerHandler();
   
   // Effect to re-check permissions when app returns from background (e.g., from Settings)
   useEffect(() => {
@@ -674,10 +676,7 @@ const UserMapScreen = ({ navigation }) => {
       elevation: 5,
       minWidth: 200,
     },
-    userLocationButton: {
-      position: 'absolute',
-      bottom: 100,
-      right: 15,
+    mapButton: {
       backgroundColor: colors.card,
       padding: 12,
       borderRadius: 30,
@@ -772,6 +771,8 @@ const UserMapScreen = ({ navigation }) => {
             onRegionChangeComplete={setRegion}
             showsUserLocation
             showsMyLocationButton={false}
+            followsUserLocation={followsHeading}
+            showsCompass={false}
             clusteringEnabled={false}
             minZoomLevel={0}
             maxZoomLevel={20}
@@ -827,14 +828,22 @@ const UserMapScreen = ({ navigation }) => {
           </Animated.View>
         )}
         
-        {/* User location button */}
+        {/* Floating button group */}
         {region && (
-          <TouchableOpacity
-            style={dynamicStyles.userLocationButton}
-            onPress={centerOnUser}
-          >
-            <Ionicons name="locate" size={24} color={colors.primary} />
-          </TouchableOpacity>
+          <MapButtonGroup isOpen={sheetOpen}>
+            <TouchableOpacity
+              style={dynamicStyles.mapButton}
+              onPress={() => setFollowsHeading(prev => !prev)}
+            >
+              <Ionicons name="compass-outline" size={24} color={followsHeading ? colors.primary : colors.textSecondary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={dynamicStyles.mapButton}
+              onPress={centerOnUser}
+            >
+              <Ionicons name="locate" size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </MapButtonGroup>
         )}
         
         {/* Error message */}

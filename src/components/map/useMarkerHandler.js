@@ -9,10 +9,12 @@ import { Animated } from 'react-native';
  */
 export const useMarkerHandler = () => {
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const bottomSheetAnim = useRef(new Animated.Value(0)).current;
 
   const handleMarkerPress = useCallback((place) => {
     setSelectedPlace(place);
+    setSheetOpen(true);
     Animated.spring(bottomSheetAnim, {
       toValue: 1,
       useNativeDriver: true,
@@ -22,6 +24,7 @@ export const useMarkerHandler = () => {
   }, [bottomSheetAnim]);
 
   const handleClose = useCallback(() => {
+    setSheetOpen(false);
     Animated.timing(bottomSheetAnim, {
       toValue: 0,
       duration: 200,
@@ -37,6 +40,7 @@ export const useMarkerHandler = () => {
     handleMarkerPress,
     handleClose,
     isVisible: selectedPlace !== null,
+    sheetOpen,
   };
 };
 

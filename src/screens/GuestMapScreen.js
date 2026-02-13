@@ -13,6 +13,7 @@ import { PRESET_CITIES, getCityById, getDefaultCity } from '../constants/cities'
 import audioManager from '../services/audioManager';
 import logger from '../utils/logger';
 import Sheet from '../components/map/sheet/Sheet';
+import MapButtonGroup from '../components/map/MapButtonGroup';
 import Marker from '../components/map/markers/Marker';
 
 const GuestMapScreen = ({ navigation }) => {
@@ -27,6 +28,7 @@ const GuestMapScreen = ({ navigation }) => {
   const [needsJiggle, setNeedsJiggle] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const bottomSheetAnim = useRef(new Animated.Value(0)).current;
   const mapRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -51,10 +53,7 @@ const GuestMapScreen = ({ navigation }) => {
       elevation: 5,
       minWidth: 200,
     },
-    userLocationButton: {
-      position: 'absolute',
-      bottom: 100,
-      right: 15,
+    mapButton: {
       backgroundColor: colors.card,
       padding: 12,
       borderRadius: 30,
@@ -323,6 +322,7 @@ const GuestMapScreen = ({ navigation }) => {
       originalData: point.originalData,
     });
     setIsVisible(true);
+    setSheetOpen(true);
     Animated.spring(bottomSheetAnim, {
       toValue: 1,
       useNativeDriver: true,
@@ -332,6 +332,7 @@ const GuestMapScreen = ({ navigation }) => {
   };
 
   const handleClose = () => {
+    setSheetOpen(false);
     Animated.timing(bottomSheetAnim, {
       toValue: 0,
       duration: 200,
@@ -428,14 +429,16 @@ const GuestMapScreen = ({ navigation }) => {
           </Animated.View>
         )}
         
-        {/* Center on city button */}
+        {/* Floating button group */}
         {region && (
-          <TouchableOpacity
-            style={dynamicStyles.userLocationButton}
-            onPress={centerOnCity}
-          >
-            <Ionicons name="location" size={24} color={colors.primary} />
-          </TouchableOpacity>
+          <MapButtonGroup isOpen={sheetOpen}>
+            <TouchableOpacity
+              style={dynamicStyles.mapButton}
+              onPress={centerOnCity}
+            >
+              <Ionicons name="location" size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </MapButtonGroup>
         )}
         
         {/* Preview Mode Button */}

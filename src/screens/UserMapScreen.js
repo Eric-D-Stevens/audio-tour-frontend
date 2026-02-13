@@ -602,13 +602,13 @@ const UserMapScreen = ({ navigation }) => {
       const { latitude, longitude } = location.coords;
       setUserLocation({ latitude, longitude });
       
-      // Animate map to new location
+      // Animate map to new location, preserving current zoom level
       if (mapRef.current) {
-        const mapDeltas = distanceToMapDelta(tourParams?.distance || 1500);
         const newRegion = {
           latitude,
           longitude,
-          ...mapDeltas,
+          latitudeDelta: region?.latitudeDelta || distanceToMapDelta(tourParams?.distance || 1500).latitudeDelta,
+          longitudeDelta: region?.longitudeDelta || distanceToMapDelta(tourParams?.distance || 1500).longitudeDelta,
         };
         mapRef.current.animateToRegion(newRegion);
         // Also update the region state to keep it in sync

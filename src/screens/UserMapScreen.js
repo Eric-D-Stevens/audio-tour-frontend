@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated, Platform, Alert, Linking, AppState, Image } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated, Platform, Alert, Linking, AppState, Image, Modal } from 'react-native';
 import MapView from 'react-native-maps';
 import darkMapStyle from '../styles/darkMapStyle.json';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -181,6 +181,7 @@ const UserMapScreen = ({ navigation }) => {
   // Ref for AppState listener
   const appState = useRef(AppState.currentState);
   const { selectedPlace, bottomSheetAnim, handleMarkerPress, handleClose, isVisible, sheetOpen } = useMarkerHandler();
+  const [showLightsDisclaimer, setShowLightsDisclaimer] = useState(false);
 
   const alignToHeading = async () => {
     try {
@@ -915,6 +916,8 @@ const UserMapScreen = ({ navigation }) => {
                 mapRef.current.animateToRegion(portlandRegion, 500);
                 setRegion(portlandRegion);
               }
+              
+              setShowLightsDisclaimer(true);
             }}
             colors={colors}
           />
@@ -923,9 +926,27 @@ const UserMapScreen = ({ navigation }) => {
         {/* Standard Winter Lights Banner - always visible at bottom */}
         <TouchableOpacity
           style={styles.winterLightsBanner}
-          onPress={() => navigation.navigate('TourParameters', {
-            preselectedCategory: 'event:portland-winter-lights'
-          })}
+          onPress={() => {
+            setTourParams({
+              ...tourParams,
+              category: 'event:portland-winter-lights'
+            });
+            
+            const portlandRadius = 6 * 1609.34;
+            const mapDeltas = distanceToMapDelta(portlandRadius);
+            const portlandRegion = {
+              latitude: PORTLAND_CENTER.latitude,
+              longitude: PORTLAND_CENTER.longitude,
+              ...mapDeltas,
+            };
+            
+            if (mapRef.current) {
+              mapRef.current.animateToRegion(portlandRegion, 500);
+              setRegion(portlandRegion);
+            }
+            
+            setShowLightsDisclaimer(true);
+          }}
         >
           <Text style={styles.winterLightsEmoji}>🎆</Text>
           <View style={styles.winterLightsTextContainer}>
@@ -951,6 +972,36 @@ const UserMapScreen = ({ navigation }) => {
       </View>
       </>
       )}
+      {/* Winter Lights Location Disclaimer Modal */}
+      <Modal
+        visible={showLightsDisclaimer}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLightsDisclaimer(false)}
+      >
+        <View style={styles.disclaimerOverlay}>
+          <View style={[styles.disclaimerCard, { backgroundColor: colors.surface }]}>
+            <View style={styles.disclaimerHeader}>
+              <Text style={styles.disclaimerEmoji}>✨</Text>
+              <Text style={[styles.disclaimerTitle, { color: colors.text }]}>Portland Winter Lights</Text>
+            </View>
+            <View style={styles.disclaimerDivider} />
+            <View style={styles.disclaimerBody}>
+              <Ionicons name="location-outline" size={20} color="#8B5CF6" style={{ marginRight: 8, marginTop: 2 }} />
+              <Text style={[styles.disclaimerText, { color: colors.textSecondary }]}>
+                Some marker locations are approximate and represent the general vicinity of the installation, not the exact position.
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.disclaimerButton}
+              activeOpacity={0.8}
+              onPress={() => setShowLightsDisclaimer(false)}
+            >
+              <Text style={styles.disclaimerButtonText}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -1163,6 +1214,64 @@ const styles = StyleSheet.create({
   discoDate: {
     fontSize: 11,
     marginRight: 4,
+  },
+  disclaimerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 30,
+  },
+  disclaimerCard: {
+    width: '100%',
+    borderRadius: 20,
+    paddingVertical: 24,
+    paddingHorizontal: 24,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  disclaimerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  disclaimerEmoji: {
+    fontSize: 22,
+    marginRight: 8,
+  },
+  disclaimerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  disclaimerDivider: {
+    height: 1,
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    marginBottom: 16,
+  },
+  disclaimerBody: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
+  disclaimerText: {
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  disclaimerButton: {
+    backgroundColor: '#8B5CF6',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  disclaimerButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
 

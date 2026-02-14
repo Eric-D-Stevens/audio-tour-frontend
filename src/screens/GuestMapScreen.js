@@ -548,6 +548,7 @@ const styles = StyleSheet.create({
   mapContainer: {
     flex: 1,
     position: 'relative',
+    overflow: 'hidden',
   },
   map: {
     width: Dimensions.get('window').width,

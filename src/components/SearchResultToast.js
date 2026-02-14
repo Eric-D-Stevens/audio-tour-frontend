@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity, PanResponder } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts';
 
@@ -15,6 +15,48 @@ const SearchResultToast = ({
   const { colors } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-50)).current;
+  const timerRef = useRef(null);
+
+  const dismiss = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: -80,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      if (onHide) onHide();
+    });
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => gestureState.dy < -5,
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy < 0) {
+          slideAnim.setValue(gestureState.dy);
+          fadeAnim.setValue(Math.max(0, 1 + gestureState.dy / 80));
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy < -20 || gestureState.vy < -0.3) {
+          dismiss();
+        } else {
+          Animated.parallel([
+            Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true }),
+            Animated.spring(fadeAnim, { toValue: 1, useNativeDriver: true }),
+          ]).start();
+        }
+      },
+    })
+  ).current;
 
   useEffect(() => {
     if (visible) {
@@ -32,27 +74,16 @@ const SearchResultToast = ({
         }),
       ]).start();
 
-      // Auto-hide after 2.5 seconds
-      const timer = setTimeout(() => {
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(slideAnim, {
-            toValue: -50,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-        ]).start(() => {
-          if (onHide) onHide();
-        });
-      }, 2500);
+      // Auto-hide after 4 seconds
+      timerRef.current = setTimeout(() => {
+        dismiss();
+      }, 4000);
 
-      return () => clearTimeout(timer);
+      return () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+      };
     }
-  }, [visible, fadeAnim, slideAnim, onHide]);
+  }, [visible]);
 
   if (!visible) return null;
 
@@ -94,6 +125,7 @@ const SearchResultToast = ({
 
   return (
     <Animated.View 
+      {...panResponder.panHandlers}
       style={[
         styles.container,
         {
@@ -110,6 +142,9 @@ const SearchResultToast = ({
         <Text style={[styles.title, { color: colors.text }]}>{message.title}</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{message.subtitle}</Text>
       </View>
+      <TouchableOpacity onPress={dismiss} style={styles.closeButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        <Ionicons name="close" size={18} color={colors.textSecondary} />
+      </TouchableOpacity>
     </Animated.View>
   );
 };
@@ -136,6 +171,10 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 1,
+    marginRight: 8,
+  },
+  closeButton: {
+    padding: 4,
   },
   title: {
     fontSize: 15,
